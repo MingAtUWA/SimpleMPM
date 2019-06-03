@@ -126,8 +126,10 @@ public:
 	}
 
 public:
-	inline void get_nodes_of_element(ElementType *pelem,
-		NodeType *&pnode1, NodeType *&pnode2, NodeType *&pnode3, NodeType *&pnode4)
+	inline void get_nodes_of_element(
+		ElementType *pelem,
+		NodeType *&pnode1, NodeType *&pnode2,
+		NodeType *&pnode3, NodeType *&pnode4)
 	{
 		pnode1 = nodes + node_x_num * pelem->index_y + pelem->index_x;
 		pnode2 = pnode1 + 1;
@@ -135,26 +137,51 @@ public:
 		pnode4 = pnode3 - 1;
 	}
 
-	inline void get_elements_by_node(NodeType *pnode,
-		ElementType *&pelem1, ElementType *&pelem2, ElementType *&pelem3, ElementType *&pelem4)
+	/* | elem2 | elem1 |
+	 * |-------|-------|
+	 * | elem3 | elem4 |
+	 */
+	inline void get_elements_by_node(
+		NodeType *pnode,
+		ElementType *&pelem1, ElementType *&pelem2,
+		ElementType *&pelem3, ElementType *&pelem4)
 	{
 		size_t x_id = pnode->index_x;
 		size_t y_id = pnode->index_y;
-		if (x_id == 1)
-		{
-			if (y_id != 1)
-			{
+		size_t e_x1_id, e_x2_id;
+		size_t e_y1_id, e_y2_id;
 
-			}
-		}
-		else if (x_id == node_x_num - 1)
-		{
+		e_x1_id = x_id;
+		e_x2_id = x_id;
+		if (x_id == 0) e_x1_id = node_x_num + 1;
+		if (x_id == node_x_num - 1)	e_x2_id = node_x_num;
+		--e_x1_id;
 
-		}
+		e_y1_id = y_id;
+		e_y2_id = y_id;
+		if (y_id == 0) e_y1_id = node_y_num + 1;
+		if (y_id == node_y_num - 1) e_y2_id = node_y_num;
+		--e_y1_id;
+
+		if (e_x2_id < node_x_num && e_y2_id < node_y_num)
+			pelem1 = elems + elem_x_num * e_y2_id  + e_x2_id;
 		else
-		{
-			//....
-		}
+			pelem1 = nullptr;
+
+		if (e_x1_id < node_x_num && e_y2_id < node_y_num)
+			pelem2 = elems + elem_x_num * e_y2_id + e_x1_id;
+		else
+			pelem2 = nullptr;
+
+		if (e_x1_id < node_x_num && e_y1_id < node_y_num)
+			pelem3 = elems + elem_x_num * e_y1_id + e_x1_id;
+		else
+			pelem3 = nullptr;
+
+		if (e_x2_id < node_x_num && e_y1_id < node_y_num)
+			pelem4 = elems + elem_x_num * e_y1_id + e_x2_id;
+		else
+			pelem4 = nullptr;
 	}
 
 	ElementType *find_in_which_element(double x, double y)

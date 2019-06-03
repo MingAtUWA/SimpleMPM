@@ -16,6 +16,7 @@ public:
 	Node_Contact_Var_2D_ME *contact_var_list;
 
 	// centre of mass velocity
+	bool is_in_contact;
 	double vx_cm, vy_cm;
 
 public:
@@ -25,6 +26,7 @@ public:
 	{
 		var_list = nullptr;
 		object_num = 0;
+		is_in_contact = false;
 	}
 	inline void add(NodeVar_2D_ME *nv)
 	{

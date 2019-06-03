@@ -442,11 +442,12 @@ int Step_R2D_ME_MPM::contact_calculation(void)
 	Node_BG_R2D_ME *pnd;
 	Element_BG_R2D_ME *pelem1, *pelem2, *pelem3, *pelem4;
 	Object_Particle_2D_ME *pobj;
-	Particle_2D_ME *ppcl;
-	ParticleVar_R2D_ME *ppcl_var;
+	Particle_2D_ME *ppcl1, *ppcl2, *ppcl3, *ppcl4;
+	ParticleVar_R2D_ME *ppcl1_var, *ppcl2_var, *ppcl3_var, *ppcl4_var;
 	NodeVar_2D_ME *pnd_var;
 	Node_Contact_Var_2D_ME *con_var;
 	double cm, cmmx, cmmy;
+	double n_norm;
 
 	for (size_t i = 0; i < mesh->node_num; i++)
 	{
@@ -472,11 +473,47 @@ int Step_R2D_ME_MPM::contact_calculation(void)
 
 			// calculate normal vector
 			mesh->get_elements_by_node(pnd, pelem1, pelem2, pelem3, pelem4);
+			ppcl1_var = pelem1->first_pcl_var();
+			ppcl2_var = pelem2->first_pcl_var();
+			ppcl3_var = pelem3->first_pcl_var();
+			ppcl4_var = pelem4->first_pcl_var();
 			for (pnd_var = pnd->first(), con_var = pnd->first_contact_var(); pnd_var;
 				 pnd_var = pnd->next(pnd_var), con_var = pnd->next_contact_var(con_var))
 			{
 				pobj = pnd_var->object;
-				//.....
+				con_var->nx = 0.0;
+				con_var->ny = 0.0;
+				// element1
+				while (ppcl1_var->pcl->object == pobj)
+				{
+					con_var->nx += ppcl1_var->dN1_dx * ppcl1_var->vol;
+					con_var->ny += ppcl1_var->dN1_dy * ppcl1_var->vol;
+					ppcl1_var = pelem1->next_pcl_var(ppcl1_var);
+				}
+				// element2
+				while (ppcl2_var->pcl->object == pobj)
+				{
+					con_var->nx += ppcl2_var->dN2_dx * ppcl2_var->vol;
+					con_var->ny += ppcl2_var->dN2_dy * ppcl2_var->vol;
+					ppcl2_var = pelem2->next_pcl_var(ppcl2_var);
+				}
+				// element3
+				while (ppcl3_var->pcl->object == pobj)
+				{
+					con_var->nx += ppcl3_var->dN3_dx * ppcl3_var->vol;
+					con_var->ny += ppcl3_var->dN3_dy * ppcl3_var->vol;
+					ppcl3_var = pelem3->next_pcl_var(ppcl3_var);
+				}
+				// element4
+				while (ppcl4_var->pcl->object == pobj)
+				{
+					con_var->nx += ppcl4_var->dN4_dx * ppcl4_var->vol;
+					con_var->ny += ppcl4_var->dN4_dy * ppcl4_var->vol;
+					ppcl4_var = pelem4->next_pcl_var(ppcl4_var);
+				}
+				n_norm = sqrt(con_var->nx * con_var->nx + con_var->ny * con_var->ny);
+				con_var->nx /= n_norm;
+				con_var->ny /= n_norm;
 			}
 
 			if (pnd->object_num == 2)
@@ -495,45 +532,57 @@ int Step_R2D_ME_MPM::contact_calculation(void)
 			}
 		}
 	}
-
+	
 	// Reapply acceleration boundary conditions
 	for (size_t i = 0; i < mesh->ax_bc_num; i++)
 	{
 		pnd = mesh->nodes + mesh->ax_bcs[i].node_id;
-		for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
-			 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+		if (pnd->is_in_contact)
 		{
-			pnd_var->ax = mesh->ax_bcs[i].a;
+			for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
+				 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+			{
+				 pnd_var->ax = mesh->ax_bcs[i].a;
+			}
 		}
 	}
 	for (size_t i = 0; i < mesh->ay_bc_num; i++)
 	{
 		pnd = mesh->nodes + mesh->ay_bcs[i].node_id;
-		for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
-			 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+		if (pnd->is_in_contact)
 		{
-			pnd_var->ay = mesh->ay_bcs[i].a;
+			for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
+				 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+			{
+				pnd_var->ay = mesh->ay_bcs[i].a;
+			}
 		}
 	}
 	// Reapply velocity boundary conditions
 	for (size_t i = 0; i < mesh->vx_bc_num; i++)
 	{
 		pnd = mesh->nodes + mesh->vx_bcs[i].node_id;
-		for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
-			 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+		if (pnd->is_in_contact)
 		{
-			pnd_var->vx = mesh->vx_bcs[i].v;
-			pnd_var->ax = 0.0;
+			for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
+				pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+			{
+				pnd_var->vx = mesh->vx_bcs[i].v;
+				pnd_var->ax = 0.0;
+			}
 		}
 	}
 	for (size_t i = 0; i < mesh->vy_bc_num; i++)
 	{
 		pnd = mesh->nodes + mesh->vy_bcs[i].node_id;
-		for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
-			 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+		if (pnd->is_in_contact)
 		{
-			pnd_var->vy = mesh->vy_bcs[i].v;
-			pnd_var->ay = 0.0;
+			for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
+				pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+			{
+				pnd_var->vy = mesh->vy_bcs[i].v;
+				pnd_var->ay = 0.0;
+			}
 		}
 	}
 
