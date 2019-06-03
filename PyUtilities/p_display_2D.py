@@ -41,7 +41,7 @@ with open(abs_file_path, 'r') as res_file:
             for i in range(output_pcl_num):
                 line_text = res_file.readline()
                 line_data = list(map(lambda x: float(x.strip('\n')), line_text.split(',')))
-                if i == 1: # node at the bottom
+                if i == 2: # node at the bottom
                 #if i == output_pcl_num - 1: # node at the boundary
                     field_value = line_data[3] # p
                     y_data.append(field_value)
@@ -59,24 +59,25 @@ line1, = plot1.plot(x_data, y_data)
 E = 1000.0
 niu = 0.25 # possion ratio
 Es = (1 - niu) / (1 + niu) / (1 - 2.0*niu) * E # Es = (1-v) / (1 + v) / (1-2v) * E
-kv = 1.0e-4
+kv = 1.0e-5
 miu = 1.0 # dynamic viscosity
 Cv = kv * Es / miu
 u0 = 10.0
 H = 1.0
 con_res = oc.OneDConsolidation(Cv, Es, u0, H)
 
-data_num = 31
+time = 200.0 # time of consolidation
+data_num = 100
 t_list = np.zeros(data_num + 2)
 u_list = np.zeros(data_num + 2)
 t_list[0] = 0.0
 u_list[0] = u0 * 166666.67 / (166666.67 + 120)
-t_list[1] = 9.99
+t_list[1] = 50.0
 u_list[1] = u_list[0]
 for i in range(data_num):
-    t_list[i + 2] = float(i)
+    t_list[i + 2] = time * float(i) / float(data_num)
     u_list[i + 2] = con_res.calPorePressure(t_list[i + 2], 1.0 - z)
-    t_list[i + 2] += 10.0
+    t_list[i + 2] += t_list[1]
 
 line2, = plot1.plot(t_list, u_list, 'r--')
 

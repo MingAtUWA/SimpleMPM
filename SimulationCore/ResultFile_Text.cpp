@@ -166,7 +166,7 @@ int ResultFile_Text::finalize_per_step(void)
 	step_info << "    Name = ";
 	step_info << step->get_name() << "\n";
 	// index
-	step_info << "    Index = " << step->get_id() << "\n";
+	step_info << "    Index = " << step->get_index() << "\n";
 	// start_time
 	snprintf(str_tmp, str_tmp_size, "%.3e", step->get_total_time() - step->get_step_time());
 	step_info << "    StartTime = " << str_tmp << "\n";
@@ -201,7 +201,7 @@ int ResultFile_Text::init_time_record(TimeHistoryFileInfo *_pthfi)
 	// time record id
 	time_rcd_header << "    Index = " << pthfi->time_history->get_time_rcd_id() << "\n";
 	// step index
-	time_rcd_header << "    StepIndex = " << step->get_id() << "\n";
+	time_rcd_header << "    StepIndex = " << step->get_index() << "\n";
 	// substep number
 	time_rcd_header << "    SubstepNum = " << step->get_substep_num() << "\n";
 	// total substep number

@@ -1,10 +1,11 @@
 #ifndef _PARTICLE_2D_CHM_H_
 #define _PARTICLE_2D_CHM_H_
 
-struct Element_R2D_CHM_MPM;
-struct Node_R2D_CHM;
+#include "Object.h"
+#include "ConstitutiveModel.h"
+#include "Mesh_BG_R2D.h"
 
-struct Particle_2D_CHM
+struct Particle_2D_CHM : public Particle
 {
 public:
 	union
@@ -84,20 +85,6 @@ public:
 		};
 	};
 
-	// Constitutive model
-	double E;   // Elastic modulus
-	double niu; // Poisson ratio
-	double Kf;  // Bulk modulus of water
-	double k;   // Permeability
-	double miu; // Dynamic viscosity
-	
-	// Calculation variables
-	bool is_in_mesh;
-	Element_R2D_CHM_MPM *elem;
-	Node_R2D_CHM *node1, *node2, *node3, *node4;
-
-	double k_div_miu;
-
 	union // initial particle position
 	{
 		double coords_ori[2];
@@ -114,38 +101,59 @@ public:
 		struct { double ux_f, uy_f; };
 	};
 
-	// natural coordinates
-	union
-	{
-		double na_coords[2];
-		struct { double xi, eta; };
-	};
-	
-	// shape function
-	double N1;
-	double N2;
-	double N3;
-	double N4;
+	// Constitutive Model
+	ConstitutiveModel *cm;
 
-	// space directives of shape function
-	double dN1_dx, dN1_dy;
-	double dN2_dx, dN2_dy;
-	double dN3_dx, dN3_dy;
-	double dN4_dx, dN4_dy;
+	// Calculation variables
+	ParticleVar *var;
+
+public:
+	void init(void)
+	{
+		x = 0.0;
+		y = 0.0;
+		vol = 0.0;
+		n = 0.0;
+		density_s = 0.0;
+		density_f = 0.0;
+		vx_s = 0.0;
+		vy_s = 0.0;
+		vx_f = 0.0;
+		vy_f = 0.0;
+		s11 = 0.0;
+		s22 = 0.0;
+		s33 = 0.0;
+		s12 = 0.0;
+		s23 = 0.0;
+		s31 = 0.0;
+		p = 0.0;
+		e11 = 0.0;
+		e22 = 0.0;
+		e12 = 0.0;
+		es11 = 0.0;
+		es22 = 0.0;
+		es12 = 0.0;
+		ps11 = 0.0;
+		ps22 = 0.0;
+		ps12 = 0.0;
+		x_ori = 0.0;
+		y_ori = 0.0;
+		ux_s = 0.0;
+		uy_s = 0.0;
+		ux_f = 0.0;
+		uy_f = 0.0;
+		cm = nullptr;
+		var = nullptr;
+	}
 
 public: // Critical time step at particle
 	// Non-combined version by Mieremet (2015) report 
 	inline double critical_time_step1(double elem_char_len)
 	{
-		double density_bar;
-		double Ec;
-		double dt_cr1;
-		density_bar = (1.0-n)*density_s + n*density_f + (1.0/n-2.0)*density_f;
-		Ec = (1.0 - niu) / ((1.0 + niu) * (1.0 - 2.0 * niu)) * E;
-		dt_cr1 = elem_char_len / sqrt((Ec + Kf/n) / density_bar);
-		double dt_cr2;
-		dt_cr2 = 2.0 * density_bar * k/miu;
-		//std::cout << dt_cr1 << " " << dt_cr2 << " ";
+		double density_bar = (1.0 - n)*density_s + n*density_f + (1.0 / n - 2.0)*density_f;
+		double Ec = (1.0 - niu) / ((1.0 + niu) * (1.0 - 2.0 * niu)) * E;
+		double dt_cr1 = elem_char_len / sqrt((Ec + Kf / n) / density_bar);
+		double dt_cr2 = 2.0 * density_bar * k/miu;
 		return dt_cr1 < dt_cr2 ? dt_cr1 : dt_cr2;
 	}
 
@@ -166,6 +174,15 @@ public: // Critical time step at particle
 		dt_cr = (-2.0*a + sqrt(4.0*a*a + 8.0*tmp2)) / tmp2;
 		return dt_cr;
 	}
+
+	/* ---------------- content below obsoleted ----------------- */
+public:
+	// Constitutive model
+	double E;   // Elastic modulus
+	double niu; // Poisson ratio
+	double Kf;  // Bulk modulus of water
+	double k;   // Permeability
+	double miu; // Dynamic viscosity
 };
 
 #endif

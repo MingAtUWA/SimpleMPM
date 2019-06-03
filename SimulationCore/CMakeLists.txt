@@ -6,28 +6,54 @@
 add_library(
     SimulationCore STATIC
     SimulationCore_pcp.h SimulationCore_pcp.cpp
-    Model.h                       # Model.h
+    # Base Class
+    ConstitutiveModel.h
+    Mesh.h
+    Object.h
     BC.h                          # Boundary conditions
+    Model.h
     Step.h Step.cpp               # Simulation step
     TimeHistory.h TimeHistory.cpp # Time history output
     ResultFile.h ResultFile.cpp   # Result file
     # Common
+    Mesh_R2D.hpp
+    Object_Particle.hpp
     TimeHistory_ConsoleProgressBar.h TimeHistory_ConsoleProgressBar.cpp
     ResultFile_Text.h ResultFile_Text.cpp
     ResultFile_HDF5.h ResultFile_HDF5.cpp
-    # Purely mechanics
-    Particle_2D_ME.h Node_R2D_ME.h Element_R2D_ME_MPM.h
+    # Purely mechanics (Multiple Objects)
+    Particle_2D_ME.h
+    Object_Particle_2D_ME.h
+    ParticleVar_R2D_ME.h
+    Mesh_BG_R2D_ME.h Mesh_BG_R2D_ME.cpp
+    NodeVar_2D_ME.h
+    Model_R2D_ME_MPM.h Model_R2D_ME_MPM.cpp
+    Step_R2D_ME_MPM.h  Step_R2D_ME_MPM.cpp
+    TimeHistory_Particle_2D_ME_AllPcl.h TimeHistory_Particle_2D_ME_AllPcl.cpp
+    # Coupled hydro-mechanics (Multiple Objects)
+    # Particle_2D_CHM.h
+    # Object_Particle_2D_CHM.h
+    # ParticleVar_R2D_CHM.h
+    # NodeVar_2D_CHM.h
+    # Model_R2D_CHM_MPM.h Model_R2D_CHM_MPM.cpp
+    # Step_R2D_CHM_MPM.h  Step_R2D_CHM_MPM.cpp
+    # Purely mechanics (Single Objects)
+    Particle_R2D_ME_s.h
+    Node_R2D_ME_s.h
+    Element_R2D_ME_MPM_s.h
     Model_R2D_ME_MPM_s.h Model_R2D_ME_MPM_s.cpp
-    Step_R2D_ME_MPM_s.h Step_R2D_ME_MPM_s.cpp
+    Step_R2D_ME_MPM_s.h  Step_R2D_ME_MPM_s.cpp
     Step_R2D_ME_MPM_s_KinDamp.h Step_R2D_ME_MPM_s_KinDamp.cpp
-    TimeHistory_Particle_2D_ME.h TimeHistory_Particle_2D_ME.cpp
-    # Coupled Hydro-mechanics
-    Particle_2D_CHM.h Node_R2D_CHM.h Element_R2D_CHM_MPM.h
+    TimeHistory_Particle_R2D_ME_s.h TimeHistory_Particle_R2D_ME_s.cpp
+    # Coupled Hydro-mechanics (Single Objects)
+    Particle_R2D_CHM_s.h
+    Node_R2D_CHM_s.h
+    Element_R2D_CHM_MPM_s.h
     Model_R2D_CHM_MPM_s.h Model_R2D_CHM_MPM_s.cpp 
-    Step_R2D_CHM_MPM_s.h Step_R2D_CHM_MPM_s.cpp
-    Step_R2D_CHM_MPM_s_damp.h Step_R2D_CHM_MPM_s_damp.cpp
+    Step_R2D_CHM_MPM_s.h  Step_R2D_CHM_MPM_s.cpp
+    Step_R2D_CHM_MPM_s_VisDamp.h Step_R2D_CHM_MPM_s_VisDamp.cpp
     Step_R2D_CHM_MPM_s_KinDamp.h Step_R2D_CHM_MPM_s_KinDamp.cpp
-    TimeHistory_Particle_2D_CHM.h TimeHistory_Particle_2D_CHM.cpp
+    TimeHistory_Particle_R2D_CHM_s.h TimeHistory_Particle_R2D_CHM_s.cpp
     )
 
 target_include_directories(

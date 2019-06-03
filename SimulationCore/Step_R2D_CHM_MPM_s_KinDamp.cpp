@@ -12,7 +12,7 @@ Step_R2D_CHM_MPM_s_KinDamp::~Step_R2D_CHM_MPM_s_KinDamp() {}
 
 int Step_R2D_CHM_MPM_s_KinDamp::init()
 {
-	Particle_2D_CHM *ppcl;
+	Particle_R2D_CHM_s *ppcl;
 
 	if (is_first_step)
 	{
@@ -51,9 +51,9 @@ int solve_substep_R2D_CHM_MPM_s_KinDamp(void *_self)
 {
 	Step_R2D_CHM_MPM_s_KinDamp *self = (Step_R2D_CHM_MPM_s_KinDamp *)_self;
 	Model_R2D_CHM_MPM_s *model = self->model;
-	Particle_2D_CHM *ppcl;
-	Element_R2D_CHM_MPM *pelem;
-	Node_R2D_CHM *pn, *pn1, *pn2, *pn3, *pn4;
+	Particle_R2D_CHM_s *ppcl;
+	Element_R2D_CHM_MPM_s *pelem;
+	Node_R2D_CHM_s *pn, *pn1, *pn2, *pn3, *pn4;
 
 	// init nodes
 	for (size_t i = 0; i < model->node_num; i++)
@@ -106,8 +106,8 @@ int solve_substep_R2D_CHM_MPM_s_KinDamp(void *_self)
 		ppcl = model->pcls + i;
 		if (ppcl->is_in_mesh)
 		{
-			ppcl->elem = model->find_in_which_element(ppcl->x, ppcl->y, ppcl->elem);
-			pelem = ppcl->elem;
+			pelem = model->find_in_which_element(ppcl->x, ppcl->y, static_cast<Element_R2D_CHM_MPM_s *>(ppcl->elem));
+			ppcl->elem = pelem;
 			if (pelem)
 			{
 				// init variables on particles
@@ -148,7 +148,7 @@ int solve_substep_R2D_CHM_MPM_s_KinDamp(void *_self)
 			ppcl = model->pcls + i;
 			if (ppcl->elem)
 			{
-				cri_dt_tmp = ppcl->critical_time_step1(ppcl->elem->char_len);
+				cri_dt_tmp = ppcl->critical_time_step1(static_cast<Element_R2D_CHM_MPM_s *>(ppcl->elem)->char_len);
 				if (cri_dt > cri_dt_tmp)
 					cri_dt = cri_dt_tmp;
 			}
@@ -393,19 +393,15 @@ int solve_substep_R2D_CHM_MPM_s_KinDamp(void *_self)
 		pcl_max_f = ppcl->n * ppcl->density_f * pcl_ax_f * ppcl->vol;
 		pcl_may_f = ppcl->n * ppcl->density_f * pcl_ay_f * ppcl->vol;
 		// node 1
-		pn1 = ppcl->node1;
 		pn1->fx_kin_f += ppcl->N1 * pcl_max_f;
 		pn1->fy_kin_f += ppcl->N1 * pcl_may_f;
 		// node 2
-		pn2 = ppcl->node2;
 		pn2->fx_kin_f += ppcl->N2 * pcl_max_f;
 		pn2->fy_kin_f += ppcl->N2 * pcl_may_f;
 		// node 3
-		pn3 = ppcl->node3;
 		pn3->fx_kin_f += ppcl->N3 * pcl_max_f;
 		pn3->fy_kin_f += ppcl->N3 * pcl_may_f;
 		// node 4
-		pn4 = ppcl->node4;
 		pn4->fx_kin_f += ppcl->N4 * pcl_max_f;
 		pn4->fy_kin_f += ppcl->N4 * pcl_may_f;
 	}

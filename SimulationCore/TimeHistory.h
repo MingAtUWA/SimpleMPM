@@ -8,11 +8,12 @@ enum class TimeHistoryType : unsigned short int
 {
 	InvalidType = 0,
 	ConsoleProgressBar = 1,
-	Node_1D_CHM = 2,
-	Node_2D_CHM = 3,
+	Node_R1D_CHM_s = 2,
+	Node_R2D_CHM_s = 3,
 	GaussPoint_2D_CHM = 4,
-	Particle_2D_ME = 5,
-	Particle_2D_CHM = 6
+	Particle_R2D_ME_s = 5,
+	Particle_R2D_CHM_s = 6,
+	Particle_2D_ME_AllPcl = 7
 };
 
 struct Model;

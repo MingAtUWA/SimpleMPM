@@ -18,9 +18,12 @@ add_executable(
     test_me_kindamp_mpm2.cpp
     test_chm_mpm1.cpp
     test_chm_mpm2.cpp
-    test_chm_damp_mpm1.cpp
-    test_chm_damp_mpm2.cpp
-    test_chm_damp_mpm3.cpp
+    test_chm_visdamp_mpm1.cpp
+    test_chm_visdamp_mpm2.cpp
+    test_chm_visdamp_mpm3.cpp
+    test_chm_kindamp_mpm2.cpp
+    # multiple object
+    test_multi_object_me1.cpp
     # write result file
     test_hdf5_resultfile.cpp
     test_text_resultfile.cpp

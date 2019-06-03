@@ -7,6 +7,10 @@ add_library(
     Utilities STATIC
     common_utilities.h common_utilities.cpp
     ItemArray.hpp
+    ItemBuffer.hpp
+    ItemStack.hpp
+    ItemList.hpp
+    LinkedMemoryPool.h
     ContinuousFixedSizeMemory.h
     ContinuousFlexibleSizeMemory.h
     LinkedFixedSizeMemory.h LinkedFixedSizeMemory.cpp

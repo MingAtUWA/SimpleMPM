@@ -1,52 +1,21 @@
 #include "SimulationCore_pcp.h"
 
-#include <cassert>
-
-#include "Model_R2D_ME_MPM_s.h"
-#include "Step_R2D_ME_MPM_s.h"
+#include "Model_R2D_ME_MPM.h"
+#include "Step_R2D_ME_MPM.h"
 #include "ResultFile.h"
 
-#include "TimeHistory_Particle_2D_ME.h"
+#include "TimeHistory_Particle_2D_ME_AllPcl.h"
 
 /*====================================================================
-TimeHistory_Particle_2D_ME Class
+TimeHistory_Particle_2D_ME_AllPcl Class
  =====================================================================*/
-TimeHistory_Particle_2D_ME::TimeHistory_Particle_2D_ME() :
-	TimeHistory(TimeHistoryType::Particle_2D_ME, "Particle_2D_ME") {}
+TimeHistory_Particle_2D_ME_AllPcl::TimeHistory_Particle_2D_ME_AllPcl() :
+	TimeHistory(TimeHistoryType::Particle_2D_ME_AllPcl, "Particle_2D_ME_AllPcl"),
+	fld_mem(10) {}
 
-TimeHistory_Particle_2D_ME::~TimeHistory_Particle_2D_ME() {}
+TimeHistory_Particle_2D_ME_AllPcl::~TimeHistory_Particle_2D_ME_AllPcl() {}
 
-int TimeHistory_Particle_2D_ME::set_model_output(Model_R2D_ME_MPM_s *md,
-	Particle_2D_ME_Field *fld_ids, size_t fld_num, size_t *pcl_ids, size_t pcl_num)
-{
-	assert(md);
-
-	set_field_num(fld_num);
-	for (size_t i = 0; i < fld_num; i++)
-		add_field(fld_ids[i]);
-
-	set_particle_num(pcl_num);
-	for (size_t i = 0; i < pcl_num; i++)
-		if (pcl_ids[i] < md->pcl_num)
-			add_particle(1, md->pcls + pcl_ids[i]);
-
-	return 0;
-}
-
-int TimeHistory_Particle_2D_ME::add_particle(size_t obj_id, Particle_2D_ME *pcl)
-{
-	if (!pcl) return 0;
-
-	ParticleInfo pcl_info;
-	pcl_info.obj_id = obj_id;
-	pcl_info.pcl = pcl;
-	pcl_mem.add(&pcl_info);
-	++point_num;
-
-	return 0;
-}
-
-int TimeHistory_Particle_2D_ME::add_field(Particle_2D_ME_Field fld)
+int TimeHistory_Particle_2D_ME_AllPcl::add_field(Particle_Field_2D_ME fld)
 {
 	unsigned short int fld_us = (unsigned short int)fld;
 	if (fld_us > field_max_num || !output_field_funcs_map[fld_us])
@@ -61,16 +30,43 @@ int TimeHistory_Particle_2D_ME::add_field(Particle_2D_ME_Field fld)
 	return 0;
 }
 
-int TimeHistory_Particle_2D_ME::init_per_step(void)
+int TimeHistory_Particle_2D_ME_AllPcl::init_per_step(void)
 {
-	pcl_infos = pcl_mem.get_mem();
+	Model_R2D_ME_MPM *model = static_cast<Model_R2D_ME_MPM *>(step->get_model());
+	Object_Particle_2D_ME *pobj, *pobj_end;
+	Particle_2D_ME *ppcl;
+	
+	size_t total_pcl_num = 0;
+	pobj = model->objects.first();
+	pobj_end = model->objects.eoi();
+	while (pobj != pobj_end)
+	{
+		total_pcl_num += pobj->pcl_num;
+		pobj = model->objects.next(pobj);
+	}
+	pcl_mem.reserve(total_pcl_num);
+
+	pobj = model->objects.first();
+	pobj_end = model->objects.eoi();
+	while (pobj != pobj_end)
+	{
+		for (size_t i = 0; i < pobj->pcl_num; i++)
+		{
+			ppcl = pobj->pcls + i;
+			pcl_mem.add(ppcl);
+		}
+		pobj = model->objects.next(pobj);
+	}
+	pcls = pcl_mem.get_mem();
+
 	fld_infos = fld_mem.get_mem();
+
 	return 0;
 }
 
-void TimeHistory_Particle_2D_ME::finalize_per_step(void) {}
+void TimeHistory_Particle_2D_ME_AllPcl::finalize_per_step(void) {}
 
-int TimeHistory_Particle_2D_ME::output(void)
+int TimeHistory_Particle_2D_ME_AllPcl::output(void)
 {
 	// Create new time record and get the first data buffer
 	res_file->init_time_record(file_info);
@@ -102,9 +98,9 @@ int TimeHistory_Particle_2D_ME::output(void)
 
 // Map listing relative location of each variable at the data point.
 #define FIELD_MAX_NUM 29
-const unsigned short int TimeHistory_Particle_2D_ME::field_max_num = FIELD_MAX_NUM;
-const TimeHistory_Particle_2D_ME::TimeHistoryFieldFunc
-TimeHistory_Particle_2D_ME::output_field_funcs_map[FIELD_MAX_NUM] =
+const unsigned short int TimeHistory_Particle_2D_ME_AllPcl::field_max_num = FIELD_MAX_NUM;
+const TimeHistory_Particle_2D_ME_AllPcl::TimeHistoryFieldFunc
+TimeHistory_Particle_2D_ME_AllPcl::output_field_funcs_map[FIELD_MAX_NUM] =
 {
 	nullptr,            // 0
 	&output_x,          // 1
@@ -112,8 +108,8 @@ TimeHistory_Particle_2D_ME::output_field_funcs_map[FIELD_MAX_NUM] =
 	&output_vol,        // 3
 	&output_density,    // 4
 	&output_m,          // 5
-	&output_v_x,        // 6
-	&output_v_y,        // 7
+	&output_vx,         // 6
+	&output_vy,         // 7
 	&output_momentum_x, // 8
 	&output_momentum_y, // 9
 	nullptr,            // 10
@@ -137,244 +133,242 @@ TimeHistory_Particle_2D_ME::output_field_funcs_map[FIELD_MAX_NUM] =
 	&output_ps12,       // 28
 };
 
-void TimeHistory_Particle_2D_ME::output_x(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_x(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->x;
+		*pdata = pcls[i]->x;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_y(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_y(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->y;
+		*pdata = pcls[i]->y;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_vol(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_vol(void)
 {
 	double *pdata = buffer_pos;
-	Particle_2D_ME *ppcl;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		ppcl = pcl_infos[i].pcl;
-		*pdata = ppcl->m / ppcl->density;
+		*pdata = pcls[i]->m / pcls[i]->density;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_density(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_density(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->density;
+		*pdata = pcls[i]->density;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_m(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_m(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->m;
+		*pdata = pcls[i]->m;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_v_x(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_vx(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->mmx / pcl_infos[i].pcl->m;
+		*pdata = pcls[i]->vx;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_v_y(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_vy(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->mmy / pcl_infos[i].pcl->m;
+		*pdata = pcls[i]->vy;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_momentum_x(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_momentum_x(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->mmx;
+		*pdata = pcls[i]->vx * pcls[i]->m;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_momentum_y(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_momentum_y(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->mmy;
+		*pdata = pcls[i]->vy * pcls[i]->m;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_s11(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_s11(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->s11;
+		*pdata = pcls[i]->s11;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_s22(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_s22(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->s22;
+		*pdata = pcls[i]->s22;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_s33(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_s33(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->s33;
+		*pdata = pcls[i]->s33;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_s12(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_s12(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->s12;
+		*pdata = pcls[i]->s12;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_s23(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_s23(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->s23;
+		*pdata = pcls[i]->s23;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_s31(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_s31(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->s31;
+		*pdata = pcls[i]->s31;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_e11(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_e11(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->e11;
+		*pdata = pcls[i]->e11;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_e22(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_e22(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->e22;
+		*pdata = pcls[i]->e22;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_e12(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_e12(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->e12;
+		*pdata = pcls[i]->e12;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_es11(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_es11(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->es11;
+		*pdata = pcls[i]->es11;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_es22(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_es22(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->es22;
+		*pdata = pcls[i]->es22;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_es12(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_es12(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->es12;
+		*pdata = pcls[i]->es12;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_ps11(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_ps11(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->ps11;
+		*pdata = pcls[i]->ps11;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_ps22(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_ps22(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->ps22;
+		*pdata = pcls[i]->ps22;
 		pdata += field_num;
 	}
 }
 
-void TimeHistory_Particle_2D_ME::output_ps12(void)
+void TimeHistory_Particle_2D_ME_AllPcl::output_ps12(void)
 {
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcl_infos[i].pcl->ps12;
+		*pdata = pcls[i]->ps12;
 		pdata += field_num;
 	}
 }

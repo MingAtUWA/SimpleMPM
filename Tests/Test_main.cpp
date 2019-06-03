@@ -17,9 +17,14 @@ int main(int argc, char *argv[])
 	//test_chm_mpm1();
 	//test_chm_mpm2();
 
-	//test_chm_damp_mpm1();
-	//test_chm_damp_mpm2();
-	test_chm_damp_mpm3();
+	//test_chm_visdamp_mpm1();
+	//test_chm_visdamp_mpm2();
+	//test_chm_visdamp_mpm3();
+
+	//test_chm_kindamp_mpm1();
+	//test_chm_kindamp_mpm2();
+
+	test_multi_object_me1();
 
 	//test_file_char_array();
 	//test_item_array();

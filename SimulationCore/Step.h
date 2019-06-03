@@ -26,8 +26,8 @@ class Step
 	friend void test_text_resultfile(void);
 
 protected:
-	static size_t cur_id;
-	size_t id;
+	static size_t max_index;
+	size_t index;
 	std::string name;
 
 	Model *model;
@@ -37,10 +37,14 @@ public:
 	Step(SolveSubstepFunc solve_substep_func = &solve_substep_base);
 	~Step();
 
-	// get parameters
-	inline size_t get_id(void) const { return id; }
+	inline size_t get_index(void) const { return index; }
+	inline void set_index(size_t id)
+	{
+		index = id;
+		if (max_index < id)
+			max_index = id;
+	}
 	inline const char *get_name(void) const { return name.c_str(); }
-	// set parameters
 	inline void set_name(const char *na) { name = na; }
 	inline void set_step_time(double step_t) { step_time = step_t; }
 	inline void set_dt(double d_t, double t_tol_r = 0.01)
@@ -51,28 +55,28 @@ public:
 	}
 	// for the first step
 	inline void set_model(Model *md) { model = md; }
-	inline void set_result_file(ResultFile *rf)
+	inline Model *get_model(void) const { return model; }
+	void set_result_file(ResultFile *rf)
 	{
 		if (res_file && res_file->step != this)
 			res_file->step->detach_result_file();
-		res_file = rf; if (res_file) res_file->step = this;
+		res_file = rf;
+		if (res_file)
+			res_file->step = this;
 	}
-	inline void detach_result_file(void)
+	void detach_result_file(void)
 	{
 		if (res_file && res_file->step == this)
 			res_file->step = nullptr;
 		res_file = nullptr;
 	}
 	// for other step
-	inline void set_prev_step(Step *prev_step)
+	void set_prev_step(Step *prev_step)
 	{
 		if (!prev_step) return;
 
-		if (id <= prev_step->id)
-		{
-			id = prev_step->id + 1;
-			cur_id = id;
-		}
+		if (index <= prev_step->index)
+			set_index(prev_step->index + 1);
 
 		is_first_step = false;
 		start_substep_index = prev_step->get_total_substep_num();
@@ -81,7 +85,7 @@ public:
 		set_model(prev_step->model);
 		set_result_file(prev_step->res_file);
 	}
-	inline void add_output(TimeHistory *th)
+	void add_output(TimeHistory *th)
 	{
 		if (!th) return;
 		if (th->step != this)
@@ -91,7 +95,7 @@ public:
 			add_th_to_list(th);
 		}
 	}
-	inline void del_output(TimeHistory *th)
+	void del_output(TimeHistory *th)
 	{
 		if (has_th_in_list(th))
 		{
@@ -199,7 +203,7 @@ protected: // tolerance for double
 public:
 	inline void set_tol(double t) { tol = t < 0 ? tol : t; }
 	inline bool is_zero(double num) { return abs(num) < tol; }
-	inline bool is_equal(double num1, double num2) { return abs(num1 - num2) < tol; }
+	inline bool is_equal(double num1, double num2) { return abs(num1 - num2) < tol;}
 };
 
 #endif

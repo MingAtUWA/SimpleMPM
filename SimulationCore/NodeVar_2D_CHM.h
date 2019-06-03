@@ -1,9 +1,16 @@
-#ifndef _NODE_R2D_CHM_H_
-#define _NODE_R2D_CHM_H_
+#ifndef _NODEVAR_2D_CHM_H_
+#define _NODEVAR_2D_CHM_H_
 
-struct Node_R2D_CHM
+#include "Mesh.h"
+#include "Mesh_BG_R2D.h"
+
+// Nodal calculation variables
+// For 2 dimensional coupled hydro-mechanics case
+struct NodeVar_2D_CHM : public NodeVar
 {
-	size_t index_x, index_y;
+	Node_BG_R2D *node;
+
+	Object *object;
 
 	// for soil (mixture) phase
 	double ax_s, vx_s, dux_s;
@@ -23,9 +30,7 @@ struct Node_R2D_CHM
 	double fx_int_tf, fy_int_tf;
 	double fx_drag_tf, fy_drag_tf;
 
-	unsigned char cal_flag;
-
-	// for calculate damping
+	// for damping calculation
 	double vx_f_normalized, vy_f_normalized;
 	double m_f;
 	double fx_tf, fy_tf;

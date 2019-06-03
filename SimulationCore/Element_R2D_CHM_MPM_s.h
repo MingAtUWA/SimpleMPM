@@ -1,7 +1,7 @@
-#ifndef _ELEMENT_R2D_CHM_MPM_H_
-#define _ELEMENT_R2D_CHM_MPM_H_
+#ifndef _ELEMENT_R2D_CHM_MPM_S_H_
+#define _ELEMENT_R2D_CHM_MPM_S_H_
 
-struct Particle_2D_CHM;
+#include "Mesh.h"
 
 /* ===============================================
 Class Element_R2D_CHM_MPM
@@ -25,13 +25,10 @@ edge 2: node 2 -- node 3;
 edge 3: node 3 -- node 4;
 edge 4: node 4 -- node 1;
  =============================================== */
-struct Element_R2D_CHM_MPM
+struct Element_R2D_CHM_MPM_s : public Element
 {
 	// Topology
 	size_t index_x, index_y;
-
-	// particles in this element
-	Particle_2D_CHM *head;
 
 	// characteristic length of element
 	double char_len;

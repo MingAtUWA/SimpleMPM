@@ -1,18 +1,37 @@
 #include "SimulationCore_pcp.h"
 
-#include "Step_R2D_CHM_MPM_s_damp.h"
+#include "Step_R2D_CHM_MPM_s_VisDamp.h"
+#include "Step_R2D_CHM_MPM_s_Kindamp.h"
 
-Step_R2D_CHM_MPM_s_damp::Step_R2D_CHM_MPM_s_damp() :
+Step_R2D_CHM_MPM_s_VisDamp::Step_R2D_CHM_MPM_s_VisDamp() :
 	Step(&solve_substep_R2D_CHM_MPM_s_damp),
 	model(nullptr),
 	elem_len_min(std::numeric_limits<double>::max()),
 	dt_adjust_factor(0.2) {}
 
-Step_R2D_CHM_MPM_s_damp::~Step_R2D_CHM_MPM_s_damp() {}
+Step_R2D_CHM_MPM_s_VisDamp::~Step_R2D_CHM_MPM_s_VisDamp() {}
 
-int Step_R2D_CHM_MPM_s_damp::init()
+void Step_R2D_CHM_MPM_s_VisDamp::set_model(Model_R2D_CHM_MPM_s *md)
 {
-	Particle_2D_CHM *ppcl;
+	Step::set_model(md);
+	model = md;
+}
+
+// Restart from previous step
+void Step_R2D_CHM_MPM_s_VisDamp::set_prev_step(Step_R2D_CHM_MPM_s_VisDamp *prev_step)
+{
+	Step::set_prev_step(prev_step);
+	model = prev_step->model;
+}
+void Step_R2D_CHM_MPM_s_VisDamp::set_prev_step(Step_R2D_CHM_MPM_s_KinDamp *prev_step)
+{
+	Step::set_prev_step(prev_step);
+	model = static_cast<Model_R2D_CHM_MPM_s *>(get_model());
+}
+
+int Step_R2D_CHM_MPM_s_VisDamp::init()
+{
+	Particle_R2D_CHM_s *ppcl;
 
 	if (is_first_step)
 	{
@@ -42,16 +61,16 @@ int Step_R2D_CHM_MPM_s_damp::init()
 	return 0;
 }
 
-int Step_R2D_CHM_MPM_s_damp::finalize() { return 0; }
+int Step_R2D_CHM_MPM_s_VisDamp::finalize() { return 0; }
 
 
 int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 {
-	Step_R2D_CHM_MPM_s_damp *self = (Step_R2D_CHM_MPM_s_damp *)_self;
+	Step_R2D_CHM_MPM_s_VisDamp *self = (Step_R2D_CHM_MPM_s_VisDamp *)_self;
 	Model_R2D_CHM_MPM_s *model = self->model;
-	Particle_2D_CHM *ppcl;
-	Element_R2D_CHM_MPM *pelem;
-	Node_R2D_CHM *pn, *pn1, *pn2, *pn3, *pn4;
+	Particle_R2D_CHM_s *ppcl;
+	Element_R2D_CHM_MPM_s *pelem;
+	Node_R2D_CHM_s *pn, *pn1, *pn2, *pn3, *pn4;
 
 	// init nodes
 	for (size_t i = 0; i < model->node_num; i++)
@@ -105,8 +124,8 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 		ppcl = model->pcls + i;
 		if (ppcl->is_in_mesh)
 		{
-			ppcl->elem = model->find_in_which_element(ppcl->x, ppcl->y, ppcl->elem);
-			pelem = ppcl->elem;
+			pelem = model->find_in_which_element(ppcl->x, ppcl->y, static_cast<Element_R2D_CHM_MPM_s *>(ppcl->elem));
+			ppcl->elem = pelem;
 			if (pelem)
 			{
 				// init variables on particles
@@ -147,7 +166,7 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 			ppcl = model->pcls + i;
 			if (ppcl->elem)
 			{
-				cri_dt_tmp = ppcl->critical_time_step1(ppcl->elem->char_len);
+				cri_dt_tmp = ppcl->critical_time_step1(static_cast<Element_R2D_CHM_MPM_s *>(ppcl->elem)->char_len);
 				if (cri_dt > cri_dt_tmp)
 					cri_dt = cri_dt_tmp;
 			}
@@ -410,19 +429,15 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 		pcl_max_f = ppcl->vol * ppcl->n * ppcl->density_f * pcl_ax_f;
 		pcl_may_f = ppcl->vol * ppcl->n * ppcl->density_f * pcl_ay_f;
 		// node 1
-		pn1 = ppcl->node1;
 		pn1->fx_kin_f += ppcl->N1 * pcl_max_f;
 		pn1->fy_kin_f += ppcl->N1 * pcl_may_f;
 		// node 2
-		pn2 = ppcl->node2;
 		pn2->fx_kin_f += ppcl->N2 * pcl_max_f;
 		pn2->fy_kin_f += ppcl->N2 * pcl_may_f;
 		// node 3
-		pn3 = ppcl->node3;
 		pn3->fx_kin_f += ppcl->N3 * pcl_max_f;
 		pn3->fy_kin_f += ppcl->N3 * pcl_may_f;
 		// node 4
-		pn4 = ppcl->node4;
 		pn4->fx_kin_f += ppcl->N4 * pcl_max_f;
 		pn4->fy_kin_f += ppcl->N4 * pcl_may_f;
 	}

@@ -1,11 +1,12 @@
 #ifndef _MODEL_R2D_CHM_MPM_S_H_
 #define _MODEL_R2D_CHM_MPM_S_H_
 
-#include "Node_R2D_CHM.h"
-#include "Element_R2D_CHM_MPM.h"
-#include "Particle_2D_CHM.h"
-#include "BC.h"
 #include "Model.h"
+#include "BC.h"
+
+#include "Element_R2D_CHM_MPM_s.h"
+#include "Node_R2D_CHM_s.h"
+#include "Particle_R2D_CHM_s.h"
 
 struct Model_R2D_CHM_MPM_s : public Model
 {
@@ -16,14 +17,14 @@ public:
 	size_t node_y_num;
 	double *node_coords_y;
 	size_t node_num;
-	Node_R2D_CHM *nodes;
+	Node_R2D_CHM_s *nodes;
 	size_t elem_x_num;
 	size_t elem_y_num;
 	size_t elem_num;
-	Element_R2D_CHM_MPM *elems;
+	Element_R2D_CHM_MPM_s *elems;
 
 	size_t pcl_num;
-	Particle_2D_CHM *pcls;
+	Particle_R2D_CHM_s *pcls;
 
 	size_t bfx_num, bfy_num;
 	BodyForce *bfxs, *bfys;
@@ -51,16 +52,16 @@ public:
 
 	void set_local_damping(double a_s, double a_f);
 	
-	Element_R2D_CHM_MPM *find_in_which_element(double x, double y);
-	Element_R2D_CHM_MPM *find_in_which_element(double x, double y, Element_R2D_CHM_MPM *elem);
+	Element_R2D_CHM_MPM_s *find_in_which_element(double x, double y);
+	Element_R2D_CHM_MPM_s *find_in_which_element(double x, double y, Element_R2D_CHM_MPM_s *elem);
 
-	double cal_characteristic_length(Element_R2D_CHM_MPM *elem);
+	double cal_characteristic_length(Element_R2D_CHM_MPM_s *elem);
 
-	void cal_shape_function(Particle_2D_CHM *pcl);
+	void cal_shape_function(Particle_R2D_CHM_s *pcl);
 
 protected:
 	// for accelerating inWhichElement(double *coords;)
-	Element_R2D_CHM_MPM *elem_buffer;
+	Element_R2D_CHM_MPM_s *elem_buffer;
 	// Find in which coords interval the coordinate lies
 	// return -1 if coordinate lie out side the cordinates range
 	int find_x_index(double x, size_t *index);

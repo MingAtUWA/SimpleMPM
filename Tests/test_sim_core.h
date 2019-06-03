@@ -17,8 +17,14 @@ void test_me_kindamp_mpm2(void);
 void test_chm_mpm1(void);
 void test_chm_mpm2(void);
 
-void test_chm_damp_mpm1(void);
-void test_chm_damp_mpm2(void);
-void test_chm_damp_mpm3(void);
+void test_chm_visdamp_mpm1(void);
+void test_chm_visdamp_mpm2(void);
+void test_chm_visdamp_mpm3(void);
+
+//void test_chm_kindamp_mpm1(void);
+void test_chm_kindamp_mpm2(void);
+
+// multiple objects
+void test_multi_object_me1(void);
 
 #endif

@@ -10,7 +10,7 @@ Step_R2D_CHM_MPM_s::~Step_R2D_CHM_MPM_s() {}
 
 int Step_R2D_CHM_MPM_s::init()
 {
-	Particle_2D_CHM *ppcl;
+	Particle_R2D_CHM_s *ppcl;
 
 	if (is_first_step)
 	{
@@ -42,9 +42,9 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 {
 	Step_R2D_CHM_MPM_s *self = (Step_R2D_CHM_MPM_s *)_self;
 	Model_R2D_CHM_MPM_s *model = self->model;
-	Particle_2D_CHM *ppcl;
-	Element_R2D_CHM_MPM *pelem;
-	Node_R2D_CHM *pn, *pn1, *pn2, *pn3, *pn4;
+	Particle_R2D_CHM_s *ppcl;
+	Element_R2D_CHM_MPM_s *pelem;
+	Node_R2D_CHM_s *pn, *pn1, *pn2, *pn3, *pn4;
 
 	// init nodes
 	for (size_t i = 0; i < model->node_num; i++)
@@ -95,8 +95,8 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 		ppcl = model->pcls + i;
 		if (ppcl->is_in_mesh)
 		{
-			ppcl->elem = model->find_in_which_element(ppcl->x, ppcl->y, ppcl->elem);
-			pelem = ppcl->elem;
+			pelem = model->find_in_which_element(ppcl->x, ppcl->y, ppcl->elem);
+			ppcl->elem = pelem;
 			if (pelem)
 			{
 				// init variables on particles
@@ -115,14 +115,6 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 				pn3->cal_flag = 1;
 				ppcl->node4 = pn4;
 				pn4->cal_flag = 1;
-
-				//std::cout << "px: " << ppcl->x << " py: " << ppcl->y
-				//	<< " elem: " << ppcl->elem->index_x << " " << ppcl->elem->index_y
-				//	<< " pn1: " << ppcl->node1->index_x << " " << ppcl->node1->index_y
-				//	<< " pn2: " << ppcl->node2->index_x << " " << ppcl->node2->index_y
-				//	<< " pn3: " << ppcl->node3->index_x << " " << ppcl->node3->index_y
-				//	<< " pn4: " << ppcl->node4->index_x << " " << ppcl->node4->index_y
-				//	<< std::endl;
 			}
 			else
 			{
@@ -130,23 +122,6 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 			}
 		}
 	}
-
-	/*
-	for (size_t i = 0; i < model->pcl_num; i++)
-	{
-		ppcl = model->pcls + i;
-		//if (i == 2 || i == 3) std::cout << ppcl->vy_f << " ";
-		std::cout << "p-" << i << " N1: " << ppcl->N1 << " N2: " << ppcl->N2 
-			<< " N3: " << ppcl->N3 << " N4: " << ppcl->N4 
-			<< " df: " << ppcl->density_f
-			<< " vy_f: " << ppcl->vy_f
-			<< " vol: " << ppcl->vol << std::endl;
-	}
-	for (size_t i = 0; i < model->node_num; i++)
-	{
-		pn = model->nodes + i;
-		if (i == 2 || i == 3) std::cout << "n-" << i << " mm: " << pn->mmx_tf << " " << pn->mmy_tf << std::endl;
-	}*/
 
 	// map variables to node and cal internal force
 	for (size_t i = 0; i < model->pcl_num; i++)
@@ -221,17 +196,8 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 			pn4->fy_int_tf += (ppcl->dN4_dy * -ppcl->p) * ppcl->vol;
 			pn4->fx_drag_tf += ppcl->N4 * ppcl->n / ppcl->k_div_miu * (ppcl->vx_f - ppcl->vx_s) * ppcl->vol;
 			pn4->fy_drag_tf += ppcl->N4 * ppcl->n / ppcl->k_div_miu * (ppcl->vy_f - ppcl->vy_s) * ppcl->vol;
-		
-			//std::cout << "mmy_tf: " << pn1->mmy_tf << " " << pn2->mmy_tf << " " << pn3->mmy_tf << " " << pn4->mmy_tf << std::endl;
 		}
 	}
-
-	/*
-	for (size_t i = 0; i < model->node_num; i++)
-	{
-		pn = model->nodes + i;
-		if (i == 2 || i == 3) std::cout << "n-"<< i << " mm: " << pn->mmx_tf << " " << pn->mmy_tf << std::endl;
-	}*/
 
 	// body force
 	double bf_m, bf_tf;
@@ -337,19 +303,11 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 		pn = model->nodes + model->ay_f_bcs[i].node_id;
 		pn->ay_f = model->ay_f_bcs[i].a;
 	}
-	for (size_t i = 0; i < model->node_num; i++)
-	{
-		pn = model->nodes + i;
-		//if (i == 2 || i == 3) std::cout << "a: " << pn->ax_f << " " << pn->ay_f << std::endl;
-	}
 
 	// update nodal momentum of fluid phase
 	for (size_t i = 0; i < model->node_num; i++)
 	{
 		pn = model->nodes + i;
-
-		//if (i == 2 || i == 3) std::cout << "a: " << pn->ax_f << " " << pn->ay_f << std::endl;
-		//if (i == 2 || i == 3) std::cout << "mm_tf: " << pn->mmx_tf << " " << pn->mmy_tf << std::endl;
 		if (pn->cal_flag)
 		{
 			pn->vx_f  = pn->mmx_tf / pn->m_tf;
@@ -371,11 +329,6 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 		pn = model->nodes + model->vy_f_bcs[i].node_id;
 		pn->vy_f = model->vy_f_bcs[i].v;
 		pn->ay_f = 0.0;
-	}
-	for (size_t i = 0; i < model->node_num; i++)
-	{
-		pn = model->nodes + i;
-		//if (i == 2 || i == 3) std::cout << "v: " << pn->vx_f << " " << pn->vy_f << std::endl;
 	}
 
 	// calculate the inertial term of fluid in mixture formulation
@@ -475,9 +428,6 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 			pn->dux_f = pn->vx_f * self->dt;
 			pn->duy_f = pn->vy_f * self->dt;
 		}
-		
-		//if (i == 2 || i == 3) std::cout << pn->dux_s << " " << pn->duy_s << std::endl;
-		//if (i == 2 || i == 3) std::cout << pn->dux_f << " " << pn->duy_f << std::endl;
 	}
 
 	// map variables back to and update variables particles
@@ -520,9 +470,6 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 						+ pn3->dux_f * N3_tmp + pn4->dux_f * N4_tmp;
 			ppcl->uy_f += pn1->duy_f * N1_tmp + pn2->duy_f * N2_tmp
 						+ pn3->duy_f * N3_tmp + pn4->duy_f * N4_tmp;
-			
-			//if (i == 2) std::cout << ppcl->ux_s << " " << ppcl->uy_s << std::endl;
-			//if (i == 3) std::cout << ppcl->ux_s << " " << ppcl->uy_s << std::endl;
 
 			// update position
 			ppcl->x = ppcl->x_ori + ppcl->ux_s;
@@ -577,12 +524,6 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 			de_vol_f = -(1.0 - ppcl->n) / ppcl->n * de_vol_s
 				   - (pn1->dux_f * ppcl->dN1_dx + pn2->dux_f * ppcl->dN2_dx + pn3->dux_f * ppcl->dN3_dx + pn4->dux_f * ppcl->dN4_dx)
 				   - (pn1->duy_f * ppcl->dN1_dy + pn2->duy_f * ppcl->dN2_dy + pn3->duy_f * ppcl->dN3_dy + pn4->duy_f * ppcl->dN4_dy);
-			
-			//if (i == 2) std::cout << pn1->duy_f << " " << pn2->duy_f << " " << pn3->duy_f << " " << pn4->duy_f << std::endl;
-			//if (i == 3) std::cout << pn1->duy_f << " " << pn2->duy_f << " " << pn3->duy_f << " " << pn4->duy_f << std::endl;
-
-			//if (i == 2) std::cout << (pn1->duy_f * ppcl->dN1_dy + pn2->duy_f * ppcl->dN2_dy + pn3->duy_f * ppcl->dN3_dy + pn4->duy_f * ppcl->dN4_dy) << std::endl;
-			//if (i == 3) std::cout << (pn1->duy_f * ppcl->dN1_dy + pn2->duy_f * ppcl->dN2_dy + pn3->duy_f * ppcl->dN3_dy + pn4->duy_f * ppcl->dN4_dy) << std::endl;
 
 			// pore pressure
 			ppcl->p += ppcl->Kf * de_vol_f;

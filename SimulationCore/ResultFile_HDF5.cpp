@@ -214,7 +214,7 @@ int ResultFile_HDF5::init_time_record(TimeHistoryFileInfo *_pthfi)
 	hsize_t dims[2], start[2], count[2];
 	TimeRecord_HDF5 time_rcd;
 
-	time_rcd.step_index = step->get_id();
+	time_rcd.step_index = step->get_index();
 	time_rcd.substep_num = step->get_substep_num();
 	time_rcd.total_substep_num = step->get_total_substep_num();
 	time_rcd.current_time = step->get_current_time();

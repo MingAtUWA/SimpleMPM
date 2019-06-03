@@ -5,8 +5,8 @@
 #include "ResultFile_HDF5.h"
 #include "ResultFile_Text.h"
 
-#include "TimeHistory_Particle_2D_CHM.h"
 #include "TimeHistory_ConsoleProgressBar.h"
+#include "TimeHistory_Particle_R2D_CHM_s.h"
 #include "Step_R2D_CHM_MPM_s.h"
 
 #include "test_sim_core.h"
@@ -30,7 +30,7 @@ void test_chm_mpm1(void)
 		model.node_coords_y[i] = (double)i;
 	}
 	model.node_num = model.node_x_num * model.node_y_num;
-	model.nodes = new Node_R2D_CHM[model.node_num];
+	model.nodes = new Node_R2D_CHM_s[model.node_num];
 	k = 0;
 	for (i = 0; i < model.node_y_num; i++)
 		for (j = 0; j < model.node_x_num; j++)
@@ -43,7 +43,7 @@ void test_chm_mpm1(void)
 	model.elem_x_num = model.node_x_num - 1;
 	model.elem_y_num = model.node_y_num - 1;
 	model.elem_num = model.elem_x_num * model.elem_y_num;
-	model.elems = new Element_R2D_CHM_MPM[model.elem_num];
+	model.elems = new Element_R2D_CHM_MPM_s[model.elem_num];
 	k = 0;
 	for (i = 0; i < model.elem_y_num; i++)
 		for (j = 0; j < model.elem_x_num; j++)
@@ -54,8 +54,8 @@ void test_chm_mpm1(void)
 		}
 
 	model.pcl_num = model.elem_x_num * model.elem_y_num * 4;
-	model.pcls = new Particle_2D_CHM[model.pcl_num];
-	Particle_2D_CHM *ppcl;
+	model.pcls = new Particle_R2D_CHM_s[model.pcl_num];
+	Particle_R2D_CHM_s *ppcl;
 	k = 0;
 	for (i = 0; i < model.elem_y_num * 2; i++)
 		for (j = 0; j < model.elem_x_num * 2; j++)
@@ -166,21 +166,21 @@ void test_chm_mpm1(void)
 
 	res_file.output_model_state(model);
 
-	TimeHistory_Particle_2D_CHM *th1;
-	th1 = new TimeHistory_Particle_2D_CHM;
+	TimeHistory_Particle_R2D_CHM_s *th1;
+	th1 = new TimeHistory_Particle_R2D_CHM_s;
 	th1->set_name("test_out1");
 	th1->set_if_output_initial_state(true);
-	Particle_2D_CHM_Field fld1[10] = {
-		Particle_2D_CHM_Field::x,
-		Particle_2D_CHM_Field::y,
-		Particle_2D_CHM_Field::vol,
-		Particle_2D_CHM_Field::p,
-		Particle_2D_CHM_Field::n,
-		Particle_2D_CHM_Field::vx_s,
-		Particle_2D_CHM_Field::vy_s,
-		Particle_2D_CHM_Field::e11,
-		Particle_2D_CHM_Field::e12,
-		Particle_2D_CHM_Field::e22
+	Particle_Field_R2D_CHM_s fld1[10] = {
+		Particle_Field_R2D_CHM_s::x,
+		Particle_Field_R2D_CHM_s::y,
+		Particle_Field_R2D_CHM_s::vol,
+		Particle_Field_R2D_CHM_s::p,
+		Particle_Field_R2D_CHM_s::n,
+		Particle_Field_R2D_CHM_s::vx_s,
+		Particle_Field_R2D_CHM_s::vy_s,
+		Particle_Field_R2D_CHM_s::e11,
+		Particle_Field_R2D_CHM_s::e12,
+		Particle_Field_R2D_CHM_s::e22
 	};
 	size_t *pcl_ids1;
 	pcl_ids1 = new size_t[model.pcl_num];

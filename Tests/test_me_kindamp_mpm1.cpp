@@ -5,7 +5,7 @@
 #include "ResultFile_HDF5.h"
 #include "ResultFile_Text.h"
 
-#include "TimeHistory_Particle_2D_ME.h"
+#include "TimeHistory_Particle_R2D_ME_s.h"
 #include "TimeHistory_ConsoleProgressBar.h"
 #include "Step_R2D_ME_MPM_s_KinDamp.h"
 
@@ -18,8 +18,8 @@ void test_me_kindamp_mpm1(void)
 	Model_R2D_ME_MPM_s model;
 
 	model.pcl_num = 4;
-	model.pcls = new Particle_2D_ME[model.pcl_num];
-	Particle_2D_ME *ppcl;
+	model.pcls = new Particle_R2D_ME_s[model.pcl_num];
+	Particle_R2D_ME_s *ppcl;
 	k = 0;
 	for (i = 0; i < 2; i++)
 		for (j = 0; j < 2; j++)
@@ -57,7 +57,7 @@ void test_me_kindamp_mpm1(void)
 		model.node_coords_y[i] = (double)i;
 
 	model.node_num = model.node_x_num * model.node_y_num;
-	model.nodes = new Node_R2D_ME[model.node_num];
+	model.nodes = new Node_R2D_ME_s[model.node_num];
 	k = 0;
 	for (i = 0; i < model.node_y_num; i++)
 		for (j = 0; j < model.node_x_num; j++)
@@ -70,7 +70,7 @@ void test_me_kindamp_mpm1(void)
 	model.elem_x_num = model.node_x_num - 1;
 	model.elem_y_num = model.node_y_num - 1;
 	model.elem_num = model.elem_x_num * model.elem_y_num;
-	model.elems = new Element_R2D_ME_MPM[model.elem_num];
+	model.elems = new Element_R2D_ME_MPM_s[model.elem_num];
 	k = 0;
 	for (i = 0; i < model.elem_y_num; i++)
 		for (j = 0; j < model.elem_x_num; j++)
@@ -128,20 +128,20 @@ void test_me_kindamp_mpm1(void)
 	step1->set_step_time(1.0); // total_time
 	step1->set_dt(1.0e-3);
 
-	TimeHistory_Particle_2D_ME *th1;
-	th1 = new TimeHistory_Particle_2D_ME;
+	TimeHistory_Particle_R2D_ME_s *th1;
+	th1 = new TimeHistory_Particle_R2D_ME_s;
 	th1->set_name("test_out1");
 	th1->set_interval_num(10);
 	th1->set_if_output_initial_state(false);
-	Particle_2D_ME_Field fld1[8] = {
-		Particle_2D_ME_Field::x,
-		Particle_2D_ME_Field::y,
-		Particle_2D_ME_Field::vol,
-		Particle_2D_ME_Field::v_x,
-		Particle_2D_ME_Field::v_y,
-		Particle_2D_ME_Field::e11,
-		Particle_2D_ME_Field::e12,
-		Particle_2D_ME_Field::e22
+	Particle_Field_R2D_ME_s fld1[8] = {
+		Particle_Field_R2D_ME_s::x,
+		Particle_Field_R2D_ME_s::y,
+		Particle_Field_R2D_ME_s::vol,
+		Particle_Field_R2D_ME_s::v_x,
+		Particle_Field_R2D_ME_s::v_y,
+		Particle_Field_R2D_ME_s::e11,
+		Particle_Field_R2D_ME_s::e12,
+		Particle_Field_R2D_ME_s::e22
 	};
 	size_t pcl_ids1[16];
 	for (i = 0; i < 16; i++) pcl_ids1[i] = i;

@@ -12,7 +12,7 @@ Step_R2D_ME_MPM_s::~Step_R2D_ME_MPM_s() {}
 
 int Step_R2D_ME_MPM_s::init()
 {
-	Particle_2D_ME *ppcl;
+	Particle_R2D_ME_s *ppcl;
 
 	if (is_first_step)
 	{
@@ -46,9 +46,9 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 {
 	Step_R2D_ME_MPM_s *self = static_cast<Step_R2D_ME_MPM_s *>(_self);
 	Model_R2D_ME_MPM_s *model = self->model;
-	Node_R2D_ME *pn, *pn1, *pn2, *pn3, *pn4;
-	Particle_2D_ME *ppcl;
-	Element_R2D_ME_MPM *pelem;
+	Element_R2D_ME_MPM_s *pelem;
+	Node_R2D_ME_s *pn, *pn1, *pn2, *pn3, *pn4;
+	Particle_R2D_ME_s *ppcl;
 
 	// init nodes
 	for (size_t i = 0; i < model->node_num; i++)

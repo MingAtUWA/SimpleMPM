@@ -5,15 +5,16 @@
 #include "ResultFile_HDF5.h"
 #include "ResultFile_Text.h"
 
-#include "TimeHistory_Particle_2D_CHM.h"
+#include "TimeHistory_Particle_R2D_CHM_s.h"
 #include "TimeHistory_ConsoleProgressBar.h"
-#include "Step_R2D_CHM_MPM_s_damp.h"
+#include "Step_R2D_CHM_MPM_s_VisDamp.h"
 
 #include "test_sim_core.h"
 
-// test Step_R2D_CHM_MPM_f
-// one dimensional consolidation
-void test_chm_damp_mpm2(void)
+// test Step_R2D_CHM_MPM_f(), One dimensional consolidation
+// Its only difference from void test_chm_damp_mpm2(void)
+// is that it uses velocity boundary condition instead.
+void test_chm_visdamp_mpm3(void)
 {
 	size_t i, j, k;
 	Model_R2D_CHM_MPM_s model;
@@ -22,19 +23,17 @@ void test_chm_damp_mpm2(void)
 	model.node_x_num = 3;
 	model.node_y_num = 11;
 	elem_len = 1.0 / (model.node_y_num - 1);
+	
 	model.node_coords_x = new double[model.node_x_num];
 	for (i = 0; i < model.node_x_num; i++)
-	{
 		model.node_coords_x[i] = (double)i * elem_len;
-		//std::cout << model.node_coords_x[i] << " ";
-	}
+	
 	model.node_coords_y =new double[model.node_y_num];
 	for (i = 0; i < model.node_y_num; i++)
-	{
 		model.node_coords_y[i] = (double)i * elem_len;
-	}
+	
 	model.node_num = model.node_x_num * model.node_y_num;
-	model.nodes = new Node_R2D_CHM[model.node_num];
+	model.nodes = new Node_R2D_CHM_s[model.node_num];
 	k = 0;
 	for (i = 0; i < model.node_y_num; i++)
 		for (j = 0; j < model.node_x_num; j++)
@@ -47,7 +46,7 @@ void test_chm_damp_mpm2(void)
 	model.elem_x_num = model.node_x_num - 1;
 	model.elem_y_num = model.node_y_num - 1;
 	model.elem_num = model.elem_x_num * model.elem_y_num;
-	model.elems = new Element_R2D_CHM_MPM[model.elem_num];
+	model.elems = new Element_R2D_CHM_MPM_s[model.elem_num];
 	k = 0;
 	for (i = 0; i < model.elem_y_num; i++)
 		for (j = 0; j < model.elem_x_num; j++)
@@ -56,10 +55,10 @@ void test_chm_damp_mpm2(void)
 			model.elems[k].index_y = i;
 			++k;
 		}
-
+	
 	model.pcl_num = model.elem_x_num * model.elem_y_num * 4;
-	model.pcls = new Particle_2D_CHM[model.pcl_num];
-	Particle_2D_CHM *ppcl;
+	model.pcls = new Particle_R2D_CHM_s[model.pcl_num];
+	Particle_R2D_CHM_s *ppcl;
 	k = 0;
 	for (i = 0; i < model.elem_y_num * 2; i++)
 		for (j = 0; j < model.elem_x_num * 2; j++)
@@ -96,7 +95,7 @@ void test_chm_damp_mpm2(void)
 			ppcl->E = 1.0e3;
 			ppcl->niu = 0.25;
 			ppcl->Kf = 50.0e3;
-			ppcl->k = 1.0e-4;
+			ppcl->k = 1.0e-5;
 			ppcl->miu = 1.0;
 
 			++k;
@@ -117,74 +116,74 @@ void test_chm_damp_mpm2(void)
 		model.ty_bcs[i].t = -10.0 * 0.5 * elem_len;
 	}
 
-	model.vx_s_bc_num = 0;
-	model.vx_s_bcs = nullptr;
-	model.ax_s_bc_num = model.node_y_num * 2;
-	model.ax_s_bcs = new AccelerationBC[model.ax_s_bc_num];
+	model.vx_s_bc_num = model.node_y_num * 2;
+	model.vx_s_bcs = new VelocityBC[model.vx_s_bc_num];
 	for (i = 0; i < model.node_y_num; i++)
 	{
-		model.ax_s_bcs[i].node_id = i * model.node_x_num;
-		model.ax_s_bcs[i].a = 0.0;
-		model.ax_s_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
-		model.ax_s_bcs[i + model.node_y_num].a = 0.0;
+		model.vx_s_bcs[i].node_id = i * model.node_x_num;
+		model.vx_s_bcs[i].v = 0.0;
+		model.vx_s_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
+		model.vx_s_bcs[i + model.node_y_num].v = 0.0;
 	}
+	model.ax_s_bc_num = 0;
+	model.ax_s_bcs = nullptr;
 
-	model.vy_s_bc_num = 0;
-	model.vy_s_bcs = nullptr;
-	model.ay_s_bc_num = model.node_x_num;
-	model.ay_s_bcs = new AccelerationBC[model.ay_s_bc_num];
-	for (i = 0; i < model.ay_s_bc_num; i++)
+	model.vy_s_bc_num = model.node_x_num;
+	model.vy_s_bcs = new VelocityBC[model.vy_s_bc_num];
+	for (i = 0; i < model.vy_s_bc_num; i++)
 	{
-		model.ay_s_bcs[i].node_id = i;
-		model.ay_s_bcs[i].a = 0.0;
+		model.vy_s_bcs[i].node_id = i;
+		model.vy_s_bcs[i].v = 0.0;
 	}
+	model.ay_s_bc_num = 0;
+	model.ay_s_bcs = nullptr;
 
-	model.vx_f_bc_num = 0;
-	model.vx_f_bcs = nullptr;
-	model.ax_f_bc_num = model.node_y_num * 2;
-	model.ax_f_bcs = new AccelerationBC[model.ax_f_bc_num];
+	model.vx_f_bc_num = model.node_y_num * 2;
+	model.vx_f_bcs = new VelocityBC[model.vx_f_bc_num];
 	for (i = 0; i < model.node_y_num; i++)
 	{
-		model.ax_f_bcs[i].node_id = i * model.node_x_num;
-		model.ax_f_bcs[i].a = 0.0;
-		model.ax_f_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
-		model.ax_f_bcs[i + model.node_y_num].a = 0.0;
+		model.vx_f_bcs[i].node_id = i * model.node_x_num;
+		model.vx_f_bcs[i].v = 0.0;
+		model.vx_f_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
+		model.vx_f_bcs[i + model.node_y_num].v = 0.0;
 	}
+	model.ax_f_bc_num = 0;
+	model.ax_f_bcs = nullptr;
 
-	model.vy_f_bc_num = 0;
-	model.vy_f_bcs = nullptr;
-	model.ay_f_bc_num = model.node_x_num * 2;
-	model.ay_f_bcs = new AccelerationBC[model.ay_f_bc_num];
+	model.vy_f_bc_num = model.node_x_num * 2;
+	model.vy_f_bcs = new VelocityBC[model.vy_f_bc_num];
 	for (i = 0; i < model.node_x_num; i++)
 	{
-		model.ay_f_bcs[i].node_id = i;
-		model.ay_f_bcs[i].a = 0.0;
-		model.ay_f_bcs[i + model.node_x_num].node_id = model.node_x_num * (model.node_y_num - 1) + i;
-		model.ay_f_bcs[i + model.node_x_num].a = 0.0;
+		model.vy_f_bcs[i].node_id = i;
+		model.vy_f_bcs[i].v = 0.0;
+		model.vy_f_bcs[i + model.node_x_num].node_id = model.node_x_num * (model.node_y_num - 1) + i;
+		model.vy_f_bcs[i + model.node_x_num].v = 0.0;
 	}
+	model.ay_f_bc_num = 0;
+	model.ay_f_bcs = nullptr;
 
 	ResultFile_Text res_file;
 	res_file.set_filename("res_file");
 
 	res_file.output_model_state(model);
 
-	TimeHistory_Particle_2D_CHM *th1;
-	th1 = new TimeHistory_Particle_2D_CHM;
+	TimeHistory_Particle_R2D_CHM_s *th1;
+	th1 = new TimeHistory_Particle_R2D_CHM_s;
 	th1->set_name("test_out1");
 	th1->set_if_output_initial_state(true);
-	Particle_2D_CHM_Field fld1[12] = {
-		Particle_2D_CHM_Field::x,
-		Particle_2D_CHM_Field::y,
-		Particle_2D_CHM_Field::vol,
-		Particle_2D_CHM_Field::p,
-		Particle_2D_CHM_Field::n,
-		Particle_2D_CHM_Field::vx_s,
-		Particle_2D_CHM_Field::vy_s,
-		Particle_2D_CHM_Field::vx_f,
-		Particle_2D_CHM_Field::vy_f,
-		Particle_2D_CHM_Field::e11,
-		Particle_2D_CHM_Field::e12,
-		Particle_2D_CHM_Field::e22
+	Particle_Field_R2D_CHM_s fld1[12] = {
+		Particle_Field_R2D_CHM_s::x,
+		Particle_Field_R2D_CHM_s::y,
+		Particle_Field_R2D_CHM_s::vol,
+		Particle_Field_R2D_CHM_s::p,
+		Particle_Field_R2D_CHM_s::n,
+		Particle_Field_R2D_CHM_s::vx_s,
+		Particle_Field_R2D_CHM_s::vy_s,
+		Particle_Field_R2D_CHM_s::vx_f,
+		Particle_Field_R2D_CHM_s::vy_f,
+		Particle_Field_R2D_CHM_s::e11,
+		Particle_Field_R2D_CHM_s::e12,
+		Particle_Field_R2D_CHM_s::e22
 	};
 	size_t *pcl_ids1;
 	pcl_ids1 = new size_t[model.pcl_num];
@@ -194,18 +193,17 @@ void test_chm_damp_mpm2(void)
 						  pcl_ids1, model.pcl_num);
 	delete[] pcl_ids1;
 
-	//model.set_local_damping(0.1, 0.1);
+	model.set_local_damping(0.005, 0.005);
 
 	TimeHistory_ConsoleProgressBar th2;
 
-	Step_R2D_CHM_MPM_s_damp *step1;
-	step1 = new Step_R2D_CHM_MPM_s_damp;
+	Step_R2D_CHM_MPM_s_VisDamp *step1;
+	step1 = new Step_R2D_CHM_MPM_s_VisDamp;
 	step1->set_name("initial_step");
 	step1->set_model(&model);
 	step1->set_result_file(&res_file);
-	step1->set_step_time(10.0); // total_time
+	step1->set_step_time(50.0);
 	//step1->set_dt(1.0e-3);
-	step1->set_auto_dt(0.5);
 	
 	th1->set_interval_num(20);
 	step1->add_output(th1);
@@ -213,22 +211,19 @@ void test_chm_damp_mpm2(void)
 
 	step1->solve();
 
-	Step_R2D_CHM_MPM_s_damp *step2;
-	step2 = new Step_R2D_CHM_MPM_s_damp;
+	Step_R2D_CHM_MPM_s_VisDamp *step2;
+	step2 = new Step_R2D_CHM_MPM_s_VisDamp;
 	step2->set_name("consolidation_step");
 	step2->set_prev_step(step1);
 	delete step1;
-	step2->set_step_time(30.0); // total_time
-	//step2->set_dt(1.0e-3);
-	step2->set_auto_dt(0.1);
-
+	step2->set_step_time(200.0);
+	//step2->set_dt(1.0e-4);
+	
 	// free drainage bcs
-	model.ay_f_bc_num = model.node_x_num;
-	th1->set_interval_num(30);
+	model.vy_f_bc_num = model.node_x_num;
+	th1->set_interval_num(60);
 	step2->add_output(th1);
 	step2->add_output(&th2);
-	// no damping when consolidation
-	model.set_local_damping(0.0, 0.0);
 
 	step2->solve();
 

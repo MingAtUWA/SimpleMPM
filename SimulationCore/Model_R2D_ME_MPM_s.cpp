@@ -37,7 +37,7 @@ Model_R2D_ME_MPM_s::~Model_R2D_ME_MPM_s()
 	if(vy_s_bcs) delete[] vy_s_bcs;
 }
 
-Element_R2D_ME_MPM *Model_R2D_ME_MPM_s::find_in_which_element(double x, double y)
+Element_R2D_ME_MPM_s *Model_R2D_ME_MPM_s::find_in_which_element(double x, double y)
 {
 	size_t elem_x_id, elem_y_id;
 
@@ -62,8 +62,8 @@ Element_R2D_ME_MPM *Model_R2D_ME_MPM_s::find_in_which_element(double x, double y
 	return elem_buffer;
 }
 
-Element_R2D_ME_MPM *Model_R2D_ME_MPM_s::find_in_which_element(
-	double x, double y, Element_R2D_ME_MPM *elem)
+Element_R2D_ME_MPM_s *Model_R2D_ME_MPM_s::find_in_which_element(
+	double x, double y, Element_R2D_ME_MPM_s *elem)
 {
 	size_t elem_x_id, elem_y_id;
 	long long int elem_id_offset;
@@ -137,16 +137,16 @@ PointNotInOrNearElem:
 }
 
 inline double get_min(double a, double b) { return a < b ? a : b; }
-double Model_R2D_ME_MPM_s::cal_characteristic_length(Element_R2D_ME_MPM *elem)
+double Model_R2D_ME_MPM_s::cal_characteristic_length(Element_R2D_ME_MPM_s *elem)
 {
 	elem->char_len = get_min(abs(node_coords_x[elem->index_x + 1] - node_coords_x[elem->index_x]),
 							 abs(node_coords_y[elem->index_y + 1] - node_coords_y[elem->index_y]));
 	return elem->char_len;
 }
 
-void Model_R2D_ME_MPM_s::cal_shape_function(Particle_2D_ME *pcl)
+void Model_R2D_ME_MPM_s::cal_shape_function(Particle_R2D_ME_s *pcl)
 {
-	Element_R2D_ME_MPM *pelem;
+	Element_R2D_ME_MPM_s *pelem;
 	double xLower, xUpper, yLower, yUpper;
 	double xMiddle, xHalfLength, yMiddle, yHalfLength;
 	double x1, x2, x3, x4, y1, y2, y3, y4;

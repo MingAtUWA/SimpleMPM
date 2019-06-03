@@ -2,7 +2,7 @@
 
 #include "Model_R2D_ME_MPM_s.h"
 #include "ResultFile_Text.h"
-#include "TimeHistory_Particle_2D_ME.h"
+#include "TimeHistory_Particle_R2D_ME_s.h"
 #include "TimeHistory_ConsoleProgressBar.h"
 #include "Step_R2D_ME_MPM_s.h"
 
@@ -16,8 +16,8 @@ void test_text_resultfile(void)
 	Model_R2D_ME_MPM_s model;
 
 	model.pcl_num = 4;
-	model.pcls = new Particle_2D_ME[model.pcl_num];
-	Particle_2D_ME *ppcl;
+	model.pcls = new Particle_R2D_ME_s[model.pcl_num];
+	Particle_R2D_ME_s *ppcl;
 	for (i = 0; i < model.pcl_num; i++)
 	{
 		ppcl = model.pcls + i;
@@ -51,30 +51,30 @@ void test_text_resultfile(void)
 	step1->set_step_time(10.0);
 	step1->set_dt(0.1);
 
-	TimeHistory_Particle_2D_ME *th1;
-	th1 = new TimeHistory_Particle_2D_ME;
+	TimeHistory_Particle_R2D_ME_s *th1;
+	th1 = new TimeHistory_Particle_R2D_ME_s;
 	th1->set_name("test_out1");
 	th1->set_interval_num(2);
 	th1->set_if_output_initial_state(false);
-	Particle_2D_ME_Field fld1[5] = {
-		Particle_2D_ME_Field::x,
-		Particle_2D_ME_Field::y,
-		Particle_2D_ME_Field::e11,
-		Particle_2D_ME_Field::e12,
-		Particle_2D_ME_Field::e22
+	Particle_Field_R2D_ME_s fld1[5] = {
+		Particle_Field_R2D_ME_s::x,
+		Particle_Field_R2D_ME_s::y,
+		Particle_Field_R2D_ME_s::e11,
+		Particle_Field_R2D_ME_s::e12,
+		Particle_Field_R2D_ME_s::e22
 	};
 	size_t pcl_ids1[4] = { 0, 1, 2, 3 };
 	th1->set_model_output(&model, fld1, 5, pcl_ids1, 4);
 
-	TimeHistory_Particle_2D_ME *th2;
-	th2 = new TimeHistory_Particle_2D_ME;
+	TimeHistory_Particle_R2D_ME_s *th2;
+	th2 = new TimeHistory_Particle_R2D_ME_s;
 	th2->set_name("test_out2");
 	th2->set_interval_num(2);
 	th2->set_if_output_initial_state(false);
-	Particle_2D_ME_Field fld2[3] = {
-		Particle_2D_ME_Field::s11,
-		Particle_2D_ME_Field::s12,
-		Particle_2D_ME_Field::s22
+	Particle_Field_R2D_ME_s fld2[3] = {
+		Particle_Field_R2D_ME_s::s11,
+		Particle_Field_R2D_ME_s::s12,
+		Particle_Field_R2D_ME_s::s22
 	};
 	size_t pcl_ids2[4] = { 0, 1, 2, 3 };
 	th2->set_model_output(&model, fld2, 3, pcl_ids2, 4);

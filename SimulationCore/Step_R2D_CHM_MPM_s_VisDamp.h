@@ -1,37 +1,31 @@
-#ifndef _STEP_R2D_CHM_MPM_S_DAMP_H_
-#define _STEP_R2D_CHM_MPM_S_DAMP_H_
+#ifndef _STEP_R2D_CHM_MPM_S_VISDAMP_H_
+#define _STEP_R2D_CHM_MPM_S_VISDAMP_H_
 
 #include "Model_R2D_CHM_MPM_s.h"
 #include "Step.h"
 
 struct Model_R2D_CHM_MPM_s;
+class Step_R2D_CHM_MPM_s_KinDamp;
 
 int solve_substep_R2D_CHM_MPM_s_damp(void *_self);
 
 // viscous damping
 // for single object only
-class Step_R2D_CHM_MPM_s_damp : public Step
+class Step_R2D_CHM_MPM_s_VisDamp : public Step
 {
 protected:
 	Model_R2D_CHM_MPM_s *model;
 	
 public:
-	Step_R2D_CHM_MPM_s_damp();
-	~Step_R2D_CHM_MPM_s_damp();
+	Step_R2D_CHM_MPM_s_VisDamp();
+	~Step_R2D_CHM_MPM_s_VisDamp();
 
-	inline void set_model(Model_R2D_CHM_MPM_s *md)
-	{
-		Step::set_model(md);
-		model = md;
-	}
+	void set_model(Model_R2D_CHM_MPM_s *md);
 
-	// Restart from previous step
-	inline void set_prev_step(Step_R2D_CHM_MPM_s_damp *prev_step)
-	{
-		Step::set_prev_step(prev_step);
-		model = prev_step->model;
-	}
-	
+	// continue from previous step
+	void set_prev_step(Step_R2D_CHM_MPM_s_VisDamp *prev_step);
+	void set_prev_step(Step_R2D_CHM_MPM_s_KinDamp *prev_step);
+
 protected:
 	int init(void);
 	friend int solve_substep_R2D_CHM_MPM_s_damp(void *_self);

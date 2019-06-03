@@ -6,11 +6,11 @@
 #include "ResultFile.h"
 #include "Step.h"
 
-size_t Step::cur_id = 0;
+size_t Step::max_index = 0;
 
 Step::Step(SolveSubstepFunc solve_substep_func) : 
 	solve_substep(solve_substep_func),
-	name("Step"), id(++cur_id), model(nullptr), res_file(nullptr),
+	name("Step"), index(++max_index), model(nullptr), res_file(nullptr),
 	is_first_step(true), start_substep_index(0), substep_num(0),
 	step_time(0.0), start_time(0.0), current_time(0.0),
 	dt(0.0), time_tol_ratio(0.01), time_tol(0.0),
@@ -19,7 +19,7 @@ Step::Step(SolveSubstepFunc solve_substep_func) :
 	tol(1.0e-10)
 {
 	char id_str[25];
-	snprintf(id_str, 25, "%zu", id);
+	snprintf(id_str, 25, "%zu", index);
 	name += id_str;
 }
 

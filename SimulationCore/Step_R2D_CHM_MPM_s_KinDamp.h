@@ -1,8 +1,9 @@
 #ifndef _STEP_R2D_CHM_MPM_S_KINDAMP_H_
 #define _STEP_R2D_CHM_MPM_S_KINDAMP_H_
 
-#include "Model_R2D_CHM_MPM_s.h"
 #include "Step.h"
+
+#include "Model_R2D_CHM_MPM_s.h"
 
 struct Model_R2D_CHM_MPM_s;
 
