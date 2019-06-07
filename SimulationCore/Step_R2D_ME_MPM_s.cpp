@@ -175,37 +175,49 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 	{
 		ppcl = model->pcls + model->bfxs[i].pcl_id;
 		bf_tmp = ppcl->m * model->bfxs[i].bf;
-		ppcl->node1->fx_ext_m += bf_tmp * ppcl->N1;
-		ppcl->node2->fx_ext_m += bf_tmp * ppcl->N2;
-		ppcl->node3->fx_ext_m += bf_tmp * ppcl->N3;
-		ppcl->node4->fx_ext_m += bf_tmp * ppcl->N4;
+		if (ppcl->is_in_mesh)
+		{
+			ppcl->node1->fx_ext_m += bf_tmp * ppcl->N1;
+			ppcl->node2->fx_ext_m += bf_tmp * ppcl->N2;
+			ppcl->node3->fx_ext_m += bf_tmp * ppcl->N3;
+			ppcl->node4->fx_ext_m += bf_tmp * ppcl->N4;
+		}
 	}
 	for (size_t i = 0; i < model->bfy_num; i++)
 	{
 		ppcl = model->pcls + model->bfys[i].pcl_id;
 		bf_tmp = ppcl->m * model->bfys[i].bf;
-		ppcl->node1->fy_ext_m += bf_tmp * ppcl->N1;
-		ppcl->node2->fy_ext_m += bf_tmp * ppcl->N2;
-		ppcl->node3->fy_ext_m += bf_tmp * ppcl->N3;
-		ppcl->node4->fy_ext_m += bf_tmp * ppcl->N4;
+		if (ppcl->is_in_mesh)
+		{
+			ppcl->node1->fy_ext_m += bf_tmp * ppcl->N1;
+			ppcl->node2->fy_ext_m += bf_tmp * ppcl->N2;
+			ppcl->node3->fy_ext_m += bf_tmp * ppcl->N3;
+			ppcl->node4->fy_ext_m += bf_tmp * ppcl->N4;
+		}
 	}
 
 	// surface force
 	for (size_t i = 0; i < model->tx_bc_num; i++)
 	{
 		ppcl = model->pcls + model->tx_bcs[i].pcl_id;
-		ppcl->node1->fx_ext_m += model->tx_bcs[i].t * ppcl->N1;
-		ppcl->node2->fx_ext_m += model->tx_bcs[i].t * ppcl->N2;
-		ppcl->node3->fx_ext_m += model->tx_bcs[i].t * ppcl->N3;
-		ppcl->node4->fx_ext_m += model->tx_bcs[i].t * ppcl->N4;
+		if (ppcl->is_in_mesh)
+		{
+			ppcl->node1->fx_ext_m += model->tx_bcs[i].t * ppcl->N1;
+			ppcl->node2->fx_ext_m += model->tx_bcs[i].t * ppcl->N2;
+			ppcl->node3->fx_ext_m += model->tx_bcs[i].t * ppcl->N3;
+			ppcl->node4->fx_ext_m += model->tx_bcs[i].t * ppcl->N4;
+		}
 	}
 	for (size_t i = 0; i < model->ty_bc_num; i++)
 	{
 		ppcl = model->pcls + model->ty_bcs[i].pcl_id;
-		ppcl->node1->fy_ext_m += model->ty_bcs[i].t * ppcl->N1;
-		ppcl->node2->fy_ext_m += model->ty_bcs[i].t * ppcl->N2;
-		ppcl->node3->fy_ext_m += model->ty_bcs[i].t * ppcl->N3;
-		ppcl->node4->fy_ext_m += model->ty_bcs[i].t * ppcl->N4;
+		if (ppcl->is_in_mesh)
+		{
+			ppcl->node1->fy_ext_m += model->ty_bcs[i].t * ppcl->N1;
+			ppcl->node2->fy_ext_m += model->ty_bcs[i].t * ppcl->N2;
+			ppcl->node3->fy_ext_m += model->ty_bcs[i].t * ppcl->N3;
+			ppcl->node4->fy_ext_m += model->ty_bcs[i].t * ppcl->N4;
+		}
 	}
 
 	// update nodal acceleration
@@ -222,12 +234,14 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 	for (size_t i = 0; i < model->ax_s_bc_num; i++)
 	{
 		pn = model->nodes + model->ax_s_bcs[i].node_id;
-		pn->ax = model->ax_s_bcs[i].a;
+		if (pn->cal_flag)
+			pn->ax = model->ax_s_bcs[i].a;
 	}
 	for (size_t i = 0; i < model->ay_s_bc_num; i++)
 	{
 		pn = model->nodes + model->ay_s_bcs[i].node_id;
-		pn->ay = model->ay_s_bcs[i].a;
+		if (pn->cal_flag)
+			pn->ay = model->ay_s_bcs[i].a;
 	}
 
 	// update nodal momentum
@@ -246,16 +260,22 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 	for (size_t i = 0; i < model->vx_s_bc_num; i++)
 	{
 		pn = model->nodes + model->vx_s_bcs[i].node_id;
-		pn->mmx = pn->m * model->vx_s_bcs[i].v;
-		pn->dmmx = 0.0;
-		pn->ax = 0.0;
+		if (pn->cal_flag)
+		{
+			pn->mmx = pn->m * model->vx_s_bcs[i].v;
+			pn->dmmx = 0.0;
+			pn->ax = 0.0;
+		}
 	}
 	for (size_t i = 0; i < model->vy_s_bc_num; i++)
 	{
 		pn = model->nodes + model->vy_s_bcs[i].node_id;
-		pn->mmy = pn->m * model->vy_s_bcs[i].v;
-		pn->dmmy = 0.0;
-		pn->ay = 0.0;
+		if (pn->cal_flag)
+		{
+			pn->mmy = pn->m * model->vy_s_bcs[i].v;
+			pn->dmmy = 0.0;
+			pn->ay = 0.0;
+		}
 	}
 
 	// update displacement increment

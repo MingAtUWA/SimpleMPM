@@ -9,7 +9,7 @@ class Step_R2D_CHM_MPM_s_KinDamp;
 
 int solve_substep_R2D_CHM_MPM_s_damp(void *_self);
 
-// viscous damping
+// local damping method (viscous damping)
 // for single object only
 class Step_R2D_CHM_MPM_s_VisDamp : public Step
 {

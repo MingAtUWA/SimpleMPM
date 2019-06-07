@@ -32,7 +32,6 @@ struct Node_R2D_CHM_s : public Node
 	double vx_f_normalized, vy_f_normalized;
 	double m_f;
 	double fx_tf, fy_tf;
-	double f_tf_norm;
 };
 
 #endif

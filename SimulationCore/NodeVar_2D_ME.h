@@ -32,19 +32,21 @@ struct NodeVar_2D_ME : public NodeVar
 // variables for nodal contact calculation
 struct Node_Contact_Var_2D_ME
 {
-	bool is_in_contact;
-
-	double vol;
-	// normal vector
+	// surface normal vector
 	double nx, ny;
-	// tangential vector
-	double tx, ty;
-	// relative velocity with respect to centre of mass 
+	// relative velocity (with respect to centre of mass) 
 	double vrx, vry;
-	// normal component of relative velocity
+	// normal relative velocity (with respect to centre of mass) 
 	double vrn, vrnx, vrny;
-	// tangential component of relative velocity
+	// tangential relative velocity (with respect to centre of mass) 
 	double vrtx, vrty;
+	// normal contact force
+	double fcnx, fcny;
+	// tangential contact force
+	double fctx, fcty;
+	// if this node is in contact
+	// used only when multiple objects are in contact
+	bool is_in_contact;
 
 	Node_Contact_Var_2D_ME *next;
 };

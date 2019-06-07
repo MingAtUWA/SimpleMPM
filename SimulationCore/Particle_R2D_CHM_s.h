@@ -131,7 +131,6 @@ public: // Critical time step at particle
 		return dt_cr;
 	}
 
-	/* ---------------- content below obsoleted ----------------- */
 public:
 	// Constitutive model
 	double E;   // Elastic modulus

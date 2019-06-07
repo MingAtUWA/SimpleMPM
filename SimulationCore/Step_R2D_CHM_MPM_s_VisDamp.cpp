@@ -173,7 +173,7 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 		}
 		self->dt = cri_dt_tmp * self->dt_adjust_factor;
 		self->time_tol = self->dt * self->time_tol_ratio;
-		//std::cout << self->id << " " << self->dt << "\n";
+		//std::cout << self->index << " " << self->dt << "\n";
 	}
 	
 	// map variables to node and cal internal force
@@ -261,82 +261,94 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 	for (size_t i = 0; i < model->bfx_num; i++)
 	{
 		ppcl  = model->pcls + model->bfxs[i].pcl_id;
-		// body force on particle
-		bf_m  = ppcl->vol * ((1.0 - ppcl->n) * ppcl->density_s + ppcl->n * ppcl->density_f) * model->bfxs[i].bf;
-		bf_tf = ppcl->vol * ppcl->density_f * model->bfxs[i].bf;
-		// node 1
-		pn1 = ppcl->node1;
-		pn1->fx_ext_m  += ppcl->N1 * bf_m;
-		pn1->fx_ext_tf += ppcl->N1 * bf_tf;
-		// node 2
-		pn2 = ppcl->node2;
-		pn2->fx_ext_m  += ppcl->N2 * bf_m;
-		pn2->fx_ext_tf += ppcl->N2 * bf_tf;
-		// node 3
-		pn3 = ppcl->node3;
-		pn3->fx_ext_m  += ppcl->N3 * bf_m;
-		pn3->fx_ext_tf += ppcl->N3 * bf_tf;
-		// node 4
-		pn4 = ppcl->node4;
-		pn4->fx_ext_m  += ppcl->N4 * bf_m;
-		pn4->fx_ext_tf += ppcl->N4 * bf_tf;
+		if (ppcl->is_in_mesh)
+		{
+			// body force on particle
+			bf_m = ppcl->vol * ((1.0 - ppcl->n) * ppcl->density_s + ppcl->n * ppcl->density_f) * model->bfxs[i].bf;
+			bf_tf = ppcl->vol * ppcl->density_f * model->bfxs[i].bf;
+			// node 1
+			pn1 = ppcl->node1;
+			pn1->fx_ext_m += ppcl->N1 * bf_m;
+			pn1->fx_ext_tf += ppcl->N1 * bf_tf;
+			// node 2
+			pn2 = ppcl->node2;
+			pn2->fx_ext_m += ppcl->N2 * bf_m;
+			pn2->fx_ext_tf += ppcl->N2 * bf_tf;
+			// node 3
+			pn3 = ppcl->node3;
+			pn3->fx_ext_m += ppcl->N3 * bf_m;
+			pn3->fx_ext_tf += ppcl->N3 * bf_tf;
+			// node 4
+			pn4 = ppcl->node4;
+			pn4->fx_ext_m += ppcl->N4 * bf_m;
+			pn4->fx_ext_tf += ppcl->N4 * bf_tf;
+		}
 	}
 	for (size_t i = 0; i < model->bfy_num; i++)
 	{
 		ppcl  = model->pcls + model->bfys[i].pcl_id;
-		// body force on particle
-		bf_m  = ppcl->vol * ((1.0 - ppcl->n) * ppcl->density_s + ppcl->n * ppcl->density_f) * model->bfys[i].bf;
-		bf_tf = ppcl->vol * ppcl->density_f * model->bfys[i].bf;
-		// node 1
-		pn1 = ppcl->node1;
-		pn1->fy_ext_m  += ppcl->N1 * bf_m;
-		pn1->fy_ext_tf += ppcl->N1 * bf_tf;
-		// node 2
-		pn2 = ppcl->node2;
-		pn2->fy_ext_m  += ppcl->N2 * bf_m;
-		pn2->fy_ext_tf += ppcl->N2 * bf_tf;
-		// node 3
-		pn3 = ppcl->node3;
-		pn3->fy_ext_m  += ppcl->N3 * bf_m;
-		pn3->fy_ext_tf += ppcl->N3 * bf_tf;
-		// node 4
-		pn4 = ppcl->node4;
-		pn4->fy_ext_m  += ppcl->N4 * bf_m;
-		pn4->fy_ext_tf += ppcl->N4 * bf_tf;
+		if (ppcl->is_in_mesh)
+		{
+			// body force on particle
+			bf_m = ppcl->vol * ((1.0 - ppcl->n) * ppcl->density_s + ppcl->n * ppcl->density_f) * model->bfys[i].bf;
+			bf_tf = ppcl->vol * ppcl->density_f * model->bfys[i].bf;
+			// node 1
+			pn1 = ppcl->node1;
+			pn1->fy_ext_m += ppcl->N1 * bf_m;
+			pn1->fy_ext_tf += ppcl->N1 * bf_tf;
+			// node 2
+			pn2 = ppcl->node2;
+			pn2->fy_ext_m += ppcl->N2 * bf_m;
+			pn2->fy_ext_tf += ppcl->N2 * bf_tf;
+			// node 3
+			pn3 = ppcl->node3;
+			pn3->fy_ext_m += ppcl->N3 * bf_m;
+			pn3->fy_ext_tf += ppcl->N3 * bf_tf;
+			// node 4
+			pn4 = ppcl->node4;
+			pn4->fy_ext_m += ppcl->N4 * bf_m;
+			pn4->fy_ext_tf += ppcl->N4 * bf_tf;
+		}
 	}
 
 	// surface force
 	for (size_t i = 0; i < model->tx_bc_num; i++)
 	{
 		ppcl = model->pcls + model->tx_bcs[i].pcl_id;
-		// node 1
-		pn1 = ppcl->node1;
-		pn1->fx_ext_m += ppcl->N1 * model->tx_bcs[i].t;
-		// node 2
-		pn2 = ppcl->node2;
-		pn2->fx_ext_m += ppcl->N2 * model->tx_bcs[i].t;
-		// node 3
-		pn3 = ppcl->node3;
-		pn3->fx_ext_m += ppcl->N3 * model->tx_bcs[i].t;
-		// node 4
-		pn4 = ppcl->node4;
-		pn4->fx_ext_m += ppcl->N4 * model->tx_bcs[i].t;
+		if (ppcl->is_in_mesh)
+		{
+			// node 1
+			pn1 = ppcl->node1;
+			pn1->fx_ext_m += ppcl->N1 * model->tx_bcs[i].t;
+			// node 2
+			pn2 = ppcl->node2;
+			pn2->fx_ext_m += ppcl->N2 * model->tx_bcs[i].t;
+			// node 3
+			pn3 = ppcl->node3;
+			pn3->fx_ext_m += ppcl->N3 * model->tx_bcs[i].t;
+			// node 4
+			pn4 = ppcl->node4;
+			pn4->fx_ext_m += ppcl->N4 * model->tx_bcs[i].t;
+		}
 	}
 	for (size_t i = 0; i < model->ty_bc_num; i++)
 	{
 		ppcl = model->pcls + model->ty_bcs[i].pcl_id;
-		// node 1
-		pn1 = ppcl->node1;
-		pn1->fy_ext_m += ppcl->N1 * model->ty_bcs[i].t;
-		// node 2
-		pn2 = ppcl->node2;
-		pn2->fy_ext_m += ppcl->N2 * model->ty_bcs[i].t;
-		// node 3
-		pn3 = ppcl->node3;
-		pn3->fy_ext_m += ppcl->N3 * model->ty_bcs[i].t;
-		// node 4
-		pn4 = ppcl->node4;
-		pn4->fy_ext_m += ppcl->N4 * model->ty_bcs[i].t;
+		if (ppcl->is_in_mesh)
+		{
+			// node 1
+			pn1 = ppcl->node1;
+			pn1->fy_ext_m += ppcl->N1 * model->ty_bcs[i].t;
+			// node 2
+			pn2 = ppcl->node2;
+			pn2->fy_ext_m += ppcl->N2 * model->ty_bcs[i].t;
+			// node 3
+			pn3 = ppcl->node3;
+			pn3->fy_ext_m += ppcl->N3 * model->ty_bcs[i].t;
+			// node 4
+			pn4 = ppcl->node4;
+			pn4->fy_ext_m += ppcl->N4 * model->ty_bcs[i].t;
+		}
 	}
 	// pore pressure force...
 
@@ -363,14 +375,11 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 
 			pn->fx_tf = pn->fx_ext_tf - pn->fx_int_tf;
 			pn->fy_tf = pn->fy_ext_tf - pn->fy_int_tf;
-			//pn->fx_tf = pn->fx_ext_tf - pn->fx_int_tf - pn->fx_drag_tf;
-			//pn->fy_tf = pn->fy_ext_tf - pn->fy_int_tf - pn->fy_drag_tf;
-			pn->f_tf_norm = sqrt(pn->fx_tf * pn->fx_tf + pn->fy_tf * pn->fy_tf);
 
 			pn->ax_f = (pn->fx_tf - pn->fx_drag_tf
-						- model->alpha_f * pn->f_tf_norm * pn->vx_f_normalized) / pn->m_tf;
+						- model->alpha_f * abs(pn->fx_tf) * pn->vx_f_normalized) / pn->m_tf;
 			pn->ay_f = (pn->fy_tf - pn->fy_drag_tf
-						- model->alpha_f * pn->f_tf_norm * pn->vy_f_normalized) / pn->m_tf;
+						- model->alpha_f * abs(pn->fy_tf) * pn->vy_f_normalized) / pn->m_tf;
 			//pn->ax_f = (pn->fx_tf - model->alpha_f * pn->f_tf_norm * pn->vx_f_normalized) / pn->m_tf;
 			//pn->ay_f = (pn->fy_tf - model->alpha_f * pn->f_tf_norm * pn->vy_f_normalized) / pn->m_tf;
 		}
@@ -378,12 +387,14 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 	for (size_t i = 0; i < model->ax_f_bc_num; i++)
 	{
 		pn = model->nodes + model->ax_f_bcs[i].node_id;
-		pn->ax_f = model->ax_f_bcs[i].a;
+		if (pn->cal_flag)
+			pn->ax_f = model->ax_f_bcs[i].a;
 	}
 	for (size_t i = 0; i < model->ay_f_bc_num; i++)
 	{
 		pn = model->nodes + model->ay_f_bcs[i].node_id;
-		pn->ay_f = model->ay_f_bcs[i].a;
+		if (pn->cal_flag)
+			pn->ay_f = model->ay_f_bcs[i].a;
 	}
 
 	// update nodal momentum of fluid phase
@@ -400,14 +411,20 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 	for (size_t i = 0; i < model->vx_f_bc_num; i++)
 	{
 		pn = model->nodes + model->vx_f_bcs[i].node_id;
-		pn->vx_f = model->vx_f_bcs[i].v;
-		pn->ax_f = 0.0;
+		if (pn->cal_flag)
+		{
+			pn->vx_f = model->vx_f_bcs[i].v;
+			pn->ax_f = 0.0;
+		}
 	}
 	for (size_t i = 0; i < model->vy_f_bc_num; i++)
 	{
 		pn = model->nodes + model->vy_f_bcs[i].node_id;
-		pn->vy_f = model->vy_f_bcs[i].v;
-		pn->ay_f = 0.0;
+		if (pn->cal_flag)
+		{
+			pn->vy_f = model->vy_f_bcs[i].v;
+			pn->ay_f = 0.0;
+		}
 	}
 	
 	// calculate the inertial term of fluid in mixture formulation
@@ -416,38 +433,41 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 	for (size_t i = 0; i < model->pcl_num; i++)
 	{
 		ppcl = model->pcls + i;
-		pn1 = ppcl->node1;
-		pn2 = ppcl->node2;
-		pn3 = ppcl->node3;
-		pn4 = ppcl->node4;
-		// particle acceleration of fluid phase
-		pcl_ax_f = ppcl->N1 * pn1->ax_f + ppcl->N2 * pn2->ax_f 
-				 + ppcl->N3 * pn3->ax_f + ppcl->N4 * pn4->ax_f;
-		pcl_ay_f = ppcl->N1 * pn1->ay_f + ppcl->N2 * pn2->ay_f
-				 + ppcl->N3 * pn3->ay_f + ppcl->N4 * pn4->ay_f;
-		// m_f * a
-		pcl_max_f = ppcl->vol * ppcl->n * ppcl->density_f * pcl_ax_f;
-		pcl_may_f = ppcl->vol * ppcl->n * ppcl->density_f * pcl_ay_f;
-		// node 1
-		pn1->fx_kin_f += ppcl->N1 * pcl_max_f;
-		pn1->fy_kin_f += ppcl->N1 * pcl_may_f;
-		// node 2
-		pn2->fx_kin_f += ppcl->N2 * pcl_max_f;
-		pn2->fy_kin_f += ppcl->N2 * pcl_may_f;
-		// node 3
-		pn3->fx_kin_f += ppcl->N3 * pcl_max_f;
-		pn3->fy_kin_f += ppcl->N3 * pcl_may_f;
-		// node 4
-		pn4->fx_kin_f += ppcl->N4 * pcl_max_f;
-		pn4->fy_kin_f += ppcl->N4 * pcl_may_f;
+		if (ppcl->is_in_mesh)
+		{
+			pn1 = ppcl->node1;
+			pn2 = ppcl->node2;
+			pn3 = ppcl->node3;
+			pn4 = ppcl->node4;
+			// particle acceleration of fluid phase
+			pcl_ax_f = ppcl->N1 * pn1->ax_f + ppcl->N2 * pn2->ax_f
+				+ ppcl->N3 * pn3->ax_f + ppcl->N4 * pn4->ax_f;
+			pcl_ay_f = ppcl->N1 * pn1->ay_f + ppcl->N2 * pn2->ay_f
+				+ ppcl->N3 * pn3->ay_f + ppcl->N4 * pn4->ay_f;
+			// m_f * a
+			pcl_max_f = ppcl->vol * ppcl->n * ppcl->density_f * pcl_ax_f;
+			pcl_may_f = ppcl->vol * ppcl->n * ppcl->density_f * pcl_ay_f;
+			// node 1
+			pn1->fx_kin_f += ppcl->N1 * pcl_max_f;
+			pn1->fy_kin_f += ppcl->N1 * pcl_may_f;
+			// node 2
+			pn2->fx_kin_f += ppcl->N2 * pcl_max_f;
+			pn2->fy_kin_f += ppcl->N2 * pcl_may_f;
+			// node 3
+			pn3->fx_kin_f += ppcl->N3 * pcl_max_f;
+			pn3->fy_kin_f += ppcl->N3 * pcl_may_f;
+			// node 4
+			pn4->fx_kin_f += ppcl->N4 * pcl_max_f;
+			pn4->fy_kin_f += ppcl->N4 * pcl_may_f;
+		}
 	}
 
 	double v_s_norm;
 	double vx_s_normalized, vy_s_normalized;
 	double m_f_tf_ratio;
-	double fx_f, fy_f, f_f_norm;
+	double fx_f, fy_f;
 	double fx_m, fy_m;
-	double fx_s, fy_s, f_s_norm;
+	double fx_s, fy_s;
 	// update nodal velocity of solid phase
 	for (size_t i = 0; i < model->node_num; i++)
 	{
@@ -472,33 +492,33 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 
 			fx_f = pn->fx_tf * m_f_tf_ratio;
 			fy_f = pn->fy_tf * m_f_tf_ratio;
-			f_f_norm = pn->f_tf_norm * m_f_tf_ratio;
 
 			fx_m = pn->fx_ext_m - pn->fx_int_m;
 			fy_m = pn->fy_ext_m - pn->fy_int_m;
 
 			fx_s = fx_m - fx_f;
 			fy_s = fy_m - fy_f;
-			f_s_norm = sqrt(fx_s * fx_s + fy_s * fy_s);
 
 			pn->ax_s = (fx_m - pn->fx_kin_f 
-						- model->alpha_s * f_s_norm * vx_s_normalized
-						- model->alpha_f * f_f_norm * pn->vx_f_normalized) / pn->m_s;
+						- model->alpha_s * abs(fx_s) * vx_s_normalized
+						- model->alpha_f * abs(fx_f) * pn->vx_f_normalized) / pn->m_s;
 			pn->ay_s = (fy_m - pn->fy_kin_f
-						- model->alpha_s * f_s_norm * vy_s_normalized
-						- model->alpha_f * f_f_norm * pn->vy_f_normalized) / pn->m_s;
+						- model->alpha_s * abs(fy_s) * vy_s_normalized
+						- model->alpha_f * abs(fy_f) * pn->vy_f_normalized) / pn->m_s;
 		}
 	}
 	// apply acceleration boundary conditions
 	for (size_t i = 0; i < model->ax_s_bc_num; i++)
 	{
 		pn = model->nodes + model->ax_s_bcs[i].node_id;
-		pn->ax_s = model->ax_s_bcs[i].a;
+		if (pn->cal_flag)
+			pn->ax_s = model->ax_s_bcs[i].a;
 	}
 	for (size_t i = 0; i < model->ay_s_bc_num; i++)
 	{
 		pn = model->nodes + model->ay_s_bcs[i].node_id;
-		pn->ay_s = model->ay_s_bcs[i].a;
+		if (pn->cal_flag)
+			pn->ay_s = model->ay_s_bcs[i].a;
 	}
 	
 	// update nodal momentum of fluid pahse
@@ -515,14 +535,20 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 	for (size_t i = 0; i < model->vx_s_bc_num; i++)
 	{
 		pn = model->nodes + model->vx_s_bcs[i].node_id;
-		pn->vx_s = model->vx_s_bcs[i].v;
-		pn->ax_s = 0.0;
+		if (pn->cal_flag)
+		{
+			pn->vx_s = model->vx_s_bcs[i].v;
+			pn->ax_s = 0.0;
+		}
 	}
 	for (size_t i = 0; i < model->vy_s_bc_num; i++)
 	{
 		pn = model->nodes + model->vy_s_bcs[i].node_id;
-		pn->vy_s = model->vy_s_bcs[i].v;
-		pn->ay_s = 0.0;
+		if (pn->cal_flag)
+		{
+			pn->vy_s = model->vy_s_bcs[i].v;
+			pn->ay_s = 0.0;
+		}
 	}
 
 	// update displacement increment of both phases

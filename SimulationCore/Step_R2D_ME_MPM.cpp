@@ -442,7 +442,6 @@ int Step_R2D_ME_MPM::contact_calculation(void)
 	Node_BG_R2D_ME *pnd;
 	Element_BG_R2D_ME *pelem1, *pelem2, *pelem3, *pelem4;
 	Object_Particle_2D_ME *pobj;
-	Particle_2D_ME *ppcl1, *ppcl2, *ppcl3, *ppcl4;
 	ParticleVar_R2D_ME *ppcl1_var, *ppcl2_var, *ppcl3_var, *ppcl4_var;
 	NodeVar_2D_ME *pnd_var;
 	Node_Contact_Var_2D_ME *con_var;
@@ -460,18 +459,22 @@ int Step_R2D_ME_MPM::contact_calculation(void)
 			pnd->init_contact();
 			for (pnd_var = pnd->first(); pnd_var; pnd_var = pnd->next(pnd_var))
 			{
-				// calculate velocity of "mass centre"
+				// Calculate velocity of "mass centre"
 				cm += pnd_var->m;
 				cmmx += pnd_var->vx * pnd_var->m;
 				cmmy += pnd_var->vy * pnd_var->m;
-				// alloc contact variables
+				/* Alloc memory for contact variables
+				 * Note:
+				 *     Do *not* initialize it here, otherwise
+				 * the node var and contact var will be in 
+				 * reserve order with each other. */
 				con_var = contact_vars->alloc();
 				pnd->add_contact_var(con_var);
 			}
 			pnd->vx_cm = cmmx / cm;
 			pnd->vy_cm = cmmy / cm;
 
-			// calculate normal vector
+			// calculate surface normal vector
 			mesh->get_elements_by_node(pnd, pelem1, pelem2, pelem3, pelem4);
 			ppcl1_var = pelem1->first_pcl_var();
 			ppcl2_var = pelem2->first_pcl_var();
@@ -484,28 +487,28 @@ int Step_R2D_ME_MPM::contact_calculation(void)
 				con_var->nx = 0.0;
 				con_var->ny = 0.0;
 				// element1
-				while (ppcl1_var->pcl->object == pobj)
+				while (ppcl1_var && ppcl1_var->pcl->object == pobj)
 				{
 					con_var->nx += ppcl1_var->dN1_dx * ppcl1_var->vol;
 					con_var->ny += ppcl1_var->dN1_dy * ppcl1_var->vol;
 					ppcl1_var = pelem1->next_pcl_var(ppcl1_var);
 				}
 				// element2
-				while (ppcl2_var->pcl->object == pobj)
+				while (ppcl2_var && ppcl2_var->pcl->object == pobj)
 				{
 					con_var->nx += ppcl2_var->dN2_dx * ppcl2_var->vol;
 					con_var->ny += ppcl2_var->dN2_dy * ppcl2_var->vol;
 					ppcl2_var = pelem2->next_pcl_var(ppcl2_var);
 				}
 				// element3
-				while (ppcl3_var->pcl->object == pobj)
+				while (ppcl3_var && ppcl3_var->pcl->object == pobj)
 				{
 					con_var->nx += ppcl3_var->dN3_dx * ppcl3_var->vol;
 					con_var->ny += ppcl3_var->dN3_dy * ppcl3_var->vol;
 					ppcl3_var = pelem3->next_pcl_var(ppcl3_var);
 				}
 				// element4
-				while (ppcl4_var->pcl->object == pobj)
+				while (ppcl4_var && ppcl4_var->pcl->object == pobj)
 				{
 					con_var->nx += ppcl4_var->dN4_dx * ppcl4_var->vol;
 					con_var->ny += ppcl4_var->dN4_dy * ppcl4_var->vol;
@@ -533,39 +536,21 @@ int Step_R2D_ME_MPM::contact_calculation(void)
 		}
 	}
 	
-	// Reapply acceleration boundary conditions
-	for (size_t i = 0; i < mesh->ax_bc_num; i++)
-	{
-		pnd = mesh->nodes + mesh->ax_bcs[i].node_id;
-		if (pnd->is_in_contact)
-		{
-			for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
-				 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
-			{
-				 pnd_var->ax = mesh->ax_bcs[i].a;
-			}
-		}
-	}
-	for (size_t i = 0; i < mesh->ay_bc_num; i++)
-	{
-		pnd = mesh->nodes + mesh->ay_bcs[i].node_id;
-		if (pnd->is_in_contact)
-		{
-			for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
-				 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
-			{
-				pnd_var->ay = mesh->ay_bcs[i].a;
-			}
-		}
-	}
-	// Reapply velocity boundary conditions
+	/*-----------------------------------------------------------
+	 * Reapply velocity boundary conditions.
+	 * ----------------------------------------------------------
+	 *     Note that because the acceleration boundary conditions 
+	 * are in conflit with contact, so it is not reapplied here.
+	 * This means that accleration boundary conditions is not
+	 * satisfied at node where contact occurs.
+	 *----------------------------------------------------------*/
 	for (size_t i = 0; i < mesh->vx_bc_num; i++)
 	{
 		pnd = mesh->nodes + mesh->vx_bcs[i].node_id;
 		if (pnd->is_in_contact)
 		{
 			for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
-				pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+				 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
 			{
 				pnd_var->vx = mesh->vx_bcs[i].v;
 				pnd_var->ax = 0.0;
@@ -578,7 +563,7 @@ int Step_R2D_ME_MPM::contact_calculation(void)
 		if (pnd->is_in_contact)
 		{
 			for (pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first()); pnd_var;
-				pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
+				 pnd_var = static_cast<NodeVar_2D_ME *>(pnd->next(pnd_var)))
 			{
 				pnd_var->vy = mesh->vy_bcs[i].v;
 				pnd_var->ay = 0.0;
@@ -592,8 +577,10 @@ int Step_R2D_ME_MPM::contact_calculation(void)
 
 void Step_R2D_ME_MPM::contact_between_two_objects(Node_BG_R2D_ME *pnd)
 {
-	NodeVar_2D_ME *pnv_obj1, *pnv_obj2;
-	Node_Contact_Var_2D_ME *pncv_obj1, *pncv_obj2;
+	NodeVar_2D_ME *pnv_obj1; // nodal variable of object 1
+	NodeVar_2D_ME *pnv_obj2; // nodal variable of object 2
+	Node_Contact_Var_2D_ME *pncv_obj1; // contact variable of object 1
+	Node_Contact_Var_2D_ME *pncv_obj2; // contact variable of object 2
 	double n_norm;
 
 	// Decide which nodes are in contact
@@ -603,6 +590,7 @@ void Step_R2D_ME_MPM::contact_between_two_objects(Node_BG_R2D_ME *pnd)
 	pncv_obj2 = pnd->next_contact_var(pncv_obj1);
 	
 	// get the "average" normal vector of two objects
+	// preserve conservation of momentum
 	// (n1 - n2) / |n1 - n2|
 	pncv_obj1->nx -= pncv_obj2->nx;
 	pncv_obj1->ny -= pncv_obj2->ny;
@@ -613,27 +601,140 @@ void Step_R2D_ME_MPM::contact_between_two_objects(Node_BG_R2D_ME *pnd)
 	pncv_obj2->ny = -pncv_obj1->ny;
 
 	pncv_obj1->vrx = pnv_obj1->vx - pnd->vx_cm;
-	pncv_obj1->vry = pnv_obj2->vy - pnd->vy_cm;
+	pncv_obj1->vry = pnv_obj1->vy - pnd->vy_cm;
 	pncv_obj1->vrn = pncv_obj1->vrx * pncv_obj1->nx + pncv_obj1->vry * pncv_obj1->ny;
 	// Check if two objects are in contact
 	if (pncv_obj1->vrn > 0.0)
 	{
+		pnd->is_in_contact = true;
+		
+		pncv_obj2->vrx = pnv_obj2->vx - pnd->vx_cm;
+		pncv_obj2->vry = pnv_obj2->vy - pnd->vy_cm;
+		pncv_obj2->vrn = pncv_obj2->vrx * pncv_obj2->nx + pncv_obj2->vry * pncv_obj2->ny;
 
+		// normal relative velocity
+		pncv_obj1->vrnx = pncv_obj1->vrn * pncv_obj1->nx;
+		pncv_obj1->vrny = pncv_obj1->vrn * pncv_obj1->ny;
+		pncv_obj2->vrnx = pncv_obj2->vrn * pncv_obj2->nx;
+		pncv_obj2->vrny = pncv_obj2->vrn * pncv_obj2->ny;
+
+		// tangential relative velocity
+		pncv_obj1->vrtx = pncv_obj1->vrx - pncv_obj1->vrnx;
+		pncv_obj1->vrty = pncv_obj1->vry - pncv_obj1->vrny;
+		pncv_obj2->vrtx = pncv_obj2->vrx - pncv_obj2->vrnx;
+		pncv_obj2->vrty = pncv_obj2->vry - pncv_obj2->vrny;
+
+		// normal contact force
+		pncv_obj1->fcnx = pnv_obj1->m * pncv_obj1->vrnx / dt;
+		pncv_obj1->fcny = pnv_obj1->m * pncv_obj1->vrny / dt;
+		pncv_obj2->fcnx = pnv_obj2->m * pncv_obj2->vrnx / dt;
+		pncv_obj2->fcny = pnv_obj2->m * pncv_obj2->vrny / dt;
+
+		// tangential contact force
+		// the max possible value to achieve fully bonding
+		pncv_obj1->fctx = pnv_obj1->m * pncv_obj1->vrtx / dt;
+		pncv_obj1->fcty = pnv_obj1->m * pncv_obj1->vrty / dt;
+		pncv_obj2->fctx = pnv_obj2->m * pncv_obj2->vrtx / dt;
+		pncv_obj2->fcty = pnv_obj2->m * pncv_obj2->vrty / dt;
+
+		// modify tangential contact force according
+		// to constitutive law of contact
+		// here we assume smooth contact (no frictional force)
+		pncv_obj1->fctx = 0.0;
+		pncv_obj1->fcty = 0.0;
+		pncv_obj2->fctx = 0.0;
+		pncv_obj2->fcty = 0.0;
+
+		// modify nodal acceleration and velocity
+		pnv_obj1->ax -= (pncv_obj1->fcnx + pncv_obj1->fctx) / pnv_obj1->m;
+		pnv_obj1->vx -=  pncv_obj1->vrnx + pncv_obj1->fctx  / pnv_obj1->m * dt;
+		pnv_obj1->ay -= (pncv_obj1->fcny + pncv_obj1->fcty) / pnv_obj1->m;
+		pnv_obj1->vy -=  pncv_obj1->vrny + pncv_obj1->fcty  / pnv_obj1->m * dt;
+		pnv_obj2->ax -= (pncv_obj2->fcnx + pncv_obj2->fctx) / pnv_obj2->m;
+		pnv_obj2->vx -=  pncv_obj2->vrnx + pncv_obj2->fctx  / pnv_obj2->m * dt;
+		pnv_obj2->ay -= (pncv_obj2->fcny + pncv_obj2->fcty) / pnv_obj2->m;
+		pnv_obj2->vy -=  pncv_obj2->vrny + pncv_obj2->fcty  / pnv_obj2->m * dt;
 	}
-	// normal contact force
-
-	// tangential contact force
-
-
-	// adjust a += f / m * dt
-	// re-apply boundary condtions
-	// adjust v += a * dt
-	// re-apply boundary condition
 }
 
 void Step_R2D_ME_MPM::contact_between_multiple_objects(Node_BG_R2D_ME *pnd)
 {
-	// Hmmmmk ..., I don't wanna code this .... :(
+	NodeVar_2D_ME *pnd_var;
+	Node_Contact_Var_2D_ME *con_var;
+	double cm, cmmx, cmmy;
 
+	for (pnd_var = pnd->first(), con_var = pnd->first_contact_var(); pnd_var;
+		 pnd_var = pnd->next(pnd_var), con_var = pnd->next_contact_var(con_var))
+	{
+		con_var->vrx = pnd_var->vx - pnd->vx_cm;
+		con_var->vry = pnd_var->vy - pnd->vy_cm;
+		con_var->vrn = con_var->vrx * con_var->nx + con_var->vry * con_var->ny;
+		// Check if this object is in contact
+		if (con_var->vrn > 0.0)
+		{
+			pnd->is_in_contact = true;
+			con_var->is_in_contact = true;
+		}
+		else
+		{
+			con_var->is_in_contact = false;
+		}
+	}
 
+	// handle contact is there is any
+	if (pnd->is_in_contact)
+	{
+		// recalculate the velocity of centre of mass
+		// consider only those in contact
+		cm = 0.0;
+		cmmx = 0.0;
+		cmmy = 0.0;
+		for (pnd_var = pnd->first(), con_var = pnd->first_contact_var(); pnd_var;
+			 pnd_var = pnd->next(pnd_var), con_var = pnd->next_contact_var(con_var))
+		{
+			if (con_var->is_in_contact)
+			{
+				// Calculate velocity of "mass centre"
+				cm += pnd_var->m;
+				cmmx += pnd_var->vx * pnd_var->m;
+				cmmy += pnd_var->vy * pnd_var->m;
+			}
+		}
+		pnd->vx_cm = cmmx / cm;
+		pnd->vy_cm = cmmy / cm;
+		
+		for (pnd_var = pnd->first(), con_var = pnd->first_contact_var(); pnd_var;
+			 pnd_var = pnd->next(pnd_var), con_var = pnd->next_contact_var(con_var))
+		{
+			if (con_var->is_in_contact)
+			{
+				// relative velocity
+				con_var->vrx = pnd_var->vx - pnd->vx_cm;
+				con_var->vry = pnd_var->vy - pnd->vy_cm;
+
+				// normal relative velocity
+				con_var->vrn  = con_var->vrx * con_var->nx + con_var->vry * con_var->ny;
+				con_var->vrnx = con_var->vrn * con_var->nx;
+				con_var->vrny = con_var->vrn * con_var->ny;
+
+				// tangential relative velocity
+				con_var->vrtx = con_var->vrx - con_var->vrnx;
+				con_var->vrty = con_var->vry - con_var->vrny;
+
+				// normal contact force
+				con_var->fcnx = pnd_var->m * con_var->vrnx / dt;
+				con_var->fcny = pnd_var->m * con_var->vrny / dt;
+
+				// tangential contact force
+				con_var->fctx = pnd_var->m * con_var->vrtx / dt;
+				con_var->fcty = pnd_var->m * con_var->vrty / dt;
+
+				// modify nodal acceleration and velocity
+				pnd_var->ax -= (con_var->fcnx + con_var->fctx) / pnd_var->m;
+				pnd_var->vx -=  con_var->vrnx + con_var->fctx  / pnd_var->m * dt;
+				pnd_var->ay -= (con_var->fcny + con_var->fcty) / pnd_var->m;
+				pnd_var->vy -=  con_var->vrny + con_var->fcty  / pnd_var->m * dt;
+			}
+		}
+	}
 }
