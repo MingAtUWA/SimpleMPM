@@ -171,13 +171,13 @@ void Model_R2D_ME_MPM_s::cal_shape_function(Particle_R2D_ME_s *pcl)
 	pcl->eta = (pcl->y - yMiddle) / yHalfLength;
 	
 	pcl->N1 = _N1_R2D(pcl->xi, pcl->eta);
-	pcl->N1 = pcl->N1 < N_tol ? N_tol : pcl->N1;
+	//pcl->N1 = pcl->N1 < N_tol ? N_tol : pcl->N1;
 	pcl->N2 = _N2_R2D(pcl->xi, pcl->eta);
-	pcl->N2 = pcl->N2 < N_tol ? N_tol : pcl->N2;
+	//pcl->N2 = pcl->N2 < N_tol ? N_tol : pcl->N2;
 	pcl->N3 = _N3_R2D(pcl->xi, pcl->eta);
-	pcl->N3 = pcl->N3 < N_tol ? N_tol : pcl->N3;
+	//pcl->N3 = pcl->N3 < N_tol ? N_tol : pcl->N3;
 	pcl->N4 = _N4_R2D(pcl->xi, pcl->eta);
-	pcl->N4 = pcl->N4 < N_tol ? N_tol : pcl->N4;
+	//pcl->N4 = pcl->N4 < N_tol ? N_tol : pcl->N4;
 
 	dN1_dxi  = _dN1_dxi_R2D(pcl->xi,  pcl->eta);
 	dN1_deta = _dN1_deta_R2D(pcl->xi, pcl->eta);

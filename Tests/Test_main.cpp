@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 	//test_me_mpm1();
 	//test_me_mpm2();
 	//test_me_mpm3();
-	//test_me_mpm4();
+	test_me_mpm4();
 
 	//test_me_kindamp_mpm1();
 	//test_me_kindamp_mpm2();
@@ -33,11 +33,11 @@ int main(int argc, char *argv[])
 	//test_frame_pcl2d();
 	//test_result_file_parser();
 	//display_model();
-	test_mesh();
+	//test_mesh();
 
 	//test_animation();
 	// animation for 2d particle
-	//test_animation_particle2d();
+	test_animation_particle2d();
 
 	system("pause");
 	return 0;

@@ -96,7 +96,7 @@ void test_me_mpm4(void)
 	for (i = 0; i < model.ty_bc_num; i++)
 	{
 		model.ty_bcs[i].pcl_id = (model.elem_y_num * 2 - 1) * model.elem_x_num * 2 + i;
-		model.ty_bcs[i].t = -100.0 * 0.5 * elem_len;
+		model.ty_bcs[i].t = -400.0 * 0.5 * elem_len;
 	}
 
 	// don't use acceleration bcs for fixed boundary condition
@@ -155,7 +155,7 @@ void test_me_mpm4(void)
 	step1.set_model(&model);
 	step1.set_result_file(&res_file);
 	step1.set_step_time(100.0);
-	step1.set_dt(1.0e-3);
+	step1.set_dt(1.0e-4);
 	//step1.set_auto_dt(0.01);
 	step1.add_output(&th1);
 	step1.add_output(&th2);
