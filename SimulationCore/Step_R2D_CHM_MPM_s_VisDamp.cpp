@@ -352,7 +352,6 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 	}
 	// pore pressure force...
 
-	double v_f_norm;
 	// update nodal acceleration of fluid pahse
 	for (size_t i = 0; i < model->node_num; i++)
 	{
@@ -361,27 +360,42 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 		{
 			pn->vx_f = pn->mmx_tf / pn->m_tf;
 			pn->vy_f = pn->mmy_tf / pn->m_tf;
-			v_f_norm = sqrt(pn->vx_f * pn->vx_f + pn->vy_f * pn->vy_f);
-			if (self->is_zero(v_f_norm))
-			{
-				pn->vx_f_normalized = 0.0;
-				pn->vy_f_normalized = 0.0;
-			}
-			else
-			{
-				pn->vx_f_normalized = pn->vx_f / v_f_norm;
-				pn->vy_f_normalized = pn->vy_f / v_f_norm;
-			}
-
+			
 			pn->fx_tf = pn->fx_ext_tf - pn->fx_int_tf;
 			pn->fy_tf = pn->fy_ext_tf - pn->fy_int_tf;
 
-			pn->ax_f = (pn->fx_tf - pn->fx_drag_tf
-						- model->alpha_f * abs(pn->fx_tf) * pn->vx_f_normalized) / pn->m_tf;
-			pn->ay_f = (pn->fy_tf - pn->fy_drag_tf
-						- model->alpha_f * abs(pn->fy_tf) * pn->vy_f_normalized) / pn->m_tf;
-			//pn->ax_f = (pn->fx_tf - model->alpha_f * pn->f_tf_norm * pn->vx_f_normalized) / pn->m_tf;
-			//pn->ay_f = (pn->fy_tf - model->alpha_f * pn->f_tf_norm * pn->vy_f_normalized) / pn->m_tf;
+			//double v_f_norm = sqrt(pn->vx_f * pn->vx_f + pn->vy_f * pn->vy_f);
+			//if (self->is_zero(v_f_norm))
+			//{
+			//	pn->vx_f_normalized = 0.0;
+			//	pn->vy_f_normalized = 0.0;
+			//}
+			//else
+			//{
+			//	pn->vx_f_normalized = pn->vx_f / v_f_norm;
+			//	pn->vy_f_normalized = pn->vy_f / v_f_norm;
+			//}
+
+			//pn->ax_f = (pn->fx_tf - pn->fx_drag_tf
+			//			- model->alpha_f * abs(pn->fx_tf) * pn->vx_f_normalized) / pn->m_tf;
+			//pn->ay_f = (pn->fy_tf - pn->fy_drag_tf
+			//			- model->alpha_f * abs(pn->fy_tf) * pn->vy_f_normalized) / pn->m_tf;
+			
+			if (pn->vx_f > 0)
+				pn->vx_f_sign = 1.0;
+			else if (pn->vx_f < 0)
+				pn->vx_f_sign = -1.0;
+			else
+				pn->vx_f_sign = 0.0;
+			pn->ax_f = (pn->fx_tf - pn->fx_drag_tf - model->alpha_f * abs(pn->fx_tf) * pn->vx_f_sign) / pn->m_tf;
+
+			if (pn->vy_f > 0)
+				pn->vy_f_sign = 1.0;
+			else if (pn->vy_f < 0)
+				pn->vy_f_sign = -1.0;
+			else
+				pn->vy_f_sign = 0.0;
+			pn->ay_f = (pn->fy_tf - pn->fy_drag_tf - model->alpha_f * abs(pn->fy_tf) * pn->vy_f_sign) / pn->m_tf;
 		}
 	}
 	for (size_t i = 0; i < model->ax_f_bc_num; i++)
@@ -462,12 +476,13 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 		}
 	}
 
-	double v_s_norm;
-	double vx_s_normalized, vy_s_normalized;
 	double m_f_tf_ratio;
 	double fx_f, fy_f;
 	double fx_m, fy_m;
 	double fx_s, fy_s;
+	//double v_s_norm;
+	//double vx_s_normalized, vy_s_normalized;
+	double vx_s_sign, vy_s_sign;
 	// update nodal velocity of solid phase
 	for (size_t i = 0; i < model->node_num; i++)
 	{
@@ -476,35 +491,52 @@ int solve_substep_R2D_CHM_MPM_s_damp(void *_self)
 		{
 			pn->vx_s = pn->mmx_s / pn->m_s;
 			pn->vy_s = pn->mmy_s / pn->m_s;
-			v_s_norm = sqrt(pn->vx_s * pn->vx_s + pn->vy_s * pn->vy_s);
-			if (self->is_zero(v_s_norm))
-			{
-				vx_s_normalized = 0.0;
-				vy_s_normalized = 0.0;
-			}
-			else
-			{
-				vx_s_normalized = pn->vx_s / v_s_norm;
-				vy_s_normalized = pn->vy_s / v_s_norm;
-			}
 
 			m_f_tf_ratio = pn->m_f / pn->m_tf;
-
 			fx_f = pn->fx_tf * m_f_tf_ratio;
 			fy_f = pn->fy_tf * m_f_tf_ratio;
-
 			fx_m = pn->fx_ext_m - pn->fx_int_m;
 			fy_m = pn->fy_ext_m - pn->fy_int_m;
-
 			fx_s = fx_m - fx_f;
 			fy_s = fy_m - fy_f;
 
-			pn->ax_s = (fx_m - pn->fx_kin_f 
-						- model->alpha_s * abs(fx_s) * vx_s_normalized
-						- model->alpha_f * abs(fx_f) * pn->vx_f_normalized) / pn->m_s;
+			//v_s_norm = sqrt(pn->vx_s * pn->vx_s + pn->vy_s * pn->vy_s);
+			//if (self->is_zero(v_s_norm))
+			//{
+			//	vx_s_normalized = 0.0;
+			//	vy_s_normalized = 0.0;
+			//}
+			//else
+			//{
+			//	vx_s_normalized = pn->vx_s / v_s_norm;
+			//	vy_s_normalized = pn->vy_s / v_s_norm;
+			//}
+			//pn->ax_s = (fx_m - pn->fx_kin_f 
+			//			- model->alpha_s * abs(fx_s) * vx_s_normalized
+			//			- model->alpha_f * abs(fx_f) * pn->vx_f_normalized) / pn->m_s;
+			//pn->ay_s = (fy_m - pn->fy_kin_f
+			//			- model->alpha_s * abs(fy_s) * vy_s_normalized
+			//			- model->alpha_f * abs(fy_f) * pn->vy_f_normalized) / pn->m_s;
+
+			if (pn->vx_s > 0.0)
+				vx_s_sign = 1.0;
+			else if (pn->vx_s < 0.0)
+				vx_s_sign = -1.0;
+			else
+				vx_s_sign = 0.0;
+			pn->ax_s = (fx_m - pn->fx_kin_f
+					 - model->alpha_s * abs(fx_s) * vx_s_sign
+					 - model->alpha_f * abs(fx_f) * pn->vx_f_sign) / pn->m_s;
+
+			if (pn->vy_s > 0.0)
+				vy_s_sign = 1.0;
+			else if (pn->vy_s < 0.0)
+				vy_s_sign = -1.0;
+			else
+				vy_s_sign = 0.0;
 			pn->ay_s = (fy_m - pn->fy_kin_f
-						- model->alpha_s * abs(fy_s) * vy_s_normalized
-						- model->alpha_f * abs(fy_f) * pn->vy_f_normalized) / pn->m_s;
+					 - model->alpha_s * abs(fy_s) * vy_s_sign
+					 - model->alpha_f * abs(fy_f) * pn->vy_f_sign) / pn->m_s;
 		}
 	}
 	// apply acceleration boundary conditions

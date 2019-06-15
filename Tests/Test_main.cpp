@@ -10,7 +10,8 @@ int main(int argc, char *argv[])
 	//test_me_mpm1();
 	//test_me_mpm2();
 	//test_me_mpm3();
-	test_me_mpm4();
+	//test_me_mpm4();
+	//test_me_mpm5();
 
 	//test_me_kindamp_mpm1();
 	//test_me_kindamp_mpm2();
@@ -21,7 +22,7 @@ int main(int argc, char *argv[])
 	//test_chm_visdamp_mpm1();
 	//test_chm_visdamp_mpm2();
 	//test_chm_visdamp_mpm3();
-	//test_chm_visdamp_mpm4();
+	test_chm_visdamp_mpm4();
 
 	//test_chm_kindamp_mpm1();
 	//test_chm_kindamp_mpm2();

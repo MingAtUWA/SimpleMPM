@@ -114,7 +114,7 @@ void test_chm_visdamp_mpm3(void)
 	for (i = 0; i < model.ty_bc_num; i++)
 	{
 		model.ty_bcs[i].pcl_id = (model.elem_y_num * 2 - 1) * model.elem_x_num * 2 + i;
-		model.ty_bcs[i].t = -400.0 * 0.5 * elem_len;
+		model.ty_bcs[i].t = -10.0 * 0.5 * elem_len;
 	}
 
 	model.vx_s_bc_num = model.node_y_num * 2;
@@ -163,7 +163,7 @@ void test_chm_visdamp_mpm3(void)
 	model.ay_f_bc_num = 0;
 	model.ay_f_bcs = nullptr;
 
-	model.set_local_damping(0.1, 0.1);
+	model.set_local_damping(0.75, 0.75);
 
 	ResultFile_Text res_file;
 	res_file.set_filename("res_file");
@@ -204,9 +204,9 @@ void test_chm_visdamp_mpm3(void)
 	step1->set_model(&model);
 	step1->set_result_file(&res_file);
 	step1->set_step_time(20.0);
-	step1->set_dt(2.0e-5);
+	//step1->set_dt(2.0e-5);
 	
-	th1->set_interval_num(30);
+	th1->set_interval_num(40);
 	step1->add_output(th1);
 	step1->add_output(&th2);
 
@@ -217,12 +217,12 @@ void test_chm_visdamp_mpm3(void)
 	step2->set_name("consolidation_step");
 	step2->set_prev_step(step1);
 	delete step1;
-	step2->set_step_time(50.0);
-	step2->set_dt(2.0e-5);
+	step2->set_step_time(80.0);
+	//step2->set_dt(2.0e-5);
 	
 	// free drainage bcs
 	model.vy_f_bc_num = model.node_x_num;
-	th1->set_interval_num(100);
+	th1->set_interval_num(160);
 	step2->add_output(th1);
 	step2->add_output(&th2);
 

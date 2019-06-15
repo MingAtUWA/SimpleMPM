@@ -13,12 +13,15 @@
 
 // test Step_R2D_CHM_MPM_s
 // One dimensional consolidation
-// Use parameters from Anura3D Tutorial Manual
+// more than 4 particles in each elements
+// heavy load
 void test_chm_visdamp_mpm4(void)
 {
 	size_t i, j, k;
 	Model_R2D_CHM_MPM_s model;
 	double elem_len;
+	size_t elem_div_num; // each element has elem_div_num * elem_div_num particles
+	double pcl_len;
 
 	model.node_x_num = 3;
 	model.node_y_num = 11;
@@ -28,7 +31,7 @@ void test_chm_visdamp_mpm4(void)
 	for (i = 0; i < model.node_x_num; i++)
 		model.node_coords_x[i] = (double)i * elem_len;
 	
-	model.node_coords_y =new double[model.node_y_num];
+	model.node_coords_y = new double[model.node_y_num];
 	for (i = 0; i < model.node_y_num; i++)
 		model.node_coords_y[i] = (double)i * elem_len;
 	
@@ -56,19 +59,21 @@ void test_chm_visdamp_mpm4(void)
 			++k;
 		}
 	
-	model.pcl_num = model.elem_x_num * model.elem_y_num * 4;
+	elem_div_num = 8;
+	pcl_len = elem_len / elem_div_num;
+	model.pcl_num = model.elem_x_num * model.elem_y_num * elem_div_num * elem_div_num;
 	model.pcls = new Particle_R2D_CHM_s[model.pcl_num];
 	Particle_R2D_CHM_s *ppcl;
 	k = 0;
-	for (i = 0; i < model.elem_y_num * 2; i++)
-		for (j = 0; j < model.elem_x_num * 2; j++)
+	for (i = 0; i < model.elem_y_num * elem_div_num; i++)
+		for (j = 0; j < model.elem_x_num * elem_div_num; j++)
 		{
 			ppcl = model.pcls + k;
 			// initialize particles
-			ppcl->x = (0.25 + (double)j * 0.5) * elem_len;
-			ppcl->y = (0.25 + (double)i * 0.5) * elem_len;
-			ppcl->vol = 0.5 * 0.5 * elem_len * elem_len;
-			ppcl->n = 0.4;
+			ppcl->x = (0.5 + (double)j) * pcl_len;
+			ppcl->y = (0.5 + (double)i) * pcl_len;
+			ppcl->vol = pcl_len * pcl_len;
+			ppcl->n = 0.3;
 			ppcl->density_s = 2650.0;
 			ppcl->density_f = 1000.0;
 			ppcl->vx_s = 0.0;
@@ -92,11 +97,11 @@ void test_chm_visdamp_mpm4(void)
 			ppcl->ps22 = 0.0;
 			ppcl->ps12 = 0.0;
 			// parameters of constitutive model
-			ppcl->E = 1.0e6;
-			ppcl->niu = 0.3;
-			ppcl->Kf = 2.15e7;
-			ppcl->k = 1.0214e-9;
-			ppcl->miu = 1.002e-6;
+			ppcl->E = 1.0e3;
+			ppcl->niu = 0.25;
+			ppcl->Kf = 50.0e3;
+			ppcl->k = 1.0e-4;
+			ppcl->miu = 1.0;
 
 			++k;
 		}
@@ -108,12 +113,12 @@ void test_chm_visdamp_mpm4(void)
 
 	model.tx_bc_num = 0;
 	model.tx_bcs = nullptr;
-	model.ty_bc_num = model.elem_x_num * 2;
+	model.ty_bc_num = model.elem_x_num * elem_div_num;
 	model.ty_bcs = new TractionBC_MPM[model.ty_bc_num];
 	for (i = 0; i < model.ty_bc_num; i++)
 	{
-		model.ty_bcs[i].pcl_id = (model.elem_y_num * 2 - 1) * model.elem_x_num * 2 + i;
-		model.ty_bcs[i].t = -400.0e3 * 0.5 * elem_len;
+		model.ty_bcs[i].pcl_id = (model.elem_y_num * elem_div_num - 1) * model.elem_x_num * elem_div_num + i;
+		model.ty_bcs[i].t = -400.0 * pcl_len;
 	}
 
 	model.vx_s_bc_num = model.node_y_num * 2;
@@ -162,14 +167,17 @@ void test_chm_visdamp_mpm4(void)
 	model.ay_f_bc_num = 0;
 	model.ay_f_bcs = nullptr;
 
+	model.set_local_damping(0.1, 0.1);
+
 	ResultFile_Text res_file;
 	res_file.set_filename("res_file");
 
 	res_file.output_model_state(model);
 
-	TimeHistory_Particle_R2D_CHM_s th1;
-	th1.set_name("test_out1");
-	th1.set_if_output_initial_state(true);
+	TimeHistory_Particle_R2D_CHM_s *th1;
+	th1 = new TimeHistory_Particle_R2D_CHM_s;
+	th1->set_name("test_out1");
+	th1->set_if_output_initial_state(true);
 	Particle_Field_R2D_CHM_s fld1[12] = {
 		Particle_Field_R2D_CHM_s::x,
 		Particle_Field_R2D_CHM_s::y,
@@ -187,45 +195,46 @@ void test_chm_visdamp_mpm4(void)
 	size_t *pcl_ids1;
 	pcl_ids1 = new size_t[model.pcl_num];
 	for (i = 0; i < model.pcl_num; i++) pcl_ids1[i] = i;
-	th1.set_model_output(&model,
-						 fld1, sizeof(fld1) / sizeof(fld1[0]),
-						 pcl_ids1, model.pcl_num);
+	th1->set_model_output(&model,
+						  fld1, sizeof(fld1) / sizeof(fld1[0]),
+						  pcl_ids1, model.pcl_num);
 	delete[] pcl_ids1;
 
 	TimeHistory_ConsoleProgressBar th2;
 
-	model.set_local_damping(0.1, 0.1);
-
-	// step 1
 	Step_R2D_CHM_MPM_s_VisDamp *step1;
 	step1 = new Step_R2D_CHM_MPM_s_VisDamp;
 	step1->set_name("initial_step");
 	step1->set_model(&model);
 	step1->set_result_file(&res_file);
-	step1->set_step_time(30.0);
-	step1->set_dt(1.0e-5);
+	step1->set_step_time(20.0);
+	step1->set_auto_dt(0.01);
+	//step1->set_dt(2.0e-5);
 	
-	th1.set_interval_num(30);
-	step1->add_output(&th1);
+	th1->set_interval_num(40);
+	step1->add_output(th1);
 	step1->add_output(&th2);
 
 	step1->solve();
 
-	// step 2
 	Step_R2D_CHM_MPM_s_VisDamp *step2;
 	step2 = new Step_R2D_CHM_MPM_s_VisDamp;
 	step2->set_name("consolidation_step");
 	step2->set_prev_step(step1);
 	delete step1;
 	step2->set_step_time(50.0);
-	step2->set_dt(1.0e-5);
+	step1->set_auto_dt(0.01);
+	//step2->set_dt(2.0e-5);
 	
 	// free drainage bcs
 	model.vy_f_bc_num = model.node_x_num;
-	th1.set_interval_num(100);
-	step2->add_output(&th1);
+	th1->set_interval_num(100);
+	step2->add_output(th1);
 	step2->add_output(&th2);
 
 	step2->solve();
+
 	delete step2;
+
+	delete th1;
 }

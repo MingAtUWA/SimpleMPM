@@ -16,6 +16,7 @@ add_executable(
     test_me_mpm2.cpp
     test_me_mpm3.cpp
     test_me_mpm4.cpp
+    test_me_mpm5.cpp
     test_me_kindamp_mpm1.cpp
     test_me_kindamp_mpm2.cpp
     test_chm_mpm1.cpp
@@ -23,7 +24,7 @@ add_executable(
     test_chm_visdamp_mpm1.cpp
     test_chm_visdamp_mpm2.cpp
     test_chm_visdamp_mpm3.cpp
-    #test_chm_visdamp_mpm4.cpp
+    test_chm_visdamp_mpm4.cpp
     test_chm_kindamp_mpm2.cpp
     # multiple object
     test_multi_object_me1.cpp

@@ -59,11 +59,11 @@ Es = (1 - niu) / (1 + niu) / (1 - 2.0*niu) * E # Es = (1-v) / (1 + v) / (1-2v) *
 kv = 1.0e-4
 miu = 1.0 # dynamic viscosity
 Cv = kv * Es / miu
-u0 = 200.0
+u0 = 100.0
 H = 1.0
 con_res = oc.OneDConsolidation(Cv, Es, u0, H)
 
-time = 50.0 # time of consolidation
+time = 80.0 # time of consolidation
 data_num = 100
 t_list = np.zeros(data_num + 2)
 u_list = np.zeros(data_num + 2)
@@ -81,4 +81,6 @@ line2, = plot1.plot(t_list, u_list, 'r--')
 plt.legend(handles=[line1,line2], labels=['Explicit MPM', 'Analytical Solution'])
 
 plt.show()
+#plt.savefig('ut - 100 - 2e-5.png')
+
 #os.system("pause")

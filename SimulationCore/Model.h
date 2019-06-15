@@ -10,6 +10,7 @@ protected:
 	const char *type;
 	// the minimum value of N (shape function)
 	double N_tol;
+
 public:
 	Model(const char *type_name = "Model") :
 		name(20, '\0'), type(type_name), N_tol(1.0e-8) {}

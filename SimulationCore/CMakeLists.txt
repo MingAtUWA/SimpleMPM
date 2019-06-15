@@ -37,7 +37,7 @@ add_library(
     # NodeVar_2D_CHM.h
     # Model_R2D_CHM_MPM.h Model_R2D_CHM_MPM.cpp
     # Step_R2D_CHM_MPM.h  Step_R2D_CHM_MPM.cpp
-    # Purely mechanics (Single Objects)
+    # Purely mechanics (Single Object)
     Particle_R2D_ME_s.h
     Node_R2D_ME_s.h
     Element_R2D_ME_MPM_s.h
@@ -45,7 +45,7 @@ add_library(
     Step_R2D_ME_MPM_s.h  Step_R2D_ME_MPM_s.cpp
     Step_R2D_ME_MPM_s_KinDamp.h Step_R2D_ME_MPM_s_KinDamp.cpp
     TimeHistory_Particle_R2D_ME_s.h TimeHistory_Particle_R2D_ME_s.cpp
-    # Coupled Hydro-mechanics (Single Objects)
+    # Coupled Hydro-mechanics (Single Object)
     Particle_R2D_CHM_s.h
     Node_R2D_CHM_s.h
     Element_R2D_CHM_MPM_s.h
@@ -54,6 +54,10 @@ add_library(
     Step_R2D_CHM_MPM_s_VisDamp.h Step_R2D_CHM_MPM_s_VisDamp.cpp
     Step_R2D_CHM_MPM_s_KinDamp.h Step_R2D_CHM_MPM_s_KinDamp.cpp
     TimeHistory_Particle_R2D_CHM_s.h TimeHistory_Particle_R2D_CHM_s.cpp
+    # Purely mechanics (1D, B-spline, Single object)
+    Model_1D_ME_MPM_BSpline_s.h Model_1D_ME_MPM_BSpline_s.cpp
+    Step_1D_ME_MPM_BSpline_s.h Step_1D_ME_MPM_BSpline_s.cpp
+    TimeHistory_Particle_1D_ME_AllPcl.h TimeHistory_Particle_1D_ME_AllPcl.cpp
     )
 
 target_include_directories(

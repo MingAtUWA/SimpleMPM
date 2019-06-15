@@ -29,9 +29,10 @@ struct Node_R2D_CHM_s : public Node
 	unsigned char cal_flag;
 
 	// for calculate damping
-	double vx_f_normalized, vy_f_normalized;
 	double m_f;
 	double fx_tf, fy_tf;
+	//double vx_f_normalized, vy_f_normalized;
+	double vx_f_sign, vy_f_sign;
 };
 
 #endif
