@@ -37,7 +37,6 @@ int solve_substep_1D_ME_MPM_BSpline_s(void *_self)
 {
 	Step_1D_ME_MPM_BSpline_s *self = static_cast<Step_1D_ME_MPM_BSpline_s *>(_self);
 	Model_1D_ME_MPM_BSpline_s *model = self->model;
-	Element_1D_ME_Grid *pelem;
 	Node_1D_ME_Grid *pn;
 	Particle_1D_ME *ppcl;
 
@@ -59,8 +58,8 @@ int solve_substep_1D_ME_MPM_BSpline_s(void *_self)
 		ppcl = model->pcls + i;
 		if (ppcl->is_in_mesh)
 		{
-			ppcl->node_x_id = model->nearest_node_x_index(ppcl->x);
-			if (!ppcl->node_x_id)
+			ppcl->node_id = model->nearest_node_x_index(ppcl->x);
+			if (!ppcl->node_id)
 			{
 				ppcl->is_in_mesh = false;
 			}
@@ -68,16 +67,15 @@ int solve_substep_1D_ME_MPM_BSpline_s(void *_self)
 	}
 
 	// map variables to node and cal internal force
-	size_t x_index;
 	double xi;
-	double vol, N, dN_dx;
+	double vol;
 	for (size_t i = 0; i < model->pcl_num; i++)
 	{
 		ppcl = model->pcls + i;
 		if (ppcl->is_in_mesh)
 		{
 			vol = ppcl->m / ppcl->density;
-			for (size_t i = 0, x_index = ppcl->node_x_id - 1;
+			for (size_t i = 0, x_index = ppcl->node_id - 1;
 				i < 3; ++i, ++x_index)
 			{
 				xi = model->xi(ppcl->x, x_index);
@@ -103,32 +101,32 @@ int solve_substep_1D_ME_MPM_BSpline_s(void *_self)
 
 	// body force
 	double bf_tmp;
-	for (size_t i = 0; i < model->bf_num; i++)
+	for (size_t bf_id = 0; bf_id < model->bf_num; bf_id++)
 	{
-		ppcl = model->pcls + model->bfs[i].pcl_id;
-		bf_tmp = ppcl->m * model->bfs[i].bf;
+		ppcl = model->pcls + model->bfs[bf_id].pcl_id;
+		bf_tmp = ppcl->m * model->bfs[bf_id].bf;
 		if (ppcl->is_in_mesh)
 		{
-			for (size_t i = 0, x_index = ppcl->node_x_id - 1;
-				i < 3; ++i, ++x_index)
+			for (size_t n_id = 0, x_index = ppcl->node_id - 1;
+				n_id < 3; ++n_id, ++x_index)
 			{
 				pn = model->get_node_by_index(x_index);
-				pn->f_ext += bf_tmp * ppcl->N[i];
+				pn->f_ext += bf_tmp * ppcl->N[n_id];
 			}
 		}
 	}
 
 	// surface force
-	for (size_t i = 0; i < model->tbc_num; i++)
+	for (size_t sf_id = 0; sf_id < model->tbc_num; sf_id++)
 	{
-		ppcl = model->pcls + model->tbcs[i].pcl_id;
+		ppcl = model->pcls + model->tbcs[sf_id].pcl_id;
 		if (ppcl->is_in_mesh)
 		{
-			for (size_t i = 0, x_index = ppcl->node_x_id - 1;
-				 i < 3; ++i, ++x_index)
+			for (size_t n_id = 0, x_index = ppcl->node_id - 1;
+				n_id < 3; ++n_id, ++x_index)
 			{
 				pn = model->get_node_by_index(x_index);
-				pn->f_ext += model->tbcs[i].t * ppcl->N[i];
+				pn->f_ext += model->tbcs[sf_id].t * ppcl->N[n_id];
 			}
 		}
 	}
@@ -137,39 +135,42 @@ int solve_substep_1D_ME_MPM_BSpline_s(void *_self)
 	for (size_t i = 0; i < model->node_num; i++)
 	{
 		pn = model->nodes + i;
-		if (pn->cal_flag) pn->a = (pn->f_ext - pn->f_int) / pn->m;
+		if (pn->cal_flag)
+			pn->a = (pn->f_ext - pn->f_int) / pn->m;
 	}
 	// apply acceleration boundary conditions
 	for (size_t i = 0; i < model->abc_num; i++)
 	{
 		pn = model->nodes + model->abcs[i].node_id;
-		if (pn->cal_flag) pn->a = model->abcs[i].a;
+		if (pn->cal_flag)
+			pn->a = model->abcs[i].a;
 	}
 
 	// update nodal momentum
 	for (size_t i = 0; i < model->node_num; i++)
 	{
 		pn = model->nodes + i;
-		if (pn->cal_flag) pn->v = pn->mv / pn->m + pn->a * self->dt;
+		if (pn->cal_flag)
+			pn->v = pn->mv / pn->m + pn->a * self->dt;
 	}
 	// apply velocity boundary conditions
 	for (size_t i = 0; i < model->vbc_num; i++)
 	{
 		pn = model->nodes + model->vbcs[i].node_id;
-		if (pn->cal_flag) pn->v = model->vbcs[i].v;
+		if (pn->cal_flag)
+			pn->v = model->vbcs[i].v;
 	}
 	
 	// update displacement increment
 	for (size_t i = 0; i < model->node_num; i++)
 	{
 		pn = model->nodes + i;
-		if (pn->cal_flag) pn->du = pn->v * self->dt;
+		if (pn->cal_flag)
+			pn->du = pn->v * self->dt;
 	}
 
+	double de_vol;
 	// map variables back to and update variables particles
-	double N1_tmp, N2_tmp, N3_tmp, N4_tmp;
-	double de_vol, ds11, ds22, ds12;
-	double E_tmp;
 	for (size_t i = 0; i < model->pcl_num; i++)
 	{
 		ppcl = model->pcls + i;
@@ -177,18 +178,18 @@ int solve_substep_1D_ME_MPM_BSpline_s(void *_self)
 		{
 			ppcl->de11 = 0.0;
 
-			for (size_t i = 0, x_index = ppcl->node_x_id - 1;
-				i < 3; ++i, ++x_index)
+			for (size_t n_id = 0, x_index = ppcl->node_id - 1;
+				n_id < 3; ++n_id, ++x_index)
 			{
 				pn = model->get_node_by_index(x_index);
 				// momentum (velocity)
-				ppcl->mv += ppcl->m * self->dt * pn->a * ppcl->N[i];
+				ppcl->mv += ppcl->m * self->dt * pn->a * ppcl->N[n_id];
 
 				// displacement
-				ppcl->u += pn->du * ppcl->N[i];
+				ppcl->u += pn->du * ppcl->N[n_id];
 			
 				// strain increment
-				ppcl->de11 += pn->du * ppcl->dN_dx[i];
+				ppcl->de11 += pn->du * ppcl->dN_dx[n_id];
 			}
 
 			// update position

@@ -21,7 +21,6 @@ int Model_1D_ME_MPM_BSpline_s::update(void)
 	for (size_t i = 0; i < node_num; i++)
 	{
 		nodes[i].index = i;
-
 	}
 	elems_mem.clear();
 	elems_mem.reserve(elem_num);
@@ -29,7 +28,6 @@ int Model_1D_ME_MPM_BSpline_s::update(void)
 	for (size_t i = 0; i < elem_num; i++)
 	{
 		elems[i].index = i;
-
 	}
 	// particles
 	pcl_num = pcls_mem.get_num();

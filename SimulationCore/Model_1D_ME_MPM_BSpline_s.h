@@ -70,7 +70,7 @@ public: // calculation variables
 	double dN_dx[3];
 	double de11;
 	bool is_in_mesh;
-	size_t node_x_id;
+	size_t node_id;
 };
 
 

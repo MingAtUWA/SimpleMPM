@@ -16,13 +16,15 @@ int main(int argc, char *argv[])
 	//test_me_kindamp_mpm1();
 	//test_me_kindamp_mpm2();
 
+	test_me_bspline_mpm1();
+
 	//test_chm_mpm1();
 	//test_chm_mpm2();
 
 	//test_chm_visdamp_mpm1();
 	//test_chm_visdamp_mpm2();
 	//test_chm_visdamp_mpm3();
-	test_chm_visdamp_mpm4();
+	//test_chm_visdamp_mpm4();
 
 	//test_chm_kindamp_mpm1();
 	//test_chm_kindamp_mpm2();
@@ -38,7 +40,7 @@ int main(int argc, char *argv[])
 
 	//test_animation();
 	// animation for 2d particle
-	test_animation_particle2d();
+	//test_animation_particle2d();
 
 	system("pause");
 	return 0;
