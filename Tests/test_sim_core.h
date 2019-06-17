@@ -18,6 +18,7 @@ void test_me_kindamp_mpm1(void);
 void test_me_kindamp_mpm2(void);
 
 void test_me_bspline_mpm1(void);
+void test_me_bspline_mpm2(void);
 
 void test_chm_mpm1(void);
 void test_chm_mpm2(void);

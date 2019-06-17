@@ -35,8 +35,8 @@ struct Particle_1D_ME
 	double m;
 	double density;
 
-	// momentum
-	double mv;
+	// velocity
+	double v;
 
 	// stress
 	double s11;
@@ -56,7 +56,7 @@ public:
 		x = 0.0;
 		m = 0.0;
 		density = 0.0;
-		mv = 0.0;
+		v = 0.0;
 		s11 = 0.0;
 		e11 = 0.0;
 	}
@@ -70,7 +70,7 @@ public: // calculation variables
 	double dN_dx[3];
 	double de11;
 	bool is_in_mesh;
-	size_t node_id;
+	size_t base_node_id;
 };
 
 
@@ -142,7 +142,7 @@ public:
 	void clear(void);
 
 public:
-	// return 0 -> invalide node
+	// return 0: invalide node
 	inline size_t nearest_node_x_index(double x)
 	{
 		if (x < x_bound1 && x >= x_bound2)
@@ -150,10 +150,7 @@ public:
 		return size_t((x - x_start) / h + 0.5);
 	}
 
-	inline Node_1D_ME_Grid *get_node_by_index(size_t i)
-	{
-		return nodes + i;
-	}
+	inline Node_1D_ME_Grid &get_node_by_index(size_t i) { return nodes[i]; }
 
 	inline double xi(double x, size_t i /* node index */)
 	{
@@ -162,24 +159,24 @@ public:
 
 	inline double N(double u)
 	{
-		if (u >= -1.5)
+		if (u > -1.5)
 			if (u < -0.5)
-				return (2.0*u+3.0) * (2.0*u+3.0) / 8.0;
+				return (2.0*u + 3.0) * (2.0*u + 3.0) / 8.0;
 			else if (u < 0.5)
 				return 0.75 - u*u;
-			else if (u <= 1.5)
-				return (3.0-2.0*u) * (3.0-2.0*u) / 8.0;
+			else if (u < 1.5)
+				return (3.0 - 2.0*u) * (3.0 - 2.0*u) / 8.0;
 		return 0.0;
 	}
 
 	inline double dN_dx(double u)
 	{
-		if (u >= -1.5)
+		if (u > -1.5)
 			if (u < -0.5)
 				return 0.5 * (2.0*u + 3.0) / h;
 			else if (u < 0.5)
 				return -2.0 * u / h;
-			else if (u <= 1.5)
+			else if (u < 1.5)
 				return 0.5 * (2.0*u - 3.0) / h;
 		return 0.0;
 	}

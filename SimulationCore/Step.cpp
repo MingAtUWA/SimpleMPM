@@ -83,7 +83,6 @@ int Step::init_output(void)
 	if (time_history_output_num)
 	{
 		info_for_time_history_output = new InfoForTimeHistoryOutput[time_history_output_num];
-		if (!info_for_time_history_output) return -1;
 		for (pth = time_history_list, i = 0; pth; pth = pth->next_for_step_class, ++i) 
 		{
 			info_for_time_history_output[i].time_history = pth;
@@ -95,13 +94,13 @@ int Step::init_output(void)
 		}
 	}
 
-	// Initialize result file
-	res_file->step = this;
-	res_file->init_per_step(); // initialize handle for each output handle
-
 	// Initialize time histories
 	for (pth = time_history_list; pth; pth = pth->next_for_step_class)
 		pth->init_per_step();
+
+	// Initialize result file
+	res_file->step = this;
+	res_file->init_per_step(); // initialize handle for each output handle
 	
 	// output the initial state if needed
 	output_time_history_if_needed();

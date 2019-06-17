@@ -12,23 +12,30 @@
 #include "test_sim_core.h"
 
 // 1D bspline mechanics
-// 3 element (len = 2.0), 2 pcls
-void test_me_bspline_mpm1(void)
+// compression
+void test_me_bspline_mpm2(void)
 {
 	Model_1D_ME_MPM_BSpline_s model;
+	size_t elem_num = 100;
+	size_t pcl_per_elem_num = 5;
+	
+	double elem_len = 1.0 / double(elem_num);
+	size_t pcl_num = elem_num * pcl_per_elem_num;
+	double pcl_len = 1.0 / double(pcl_num);
 
 	Particle_1D_ME pcl;
 	pcl.init();
-	pcl.density = 2.0;
-	pcl.m = 1.0 * 2.0;
+	pcl.density = 20.0;
+	pcl.m = pcl_len * pcl.density;
 	pcl.E = 100.0;
-	model.set_pcl_num(2);
-	pcl.x = 2.5;
-	model.add_pcl(pcl);
-	pcl.x = 3.5;
-	model.add_pcl(pcl);
+	model.set_pcl_num(pcl_num);
+	for (size_t i = 0; i < pcl_num; i++)
+	{
+		pcl.x = elem_len + (0.5 + i) * pcl_len;
+		model.add_pcl(pcl);
+	}
 
-	model.set_mesh(3, 2.0);
+	model.set_mesh(elem_num+3, elem_len);
 
 	model.set_vbc_num(2);
 	VelocityBC vbc;
@@ -40,8 +47,8 @@ void test_me_bspline_mpm1(void)
 	
 	model.set_tbc_num(1);
 	TractionBC_MPM tbc;
-	tbc.pcl_id = 1;
-	tbc.t = -1.0;
+	tbc.t = -20.0;
+	tbc.pcl_id = pcl_num - 1;
 	model.add_tbc(tbc);
 
 	model.update();
@@ -51,7 +58,7 @@ void test_me_bspline_mpm1(void)
 	
 	TimeHistory_Particle_1D_ME_AllPcl th1;
 	th1.set_name("test_out1");
-	th1.set_interval_num(100);
+	th1.set_interval_num(200);
 	th1.set_if_output_initial_state(false);
 	Particle_Field_1D_ME fld1[] = {
 		Particle_Field_1D_ME::x,
@@ -67,7 +74,7 @@ void test_me_bspline_mpm1(void)
 	step1.set_name("initial_step");
 	step1.set_model(&model);
 	step1.set_result_file(&res_file);
-	step1.set_step_time(20.0); // total_time
+	step1.set_step_time(10.0); // total_time
 	step1.set_dt(1.0e-3);
 	step1.add_output(&th1);
 

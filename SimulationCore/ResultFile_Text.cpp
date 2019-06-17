@@ -261,7 +261,7 @@ double *ResultFile_Text::get_field_data_buffer(TimeHistoryFileInfo *_pthfi, size
 int ResultFile_Text::flush_field_data_buffer(TimeHistoryFileInfo *_pthfi)
 {
 	TimeHistoryFileInfo_Text *pthfi = static_cast<TimeHistoryFileInfo_Text *>(_pthfi);
-	char str_tmp[25];
+	char str_tmp[32];
 #define str_tmp_size (sizeof(str_tmp)/sizeof(char))
 	size_t str_len;
 	size_t buf_pos;
@@ -274,12 +274,12 @@ int ResultFile_Text::flush_field_data_buffer(TimeHistoryFileInfo *_pthfi)
 	{
 		for (size_t j = 1; j < pthfi->field_num; j++)
 		{
-			str_len = snprintf(str_tmp, str_tmp_size, "%19.3e,", (reinterpret_cast<double *>(pthfi->buffer))[buf_pos]);
+			str_len = snprintf(str_tmp, str_tmp_size, "%26.10e,", (reinterpret_cast<double *>(pthfi->buffer))[buf_pos]);
 			strcpy(pthfi->text_buffer + pthfi->text_buffer_used_size, str_tmp);
 			pthfi->text_buffer_used_size += str_len;
 			++buf_pos;
 		}
-		str_len = snprintf(str_tmp, str_tmp_size, "%19.3e\n", (reinterpret_cast<double *>(pthfi->buffer))[buf_pos]);
+		str_len = snprintf(str_tmp, str_tmp_size, "%26.10e\n", (reinterpret_cast<double *>(pthfi->buffer))[buf_pos]);
 		strcpy(pthfi->text_buffer + pthfi->text_buffer_used_size, str_tmp);
 		pthfi->text_buffer_used_size += str_len;
 		++buf_pos;

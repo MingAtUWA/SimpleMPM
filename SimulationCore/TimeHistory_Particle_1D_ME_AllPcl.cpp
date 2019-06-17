@@ -42,8 +42,10 @@ int TimeHistory_Particle_1D_ME_AllPcl::init_per_step(void)
 		pcl_mem.add(ppcl);
 	}
 	pcls = pcl_mem.get_mem();
+	point_num = pcl_mem.get_num();
 
 	fld_infos = fld_mem.get_mem();
+	field_num = fld_mem.get_num();
 
 	return 0;
 }
@@ -131,7 +133,7 @@ void TimeHistory_Particle_1D_ME_AllPcl::output_mv(void)
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcls[i]->mv;
+		*pdata = pcls[i]->v * pcls[i]->m;
 		pdata += field_num;
 	}
 }
@@ -141,7 +143,7 @@ void TimeHistory_Particle_1D_ME_AllPcl::output_v(void)
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcls[i]->mv / pcls[i]->m;
+		*pdata = pcls[i]->v;
 		pdata += field_num;
 	}
 }

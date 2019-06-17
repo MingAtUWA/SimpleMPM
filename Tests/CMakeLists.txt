@@ -20,6 +20,7 @@ add_executable(
     test_me_kindamp_mpm1.cpp
     test_me_kindamp_mpm2.cpp
     test_me_bspline_mpm1.cpp
+    test_me_bspline_mpm2.cpp
     test_chm_mpm1.cpp
     test_chm_mpm2.cpp
     test_chm_visdamp_mpm1.cpp
