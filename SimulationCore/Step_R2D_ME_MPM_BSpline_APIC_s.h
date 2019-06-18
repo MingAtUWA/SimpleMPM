@@ -11,7 +11,8 @@ class Step_R2D_ME_MPM_BSpline_APIC_s : public Step
 {
 protected:
 	Model_R2D_ME_MPM_BSpline_s *model;
-	
+	double invD;
+
 public:
 	Step_R2D_ME_MPM_BSpline_APIC_s();
 	~Step_R2D_ME_MPM_BSpline_APIC_s();

@@ -2,6 +2,18 @@
 
 #include "Step_R2D_ME_MPM_BSpline_APIC_s.h"
 
+#define Mat_Set_Zero(mat) \
+	mat[0][0] = 0.0;      \
+	mat[0][1] = 0.0;      \
+	mat[1][0] = 0.0;      \
+	mat[1][1] = 0.0
+
+#define Mat_Prod_Num(mat_res, mat, num) \
+	mat_res[0][0] = mat[0][0] * num;    \
+	mat_res[0][1] = mat[0][1] * num;    \
+	mat_res[1][0] = mat[1][0] * num;    \
+	mat_res[1][1] = mat[1][1] * num
+
 Step_R2D_ME_MPM_BSpline_APIC_s::
 	Step_R2D_ME_MPM_BSpline_APIC_s() :
 	Step(&solve_substep_R2D_ME_MPM_BSpline_APIC_s),
@@ -14,21 +26,40 @@ int Step_R2D_ME_MPM_BSpline_APIC_s::init()
 {
 	if (is_first_step)
 	{
-		for (size_t i = 0; i < model->pcl_num; ++i)
+		invD = 4.0 / (model->h * model->h);
+		for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
 		{
-			ppcl = model->pcls + i;
-			ppcl->is_in_mesh = true;
-			ppcl->elem = nullptr;
+			auto &pcl = model->pcls[pcl_id];
+			pcl.is_in_mesh = model->is_in_mesh(pcl.x, pcl.y);
+			if (pcl.is_in_mesh)
+			{
+				pcl.base_node_x_id = model->base_node_x_index(pcl.x);
+				pcl.base_node_y_id = model->base_node_y_index(pcl.y);
+				// init C matrix for APIC
+				double B[2][2]; // B matrix
+				Mat_Set_Zero(B);
+				for (size_t nx_id = 0; nx_id < 3; ++nx_id)
+					for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+					{
+						double xi = model->xi(pcl.x, pcl.base_node_id + n_id);
+						pcl.N[n_id] = model->N(xi);
+						auto &pn = model->get_node_by_index(pcl.base_node_id + n_id);
+						// map to nodes
+						B += pcl.N[n_id] * pcl.v * (xi*model->h);
+					}
+				Mat_Prod_Num(pcl.C, B, invD);
+
+			}
 		}
 	}
 
-	for (size_t i = 0; i < model->pcl_num; i++)
+	for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
 	{
-		ppcl = model->pcls + i;
-		ppcl->x_ori = ppcl->x;
-		ppcl->y_ori = ppcl->y;
-		ppcl->ux = 0.0;
-		ppcl->uy = 0.0;
+		auto &pcl = model->pcls[pcl_id];
+		pcl.x_ori = pcl.x;
+		pcl.y_ori = pcl.y;
+		pcl.ux = 0.0;
+		pcl.uy = 0.0;
 	}
 	
 	return 0;
@@ -42,93 +73,31 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 	Model_R2D_ME_MPM_BSpline_s *model = self->model;
 
 	// init nodes
-	for (size_t i = 0; i < model->node_num; i++)
+	for (size_t n_id = 0; n_id < model->node_num; ++n_id)
 	{
-		pn = model->nodes + i;
-		pn->cal_flag = 0;
+		auto &pn = model->nodes[n_id];
+		pn.cal_flag = 0;
 		// for mapping to nodes
-		pn->m = 0.0;
-		pn->mmx = 0.0;
-		pn->mmy = 0.0;
-		pn->fx_ext_m = 0.0;
-		pn->fx_int_m = 0.0;
-		pn->fy_ext_m = 0.0;
-		pn->fy_int_m = 0.0;
-		// for mapping back to particles
-		pn->ax = 0.0;
-		pn->ay = 0.0;
-		pn->dmmx = 0.0;
-		pn->dmmy = 0.0;
-		pn->dux = 0.0;
-		pn->duy = 0.0;
+		pn.m = 0.0;
+		pn.ax = 0.0;
+		pn.ay = 0.0;
+		pn.vx = 0.0;
+		pn.vy = 0.0;
+		pn.dux = 0.0;
+		pn.duy = 0.0;
+		pn.fx_ext = 0.0;
+		pn.fy_ext = 0.0;
+		pn.fx_int = 0.0;
+		pn.fy_int = 0.0;
 	}
-
-	// To decide whether dt needs to be recalculated
-	double elem_len_min_tmp = std::numeric_limits<double>::max();
-	// init particles
-	for (size_t i = 0; i < model->pcl_num; i++)
-	{
-		ppcl = model->pcls + i;
-		if (ppcl->is_in_mesh)
-		{
-			ppcl->elem = model->find_in_which_element(ppcl->x, ppcl->y, ppcl->elem);
-			pelem = ppcl->elem;
-			if (pelem)
-			{
-				model->cal_shape_function(ppcl);
-				Get_Nodes_Of_Element_R2D(pelem, model, pn1, pn2, pn3, pn4);
-				// node 1
-				ppcl->node1 = pn1;
-				pn1->cal_flag = 1;
-				// node 2
-				ppcl->node2 = pn2;
-				pn2->cal_flag = 1;
-				// node 3
-				ppcl->node3 = pn3;
-				pn3->cal_flag = 1;
-				// node 4
-				ppcl->node4 = pn4;
-				pn4->cal_flag = 1;
-
-				if (elem_len_min_tmp > pelem->char_len)
-					elem_len_min_tmp = pelem->char_len;
-			}
-			else
-			{
-				ppcl->is_in_mesh = false;
-			}
-		}
-	}
-
-	// calculate critical time step
-	if (self->elem_len_min > elem_len_min_tmp)
-	{
-		self->elem_len_min = elem_len_min_tmp;
-		double cri_dt, cri_dt_tmp;
-		cri_dt = std::numeric_limits<double>::max();
-		for (size_t i = 0; i < model->pcl_num; i++)
-		{
-			ppcl = model->pcls + i;
-			if (ppcl->elem)
-			{
-				cri_dt_tmp = ppcl->critical_time_step(ppcl->elem->char_len);
-				if (cri_dt > cri_dt_tmp)
-					cri_dt = cri_dt_tmp;
-			}
-		}
-		self->dt = cri_dt_tmp * self->dt_adjust_factor;
-		self->time_tol = self->dt * self->time_tol_ratio;
-		//std::cout << self->id << " " << self->dt << "\n";
-	}
-
+	
 	// map variables to node and cal internal force
-	double vol_tmp;
-	for (size_t i = 0; i < model->pcl_num; i++)
+	for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
 	{
-		ppcl = model->pcls + i;
-		if (ppcl->is_in_mesh)
+		auto &pcl = model->pcls[pcl_id];
+		if (pcl.is_in_mesh)
 		{
-			vol_tmp = ppcl->m / ppcl->density;
+			double vol_tmp = pcl.m / pcl.density;
 			// node 1
 			pn1 = ppcl->node1;
 			pn1->m   += ppcl->m   * ppcl->N1;
@@ -136,37 +105,15 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 			pn1->mmy += ppcl->mmy * ppcl->N1;
 			pn1->fx_int_m += vol_tmp * (ppcl->dN1_dx * ppcl->s11 + ppcl->dN1_dy * ppcl->s12);
 			pn1->fy_int_m += vol_tmp * (ppcl->dN1_dx * ppcl->s12 + ppcl->dN1_dy * ppcl->s22);
-			// node 2
-			pn2 = ppcl->node2;
-			pn2->m   += ppcl->m   * ppcl->N2;
-			pn2->mmx += ppcl->mmx * ppcl->N2;
-			pn2->mmy += ppcl->mmy * ppcl->N2;
-			pn2->fx_int_m += vol_tmp * (ppcl->dN2_dx * ppcl->s11 + ppcl->dN2_dy * ppcl->s12);
-			pn2->fy_int_m += vol_tmp * (ppcl->dN2_dx * ppcl->s12 + ppcl->dN2_dy * ppcl->s22);
-			// node 3
-			pn3 = ppcl->node3;
-			pn3->m   += ppcl->m   * ppcl->N3;
-			pn3->mmx += ppcl->mmx * ppcl->N3;
-			pn3->mmy += ppcl->mmy * ppcl->N3;
-			pn3->fx_int_m += vol_tmp * (ppcl->dN3_dx * ppcl->s11 + ppcl->dN3_dy * ppcl->s12);
-			pn3->fy_int_m += vol_tmp * (ppcl->dN3_dx * ppcl->s12 + ppcl->dN3_dy * ppcl->s22);
-			// node 4
-			pn4 = ppcl->node4;
-			pn4->m   += ppcl->m   * ppcl->N4;
-			pn4->mmx += ppcl->mmx * ppcl->N4;
-			pn4->mmy += ppcl->mmy * ppcl->N4;
-			pn4->fx_int_m += vol_tmp * (ppcl->dN4_dx * ppcl->s11 + ppcl->dN4_dy * ppcl->s12);
-			pn4->fy_int_m += vol_tmp * (ppcl->dN4_dx * ppcl->s12 + ppcl->dN4_dy * ppcl->s22);
 		}
 	}
 
 	// body force
-	double bf_tmp;
 	for (size_t i = 0; i < model->bfx_num; i++)
 	{
-		ppcl = model->pcls + model->bfxs[i].pcl_id;
-		bf_tmp = ppcl->m * model->bfxs[i].bf;
-		if (ppcl->is_in_mesh)
+		auto &pcl = model->pcls[model->bfxs[i].pcl_id];
+		double bf_tmp = pcl.m * model->bfxs[i].bf;
+		if (pcl.is_in_mesh)
 		{
 			ppcl->node1->fx_ext_m += bf_tmp * ppcl->N1;
 			ppcl->node2->fx_ext_m += bf_tmp * ppcl->N2;

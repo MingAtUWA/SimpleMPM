@@ -69,7 +69,12 @@ public:
 	// APIC C matrix, C = B * 1/D
 	double C[2][2];
 
-	double u, v;
+	// weight
+	double N[3][3];
+	double dN_dx[3][3];
+	double dN_dy[3][3];
+
+	double ux, uy;
 	double x_ori, y_ori;
 
 	bool is_in_mesh;
@@ -187,7 +192,7 @@ public:
 		return size_t((y - y_start) / h + 0.5);
 	}
 
-	inline Node_R2D_ME_Grid &get_node_by_index(size_t i, size_t j) const
+	inline Node_R2D_ME_Grid &get_node(size_t i, size_t j) const
 	{
 		return nodes[j * node_x_num + i];
 	}
