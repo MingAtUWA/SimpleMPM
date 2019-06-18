@@ -50,6 +50,10 @@ struct Particle_1D_ME
 	// plastic strain
 	//double ps11;
 
+	// APIC C matrix
+	// C = B * 1/D
+	double C;
+
 public:
 	inline void init(void)
 	{

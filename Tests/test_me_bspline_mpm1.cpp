@@ -3,6 +3,7 @@
 #include "Model_1D_ME_MPM_BSpline_s.h"
 
 #include "Step_1D_ME_MPM_BSpline_s.h"
+#include "Step_1D_ME_MPM_BSpline_APIC_s.h"
 
 #include "TimeHistory_ConsoleProgressBar.h"
 #include "TimeHistory_Particle_1D_ME_AllPcl.h"
@@ -63,7 +64,8 @@ void test_me_bspline_mpm1(void)
 	for (size_t i = 0; i < sizeof(fld1) / sizeof(fld1[0]); i++)
 		th1.add_field(fld1[i]);
 
-	Step_1D_ME_MPM_BSpline_s step1;
+	//Step_1D_ME_MPM_BSpline_s step1;
+	Step_1D_ME_MPM_BSpline_APIC_s step1;
 	step1.set_name("initial_step");
 	step1.set_model(&model);
 	step1.set_result_file(&res_file);
