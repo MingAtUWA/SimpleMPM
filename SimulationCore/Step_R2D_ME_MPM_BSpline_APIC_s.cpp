@@ -36,19 +36,22 @@ int Step_R2D_ME_MPM_BSpline_APIC_s::init()
 				pcl.base_node_x_id = model->base_node_x_index(pcl.x);
 				pcl.base_node_y_id = model->base_node_y_index(pcl.y);
 				// init C matrix for APIC
-				double B[2][2]; // B matrix
+				double B[2][2]; // B matrix for APIC
 				Mat_Set_Zero(B);
 				for (size_t nx_id = 0; nx_id < 3; ++nx_id)
 					for (size_t ny_id = 0; ny_id < 3; ++ny_id)
 					{
-						double xi = model->xi(pcl.x, pcl.base_node_id + n_id);
-						pcl.N[n_id] = model->N(xi);
-						auto &pn = model->get_node_by_index(pcl.base_node_id + n_id);
-						// map to nodes
-						B += pcl.N[n_id] * pcl.v * (xi*model->h);
+						// B = sum (N * v * dist_T)
+						auto &n = *pcl.pn[ny_id][nx_id];
+						double vx_prod_N = n.vx * pcl.N[ny_id][nx_id];
+						double vy_prod_N = n.vy * pcl.N[ny_id][nx_id];
+						B[0][0] += vx_prod_N * pcl.x_dist[nx_id];
+						B[0][1] += vx_prod_N * pcl.y_dist[ny_id];
+						B[1][0] += vy_prod_N * pcl.x_dist[nx_id];
+						B[1][1] += vy_prod_N * pcl.y_dist[ny_id];
 					}
+				// update C matrix for APIC
 				Mat_Prod_Num(pcl.C, B, invD);
-
 			}
 		}
 	}
@@ -77,14 +80,10 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 	{
 		auto &pn = model->nodes[n_id];
 		pn.cal_flag = 0;
-		// for mapping to nodes
 		pn.m = 0.0;
 		pn.ax = 0.0;
 		pn.ay = 0.0;
 		pn.vx = 0.0;
-		pn.vy = 0.0;
-		pn.dux = 0.0;
-		pn.duy = 0.0;
 		pn.fx_ext = 0.0;
 		pn.fy_ext = 0.0;
 		pn.fx_int = 0.0;
@@ -95,16 +94,27 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 	for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
 	{
 		auto &pcl = model->pcls[pcl_id];
+		pcl.is_in_mesh = model->is_in_mesh(pcl.x, pcl.y);
 		if (pcl.is_in_mesh)
 		{
+			model->cal_shape_func(pcl);
 			double vol_tmp = pcl.m / pcl.density;
-			// node 1
-			pn1 = ppcl->node1;
-			pn1->m   += ppcl->m   * ppcl->N1;
-			pn1->mmx += ppcl->mmx * ppcl->N1;
-			pn1->mmy += ppcl->mmy * ppcl->N1;
-			pn1->fx_int_m += vol_tmp * (ppcl->dN1_dx * ppcl->s11 + ppcl->dN1_dy * ppcl->s12);
-			pn1->fy_int_m += vol_tmp * (ppcl->dN1_dx * ppcl->s12 + ppcl->dN1_dy * ppcl->s22);
+			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
+				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+				{
+					auto &n = model->get_node(pcl.base_node_x_id + nx_id, pcl.base_node_y_id + ny_id);
+					// map mass
+					double m_prod_N = pcl.m * pcl.N[ny_id][nx_id];
+					n.m += m_prod_N;
+					// map momentum
+					double Qx, Qy; // Q = C * (xi - xp)
+					Qx = pcl.C[0][0] * pcl.x_dist[nx_id] + pcl.C[0][1] * pcl.y_dist[ny_id];
+					Qy = pcl.C[1][0] * pcl.x_dist[nx_id] + pcl.C[1][1] * pcl.y_dist[ny_id];
+					n.vx += m_prod_N * (pcl.vx + Qx);
+					n.vy += m_prod_N * (pcl.vy + Qy);
+					n.fx_int += (pcl.dN_dx[ny_id][nx_id] * pcl.s11 + pcl.dN_dy[ny_id][nx_id] * pcl.s12) * vol_tmp;
+					n.fy_int += (pcl.dN_dx[ny_id][nx_id] * pcl.s12 + pcl.dN_dy[ny_id][nx_id] * pcl.s22) * vol_tmp;
+				}
 		}
 	}
 
@@ -112,187 +122,182 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 	for (size_t i = 0; i < model->bfx_num; i++)
 	{
 		auto &pcl = model->pcls[model->bfxs[i].pcl_id];
-		double bf_tmp = pcl.m * model->bfxs[i].bf;
 		if (pcl.is_in_mesh)
 		{
-			ppcl->node1->fx_ext_m += bf_tmp * ppcl->N1;
-			ppcl->node2->fx_ext_m += bf_tmp * ppcl->N2;
-			ppcl->node3->fx_ext_m += bf_tmp * ppcl->N3;
-			ppcl->node4->fx_ext_m += bf_tmp * ppcl->N4;
+			double bf_tmp = pcl.m * model->bfxs[i].bf;
+			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
+				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+				{
+					auto &n = model->get_node(pcl.base_node_x_id + nx_id, pcl.base_node_y_id + ny_id);
+					n.fx_ext += bf_tmp * pcl.N[ny_id][nx_id];
+				}
 		}
 	}
 	for (size_t i = 0; i < model->bfy_num; i++)
 	{
-		ppcl = model->pcls + model->bfys[i].pcl_id;
-		bf_tmp = ppcl->m * model->bfys[i].bf;
-		if (ppcl->is_in_mesh)
+		auto &pcl = model->pcls[model->bfys[i].pcl_id];
+		if (pcl.is_in_mesh)
 		{
-			ppcl->node1->fy_ext_m += bf_tmp * ppcl->N1;
-			ppcl->node2->fy_ext_m += bf_tmp * ppcl->N2;
-			ppcl->node3->fy_ext_m += bf_tmp * ppcl->N3;
-			ppcl->node4->fy_ext_m += bf_tmp * ppcl->N4;
+			double bf_tmp = pcl.m * model->bfys[i].bf;
+			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
+				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+				{
+					auto &n = model->get_node(pcl.base_node_x_id + nx_id, pcl.base_node_y_id + ny_id);
+					n.fy_ext += bf_tmp * pcl.N[ny_id][nx_id];
+				}
 		}
 	}
 
 	// surface force
-	for (size_t i = 0; i < model->tx_bc_num; i++)
+	for (size_t i = 0; i < model->tx_num; i++)
 	{
-		ppcl = model->pcls + model->tx_bcs[i].pcl_id;
-		if (ppcl->is_in_mesh)
+		auto &pcl = model->pcls[model->txs[i].pcl_id];
+		if (pcl.is_in_mesh)
 		{
-			ppcl->node1->fx_ext_m += model->tx_bcs[i].t * ppcl->N1;
-			ppcl->node2->fx_ext_m += model->tx_bcs[i].t * ppcl->N2;
-			ppcl->node3->fx_ext_m += model->tx_bcs[i].t * ppcl->N3;
-			ppcl->node4->fx_ext_m += model->tx_bcs[i].t * ppcl->N4;
+			double tf_tmp = model->txs[i].t;
+			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
+				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+				{
+					auto &n = model->get_node(pcl.base_node_x_id + nx_id, pcl.base_node_y_id + ny_id);
+					n.fy_ext += tf_tmp * pcl.N[ny_id][nx_id];
+				}
 		}
 	}
-	for (size_t i = 0; i < model->ty_bc_num; i++)
+	for (size_t i = 0; i < model->ty_num; i++)
 	{
-		ppcl = model->pcls + model->ty_bcs[i].pcl_id;
-		if (ppcl->is_in_mesh)
+		auto &pcl = model->pcls[model->tys[i].pcl_id];
+		if (pcl.is_in_mesh)
 		{
-			ppcl->node1->fy_ext_m += model->ty_bcs[i].t * ppcl->N1;
-			ppcl->node2->fy_ext_m += model->ty_bcs[i].t * ppcl->N2;
-			ppcl->node3->fy_ext_m += model->ty_bcs[i].t * ppcl->N3;
-			ppcl->node4->fy_ext_m += model->ty_bcs[i].t * ppcl->N4;
+			double tf_tmp = model->tys[i].t;
+			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
+				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+				{
+					auto &n = model->get_node(pcl.base_node_x_id + nx_id, pcl.base_node_y_id + ny_id);
+					n.fy_ext += tf_tmp * pcl.N[ny_id][nx_id];
+				}
 		}
 	}
 
 	// update nodal acceleration
-	for (size_t i = 0; i < model->node_num; i++)
+	for (size_t n_id = 0; n_id < model->node_num; ++n_id)
 	{
-		pn = model->nodes + i;
-		if (pn->cal_flag)
+		auto &n = model->nodes[n_id];
+		if (n.cal_flag)
 		{
-			pn->ax = (pn->fx_ext_m - pn->fx_int_m) / pn->m;
-			pn->ay = (pn->fy_ext_m - pn->fy_int_m) / pn->m;
+			n.ax = (n.fx_ext - n.fx_int) / n.m;
+			n.ay = (n.fy_ext - n.fy_int) / n.m;
 		}
 	}
 	// apply acceleration boundary conditions
-	for (size_t i = 0; i < model->ax_s_bc_num; i++)
+	for (size_t i = 0; i < model->ax_num; i++)
 	{
-		pn = model->nodes + model->ax_s_bcs[i].node_id;
-		if (pn->cal_flag)
-			pn->ax = model->ax_s_bcs[i].a;
+		auto &n = model->nodes[model->axs[i].node_id];
+		n.ax = model->axs[i].a;
 	}
-	for (size_t i = 0; i < model->ay_s_bc_num; i++)
+	for (size_t i = 0; i < model->ay_num; i++)
 	{
-		pn = model->nodes + model->ay_s_bcs[i].node_id;
-		if (pn->cal_flag)
-			pn->ay = model->ay_s_bcs[i].a;
+		auto &n = model->nodes[model->ays[i].node_id];
+		n.ay = model->ays[i].a;
 	}
 
 	// update nodal momentum
-	for (size_t i = 0; i < model->node_num; i++)
+	for (size_t n_id = 0; n_id < model->node_num; ++n_id)
 	{
-		pn = model->nodes + i;
-		if (pn->cal_flag)
+		auto &n = model->nodes[n_id];
+		if (n.cal_flag)
 		{
-			pn->dmmx = pn->m * pn->ax * self->dt;
-			pn->dmmy = pn->m * pn->ay * self->dt;
-			pn->mmx += pn->dmmx;
-			pn->mmy += pn->dmmy;
+			n.vx = n.vx / n.m + n.ax * self->dt;
+			n.vy = n.vy / n.m + n.ay * self->dt;
 		}
 	}
 	// apply velocity boundary conditions
-	for (size_t i = 0; i < model->vx_s_bc_num; i++)
+	for (size_t i = 0; i < model->vx_num; i++)
 	{
-		pn = model->nodes + model->vx_s_bcs[i].node_id;
-		if (pn->cal_flag)
-		{
-			pn->mmx = pn->m * model->vx_s_bcs[i].v;
-			pn->dmmx = 0.0;
-			pn->ax = 0.0;
-		}
+		auto &n = model->nodes[model->vxs[i].node_id];
+		n.vx = model->vxs[i].v;
+		n.ax = 0.0;
 	}
-	for (size_t i = 0; i < model->vy_s_bc_num; i++)
+	for (size_t i = 0; i < model->vy_num; i++)
 	{
-		pn = model->nodes + model->vy_s_bcs[i].node_id;
-		if (pn->cal_flag)
-		{
-			pn->mmy = pn->m * model->vy_s_bcs[i].v;
-			pn->dmmy = 0.0;
-			pn->ay = 0.0;
-		}
-	}
-
-	// update displacement increment
-	for (size_t i = 0; i < model->node_num; i++)
-	{
-		pn = model->nodes + i;
-		if (pn->cal_flag)
-		{
-			pn->vx = pn->mmx / pn->m;
-			pn->vy = pn->mmy / pn->m;
-			pn->dux = pn->vx * self->dt;
-			pn->duy = pn->vy * self->dt;
-		}
+		auto &n = model->nodes[model->vys[i].node_id];
+		n.vy = model->vys[i].v;
+		n.ay = 0.0;
 	}
 
 	// map variables back to and update variables particles
-	double N1_tmp, N2_tmp, N3_tmp, N4_tmp;
-	double de_vol, ds11, ds22, ds12;
-	double E_tmp;
-
-	for (size_t i = 0; i < model->pcl_num; i++)
+	for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
 	{
-		ppcl = model->pcls + i;
-		if (ppcl->is_in_mesh)
+		auto &pcl = model->pcls[pcl_id];
+		if (pcl.is_in_mesh)
 		{
-			/* map variables back to particles */
-			pn1 = ppcl->node1;
-			pn2 = ppcl->node2;
-			pn3 = ppcl->node3;
-			pn4 = ppcl->node4;
-			N1_tmp = ppcl->N1;
-			N2_tmp = ppcl->N2;
-			N3_tmp = ppcl->N3;
-			N4_tmp = ppcl->N4;
-
-			// momentum (velocity)
-			ppcl->mmx += ppcl->m * self->dt * (pn1->ax * N1_tmp + pn2->ax * N2_tmp + pn3->ax * N3_tmp + pn4->ax * N4_tmp);
-			ppcl->mmy += ppcl->m * self->dt * (pn1->ay * N1_tmp + pn2->ay * N2_tmp + pn3->ay * N3_tmp + pn4->ay * N4_tmp);
-						
+			pcl.vx = 0.0;
+			pcl.vy = 0.0;
+			double B[2][2]; // B matrix for APIC
+			Mat_Set_Zero(B);
+			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
+				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+				{
+					auto &n = *pcl.pn[ny_id][nx_id];
+					// map velocity
+					double vx_prod_N = n.vx * pcl.N[ny_id][nx_id];
+					double vy_prod_N = n.vy * pcl.N[ny_id][nx_id];
+					pcl.vx += vx_prod_N;
+					pcl.vy += vy_prod_N;
+					// B = sum (N * v * dist_T)
+					B[0][0] += vx_prod_N * pcl.x_dist[nx_id];
+					B[0][1] += vx_prod_N * pcl.y_dist[ny_id];
+					B[1][0] += vy_prod_N * pcl.x_dist[nx_id];
+					B[1][1] += vy_prod_N * pcl.y_dist[ny_id];
+				}
+			// update C matrix for APIC
+			Mat_Prod_Num(pcl.C, B, self->invD);
+			
 			// displacement
-			ppcl->ux += pn1->dux * N1_tmp + pn2->dux * N2_tmp
-					  + pn3->dux * N3_tmp + pn4->dux * N4_tmp;
-			ppcl->uy += pn1->duy * N1_tmp + pn2->duy * N2_tmp
-					  + pn3->duy * N3_tmp + pn4->duy * N4_tmp;
+			pcl.ux += pcl.vx * self->dt;
+			pcl.uy += pcl.vy * self->dt;
 			// update position
-			ppcl->x = ppcl->x_ori + ppcl->ux;
-			ppcl->y = ppcl->y_ori + ppcl->uy;
+			pcl.x = pcl.x_ori + pcl.ux;
+			pcl.y = pcl.y_ori + pcl.uy;
 			
 			// strain increment
-			ppcl->de11 = pn1->dux * ppcl->dN1_dx + pn2->dux * ppcl->dN2_dx
-					   + pn3->dux * ppcl->dN3_dx + pn4->dux * ppcl->dN4_dx;
-			ppcl->de22 = pn1->duy * ppcl->dN1_dy + pn2->duy * ppcl->dN2_dy
-					   + pn3->duy * ppcl->dN3_dy + pn4->duy * ppcl->dN4_dy;
-			ppcl->de12 = (pn1->dux * ppcl->dN1_dy + pn2->dux * ppcl->dN2_dy
-						+ pn3->dux * ppcl->dN3_dy + pn4->dux * ppcl->dN4_dy
-						+ pn1->duy * ppcl->dN1_dx + pn2->duy * ppcl->dN2_dx
-						+ pn3->duy * ppcl->dN3_dx + pn4->duy * ppcl->dN4_dx) * 0.5;
-			ppcl->dw12 = (pn1->dux * ppcl->dN1_dy + pn2->dux * ppcl->dN2_dy
-						+ pn3->dux * ppcl->dN3_dy + pn4->dux * ppcl->dN4_dy
-						- pn1->duy * ppcl->dN1_dx - pn2->duy * ppcl->dN2_dx
-						- pn3->duy * ppcl->dN3_dx - pn4->duy * ppcl->dN4_dx) * 0.5;
+			double dux, duy;
+			double de11, de22, de12, dw12;
+			de11 = 0.0;
+			de22 = 0.0;
+			de12 = 0.0;
+			dw12 = 0.0;
+			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
+				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+				{
+					auto &n = *pcl.pn[ny_id][nx_id];
+					dux = n.vx * self->dt;
+					duy = n.vy * self->dt;
+					de11 += dux * pcl.dN_dx[ny_id][nx_id];
+					de22 += duy * pcl.dN_dy[ny_id][nx_id];
+					de12 += (dux * pcl.dN_dy[ny_id][nx_id]
+						   + duy * pcl.dN_dx[ny_id][nx_id]) * 0.5;
+					dw12 += (dux * pcl.dN_dy[ny_id][nx_id]
+						   - duy * pcl.dN_dx[ny_id][nx_id]) * 0.5;
+				}
 			
 			/* update variables at particles */
-			de_vol = ppcl->de11 + ppcl->de22;
-			ppcl->density /= (1.0 + de_vol);
+			double de_vol = de11 + de22;
+			pcl.density /= (1.0 + de_vol);
 
 			// update strain (also assume that strain increment is Jaumann rate)
 			//ppcl->de11 +=  ppcl->dw12 * ppcl->e12 * 2.0;
 			//ppcl->de22 += -ppcl->dw12 * ppcl->e12 * 2.0;
 			//ppcl->de12 +=  ppcl->dw12 * (ppcl->e22 - ppcl->e11);
-			ppcl->e11 += ppcl->de11;
-			ppcl->e22 += ppcl->de22;
-			ppcl->e12 += ppcl->de12;
+			pcl.e11 += de11;
+			pcl.e22 += de22;
+			pcl.e12 += de12;
 
 			// update stress
-			E_tmp = ppcl->E / (1.0 + ppcl->niu) / (1.0 - 2.0 * ppcl->niu);
-			ds11 = E_tmp * ((1.0 - ppcl->niu) * ppcl->de11 + ppcl->niu * ppcl->de22);
-			ds12 = 2.0 * ppcl->de12 * ppcl->E / (2.0 * (1.0 + ppcl->niu));
-			ds22 = E_tmp * (ppcl->niu * ppcl->de11 + (1.0 - ppcl->niu) * ppcl->de22);
+			double ds11, ds22, ds12;
+			double E_tmp = pcl.E / (1.0 + pcl.niu) / (1.0 - 2.0 * pcl.niu);
+			ds11 = E_tmp * ((1.0 - pcl.niu) * de11 + pcl.niu * de22);
+			ds22 = E_tmp * (pcl.niu * de11 + (1.0 - pcl.niu) * de22);
+			ds12 = 2.0 * de12 * pcl.E / (2.0 * (1.0 + pcl.niu));
 
 			/* ------------------------------------------------------------------
 			Rotate as Jaumann rate:
@@ -301,9 +306,9 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 /*			ds11 +=  ppcl->dw12 * ppcl->s12 * 2.0;
 			ds22 += -ppcl->dw12 * ppcl->s12 * 2.0;
 			ds12 +=  ppcl->dw12 * (ppcl->s22 - ppcl->s11);	*/	
-			ppcl->s11 += ds11;
-			ppcl->s22 += ds22;
-			ppcl->s12 += ds12;
+			pcl.s11 += ds11;
+			pcl.s22 += ds22;
+			pcl.s12 += ds12;
 		}
 	}
 

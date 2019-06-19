@@ -14,7 +14,7 @@
 
 // 1D bspline mechanics
 // compression
-void test_me_bspline_mpm2(void)
+void test_me_1D_bspline_mpm2(void)
 {
 	Model_1D_ME_MPM_BSpline_s model;
 	size_t elem_num = 100;

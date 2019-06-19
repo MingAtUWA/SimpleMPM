@@ -14,7 +14,7 @@
 
 // 1D bspline mechanics
 // 3 element (len = 2.0), 2 pcls
-void test_me_bspline_mpm1(void)
+void test_me_1D_bspline_mpm1(void)
 {
 	Model_1D_ME_MPM_BSpline_s model;
 

@@ -13,8 +13,8 @@ struct Node_R2D_ME_Grid
 
 	// acceleration, velocity
 	// displacement increment
-	double ax, vx, dux;
-	double ay, vy, duy;
+	double ax, vx;
+	double ay, vy;
 	// mass
 	double m;
 	// external force
@@ -70,6 +70,9 @@ public:
 	double C[2][2];
 
 	// weight
+	double x_dist[3], y_dist[3];
+	// [y][x]
+	Node_R2D_ME_Grid *pn[3][3]; // nodey0x0, nodey0x1, nodey0x2
 	double N[3][3];
 	double dN_dx[3][3];
 	double dN_dy[3][3];
@@ -81,6 +84,7 @@ public:
 	size_t base_node_x_id;
 	size_t base_node_y_id;
 };
+
 
 struct Model_R2D_ME_MPM_BSpline_s : public Model
 {
@@ -202,19 +206,115 @@ public:
 
 	// ================= shape function =================
 	// (-1.5, -0.5)
-	inline double N_left(double u) const { return (3.0 + 2.0*u) * (3.0 + 2.0*u) / 8.0; }
+	#define N_left(u) ((3.0 + 2.0*(u)) * (3.0 + 2.0*(u)) / 8.0)
 	// (-0.5, 0.5)
-	inline double N_mid(double u) const { return 0.75 - u*u; }
+	#define N_mid(u) (0.75 - (u)*(u))
 	// (0.5, 1.5)
-	inline double N_right(double u) const {	return (3.0 - 2.0*u) * (3.0 - 2.0*u) / 8.0; }
+	#define N_right(u) ((3.0 - 2.0*(u)) * (3.0 - 2.0*(u)) / 8.0)
 
 	// ========== derivative of shape function ==========
 	// (-1.5, -0.5)
-	inline double dN_dx_left(double u) const { return 0.5 * (2.0*u + 3.0) / h; }
+	#define dN_dx_left(u) (0.5 * (2.0*(u) + 3.0) / h)
 	// (-0.5, 0.5)
-	inline double dN_dx_mid(double u) const { return -2.0 * u / h; }
+	#define dN_dx_mid(u) (2.0 * (u) / h)
 	// (0.5, 1.5)
-	inline double dN_dx_right(double u) const { return 0.5 * (2.0*u - 3.0) / h; }
+	#define dN_dx_right(u) (0.5 * (2.0*(u) - 3.0) / h)
+
+	inline void cal_shape_func(Particle_R2D_ME_Grid &pcl)
+	{
+		double dist, dist_norm;
+		double Nx0, Nx1, Nx2;
+		double dNx0_dx, dNx1_dx, dNx2_dx;
+		double Ny0, Ny1, Ny2;
+		double dNy0_dy, dNy1_dy, dNy2_dy;
+
+		// Nx0
+		dist = (pcl.x - x_start) - h * double(pcl.base_node_x_id);
+		pcl.x_dist[0] = dist;
+		dist_norm = dist / h;
+		Nx0 = N_right(dist_norm);
+		dNx0_dx = dN_dx_right(dist_norm);
+		// Nx1
+		dist -= h;
+		pcl.x_dist[1] = dist;
+		dist_norm -= 1.0;
+		Nx1 = N_mid(dist_norm);
+		dNx1_dx = dN_dx_mid(dist_norm);
+		// Nx2
+		dist -= h;
+		pcl.x_dist[2] = dist;
+		dist_norm -= 1.0;
+		Nx2 = N_left(dist_norm);
+		dNx2_dx = dN_dx_left(dist_norm);
+		// Ny0
+		dist = (pcl.y - y_start) - h * double(pcl.base_node_y_id);
+		pcl.y_dist[0] = dist;
+		dist_norm = dist / h;
+		Ny0 = N_right(dist_norm);
+		dNy0_dy = dN_dx_right(dist_norm);
+		// Ny1
+		dist -= h;
+		pcl.y_dist[1] = dist;
+		dist_norm -= 1.0;
+		Ny1 = N_mid(dist_norm);
+		dNy1_dy = dN_dx_mid(dist_norm);
+		// Ny2
+		dist -= h;
+		pcl.y_dist[2] = dist;
+		dist_norm -= 1.0;
+		Ny2 = N_left(dist_norm);
+		dNy2_dy = dN_dx_left(dist_norm);
+
+		auto pn = nodes + node_x_num * pcl.base_node_y_id + pcl.base_node_x_id;
+		pcl.pn[0][0] = pn;
+		pcl.pn[0][1] = pn + 1;
+		pcl.pn[0][2] = pn + 2;
+		pn += node_x_num;
+		pcl.pn[1][0] = pn;
+		pcl.pn[1][1] = pn + 1;
+		pcl.pn[1][2] = pn + 2;
+		pn += node_x_num;
+		pcl.pn[2][0] = pn;
+		pcl.pn[2][1] = pn + 1;
+		pcl.pn[2][2] = pn + 2;
+
+		pcl.N[0][0] = Ny0 * Nx0;
+		pcl.N[0][1] = Ny0 * Nx1;
+		pcl.N[0][2] = Ny0 * Nx2;
+		pcl.N[1][0] = Ny1 * Nx0;
+		pcl.N[1][1] = Ny1 * Nx1;
+		pcl.N[1][2] = Ny1 * Nx2;
+		pcl.N[2][0] = Ny2 * Nx0;
+		pcl.N[2][1] = Ny2 * Nx1;
+		pcl.N[2][2] = Ny2 * Nx2;
+
+		pcl.dN_dx[0][0] = Ny0 * dNx0_dx;
+		pcl.dN_dx[0][1] = Ny0 * dNx1_dx;
+		pcl.dN_dx[0][2] = Ny0 * dNx2_dx;
+		pcl.dN_dx[1][0] = Ny1 * dNx0_dx;
+		pcl.dN_dx[1][1] = Ny1 * dNx1_dx;
+		pcl.dN_dx[1][2] = Ny1 * dNx2_dx;
+		pcl.dN_dx[2][0] = Ny2 * dNx0_dx;
+		pcl.dN_dx[2][1] = Ny2 * dNx1_dx;
+		pcl.dN_dx[2][2] = Ny2 * dNx2_dx;
+
+		pcl.dN_dy[0][0] = dNy0_dy * Nx0;
+		pcl.dN_dy[0][1] = dNy0_dy * Nx1;
+		pcl.dN_dy[0][2] = dNy0_dy * Nx2;
+		pcl.dN_dy[1][0] = dNy1_dy * Nx0;
+		pcl.dN_dy[1][1] = dNy1_dy * Nx1;
+		pcl.dN_dy[1][2] = dNy1_dy * Nx2;
+		pcl.dN_dy[2][0] = dNy2_dy * Nx0;
+		pcl.dN_dy[2][1] = dNy2_dy * Nx1;
+		pcl.dN_dy[2][2] = dNy2_dy * Nx2;
+	}
 };
+
+#undef N_left
+#undef N_mid
+#undef N_right
+#undef dN_dx_left
+#undef dN_dx_mid
+#undef dN_dx_right
 
 #endif

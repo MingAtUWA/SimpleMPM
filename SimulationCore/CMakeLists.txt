@@ -63,6 +63,7 @@ add_library(
     # Purely mechanics (2D, B-spline, APIC)
     Model_R2D_ME_MPM_BSpline_s.h Model_R2D_ME_MPM_BSpline_s.cpp
     Step_R2D_ME_MPM_BSpline_APIC_s.h Step_R2D_ME_MPM_BSpline_APIC_s.cpp
+    TimeHistory_Particle_2D_ME_AllPcl_s.h TimeHistory_Particle_2D_ME_AllPcl_s.cpp
     )
 
 target_include_directories(
