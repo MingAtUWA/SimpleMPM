@@ -35,6 +35,7 @@ int Step_R2D_ME_MPM_BSpline_APIC_s::init()
 			{
 				pcl.base_node_x_id = model->base_node_x_index(pcl.x);
 				pcl.base_node_y_id = model->base_node_y_index(pcl.y);
+				model->cal_shape_func(pcl);
 				// init C matrix for APIC
 				double B[2][2]; // B matrix for APIC
 				Mat_Set_Zero(B);
@@ -84,6 +85,7 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 		pn.ax = 0.0;
 		pn.ay = 0.0;
 		pn.vx = 0.0;
+		pn.vy = 0.0;
 		pn.fx_ext = 0.0;
 		pn.fy_ext = 0.0;
 		pn.fx_int = 0.0;

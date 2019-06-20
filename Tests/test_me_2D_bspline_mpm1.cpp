@@ -52,7 +52,7 @@ void test_me_2D_bspline_mpm1(void)
 	for (size_t i = 0; i < 16; i++)
 	{
 		vbc.node_id = i;
-		model.add_vy(vbc);
+		model.add_vx(vbc);
 	}
 
 	model.set_ty_num(2);

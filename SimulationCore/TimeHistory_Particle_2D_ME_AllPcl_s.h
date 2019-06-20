@@ -4,7 +4,7 @@
 #include "ItemArray.hpp"
 #include "TimeHistory.h"
 
-#include "Object_Particle_2D_ME.h"
+#include "Model_R2D_ME_MPM_BSpline_s.h"
 
 // Field variables that can be output from nodes
 enum class Particle_Field_2D_ME : unsigned short int
@@ -16,28 +16,17 @@ enum class Particle_Field_2D_ME : unsigned short int
 	m   = 5,
 	vx  = 6,
 	vy  = 7,
-	momentum_x = 8,
-	momentum_y = 9,
-
+	mvx = 8,
+	mvy = 9,
+	// stress
 	s11 = 11,
 	s22 = 12,
-	s33 = 13,
-	s12 = 14,
-	s23 = 15,
-	s31 = 16,
-
-	e11 = 20,
-	e22 = 21,
-	e12 = 22,
-	es11 = 23,
-	es22 = 24,
-	es12 = 25,
-	ps11 = 26,
-	ps22 = 27,
-	ps12 = 28
+	s12 = 13,
+	// strain
+	e11 = 16,
+	e22 = 17,
+	e12 = 18,
 };
-
-struct Model_R2D_ME_MPM;
 
 /* ===========================================================
 Class TimeHistory_Particle_2D_ME_AllPcl_s
@@ -56,8 +45,8 @@ public:
 	int output(void) override;
 
 protected:
-	Particle_2D_ME **pcls;
-	MemoryUtilities::ItemArray<Particle_2D_ME *> pcl_mem;
+	Particle_R2D_ME_Grid **pcls;
+	MemoryUtilities::ItemArray<Particle_R2D_ME_Grid *> pcl_mem;
 
 	typedef void(TimeHistory_Particle_2D_ME_AllPcl_s::* TimeHistoryFieldFunc)(void);
 	struct FieldInfo
@@ -86,23 +75,14 @@ protected:
 	void output_m(void);
 	void output_vx(void);
 	void output_vy(void);
-	void output_momentum_x(void);
-	void output_momentum_y(void);
+	void output_mvx(void);
+	void output_mvy(void);
 	void output_s11(void);
 	void output_s22(void);
-	void output_s33(void);
 	void output_s12(void);
-	void output_s23(void);
-	void output_s31(void);
 	void output_e11(void);
 	void output_e22(void);
 	void output_e12(void);
-	void output_es11(void);
-	void output_es22(void);
-	void output_es12(void);
-	void output_ps11(void);
-	void output_ps22(void);
-	void output_ps12(void);
 };
 
 #endif

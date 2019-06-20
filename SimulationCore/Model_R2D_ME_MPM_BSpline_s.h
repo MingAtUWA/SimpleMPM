@@ -181,19 +181,19 @@ public:
 public:
 	inline bool is_in_mesh(double x, double y) const
 	{
-		return x < x_bound1 && x >= x_bound2
-			&& y < y_bound1 && y >= y_bound2;
+		return x >= x_bound1 && x < x_bound2
+			&& y >= y_bound1 && y < y_bound2;
 	}
 
 	// return 0: invalide node
 	inline size_t base_node_x_index(double x) const
 	{
-		return size_t((x - x_start) / h + 0.5);
+		return size_t((x - x_start) / h - 0.5);
 	}
 
 	inline size_t base_node_y_index(double y) const
 	{
-		return size_t((y - y_start) / h + 0.5);
+		return size_t((y - y_start) / h - 0.5);
 	}
 
 	inline Node_R2D_ME_Grid &get_node(size_t i, size_t j) const
@@ -216,7 +216,7 @@ public:
 	// (-1.5, -0.5)
 	#define dN_dx_left(u) (0.5 * (2.0*(u) + 3.0) / h)
 	// (-0.5, 0.5)
-	#define dN_dx_mid(u) (2.0 * (u) / h)
+	#define dN_dx_mid(u) (-2.0 * (u) / h)
 	// (0.5, 1.5)
 	#define dN_dx_right(u) (0.5 * (2.0*(u) - 3.0) / h)
 
