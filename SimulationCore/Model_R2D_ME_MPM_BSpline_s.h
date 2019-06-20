@@ -228,39 +228,44 @@ public:
 		double Ny0, Ny1, Ny2;
 		double dNy0_dy, dNy1_dy, dNy2_dy;
 
+		/* ------------------- x direction ------------------- */
+		pcl.base_node_x_id = base_node_x_index(pcl.x);
 		// Nx0
 		dist = (pcl.x - x_start) - h * double(pcl.base_node_x_id);
-		pcl.x_dist[0] = dist;
+		pcl.x_dist[0] = -dist;
 		dist_norm = dist / h;
 		Nx0 = N_right(dist_norm);
 		dNx0_dx = dN_dx_right(dist_norm);
 		// Nx1
 		dist -= h;
-		pcl.x_dist[1] = dist;
+		pcl.x_dist[1] = -dist;
 		dist_norm -= 1.0;
 		Nx1 = N_mid(dist_norm);
 		dNx1_dx = dN_dx_mid(dist_norm);
 		// Nx2
 		dist -= h;
-		pcl.x_dist[2] = dist;
+		pcl.x_dist[2] = -dist;
 		dist_norm -= 1.0;
 		Nx2 = N_left(dist_norm);
 		dNx2_dx = dN_dx_left(dist_norm);
+
+		/* ------------------- y direction ------------------- */
+		pcl.base_node_y_id = base_node_y_index(pcl.y);
 		// Ny0
 		dist = (pcl.y - y_start) - h * double(pcl.base_node_y_id);
-		pcl.y_dist[0] = dist;
+		pcl.y_dist[0] = -dist;
 		dist_norm = dist / h;
 		Ny0 = N_right(dist_norm);
 		dNy0_dy = dN_dx_right(dist_norm);
 		// Ny1
 		dist -= h;
-		pcl.y_dist[1] = dist;
+		pcl.y_dist[1] = -dist;
 		dist_norm -= 1.0;
 		Ny1 = N_mid(dist_norm);
 		dNy1_dy = dN_dx_mid(dist_norm);
 		// Ny2
 		dist -= h;
-		pcl.y_dist[2] = dist;
+		pcl.y_dist[2] = -dist;
 		dist_norm -= 1.0;
 		Ny2 = N_left(dist_norm);
 		dNy2_dy = dN_dx_left(dist_norm);

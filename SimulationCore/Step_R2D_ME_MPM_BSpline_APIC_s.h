@@ -33,6 +33,9 @@ protected:
 	int init(void);
 	friend int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self);
 	int finalize(void);
+
+public:
+	void init_B_matrix(void);
 };
 
 #endif

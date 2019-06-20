@@ -26,15 +26,23 @@ void test_me_2D_bspline_mpm1(void)
 	model.set_pcl_num(4);
 	pcl.x = 2.5;
 	pcl.y = 2.5;
+	pcl.vx = 3.0;
+	pcl.vy = 2.0;
 	model.add_pcl(pcl);
 	pcl.x = 3.5;
 	pcl.y = 2.5;
+	pcl.vx = 3.0;
+	pcl.vy = 3.0;
 	model.add_pcl(pcl);
 	pcl.x = 2.5;
 	pcl.y = 3.5;
+	pcl.vx = 3.0;
+	pcl.vy = 3.0;
 	model.add_pcl(pcl);
 	pcl.x = 3.5;
 	pcl.y = 3.5;
+	pcl.vx = 3.0;
+	pcl.vy = 4.0;
 	model.add_pcl(pcl);
 	
 	model.set_mesh(3, 3, 2.0);
@@ -93,5 +101,6 @@ void test_me_2D_bspline_mpm1(void)
 	step1.set_dt(1.0e-3);
 	step1.add_output(&th1);
 
-	step1.solve();
+	//step1.solve();
+	step1.init_B_matrix();
 }
