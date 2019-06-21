@@ -2,40 +2,10 @@
 #define _TIMEHISTORY_PARTICLE_2D_ME_ALLPCL_H_
 
 #include "ItemArray.hpp"
+#include "Particle_Field.h"
 #include "TimeHistory.h"
 
 #include "Object_Particle_2D_ME.h"
-
-// Field variables that can be output from nodes
-enum class Particle_Field_2D_ME : unsigned short int
-{
-	x   = 1,
-	y   = 2,
-	vol = 3,
-	density = 4,
-	m   = 5,
-	vx  = 6,
-	vy  = 7,
-	momentum_x = 8,
-	momentum_y = 9,
-
-	s11 = 11,
-	s22 = 12,
-	s33 = 13,
-	s12 = 14,
-	s23 = 15,
-	s31 = 16,
-
-	e11 = 20,
-	e22 = 21,
-	e12 = 22,
-	es11 = 23,
-	es22 = 24,
-	es12 = 25,
-	ps11 = 26,
-	ps22 = 27,
-	ps12 = 28
-};
 
 struct Model_R2D_ME_MPM;
 

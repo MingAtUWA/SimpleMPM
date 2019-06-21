@@ -5,6 +5,7 @@
 
 struct Model_R2D_CHM_MPM_s;
 struct Model_R2D_ME_MPM_s;
+struct Model_R2D_ME_MPM_BSpline_s;
 
 struct TimeHistoryFileInfo_Text : public TimeHistoryFileInfo
 {
@@ -51,6 +52,7 @@ public:
 	// Output Model State
 	int output_model_state(Model_R2D_ME_MPM_s &md);
 	int output_model_state(Model_R2D_CHM_MPM_s &md);
+	int output_model_state(Model_R2D_ME_MPM_BSpline_s &md);
 };
 
 #endif

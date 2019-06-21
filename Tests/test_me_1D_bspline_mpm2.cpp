@@ -6,7 +6,7 @@
 #include "Step_1D_ME_MPM_BSpline_APIC_s.h"
 
 #include "TimeHistory_ConsoleProgressBar.h"
-#include "TimeHistory_Particle_1D_ME_AllPcl.h"
+#include "TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl.h"
 
 #include "ResultFile_Text.h"
 
@@ -16,10 +16,10 @@
 // compression
 void test_me_1D_bspline_mpm2(void)
 {
-	Model_1D_ME_MPM_BSpline_s model;
 	size_t elem_num = 100;
 	size_t pcl_per_elem_num = 5;
 	
+	Model_1D_ME_MPM_BSpline_s model;
 	double elem_len = 1.0 / double(elem_num);
 	size_t pcl_num = elem_num * pcl_per_elem_num;
 	double pcl_len = 1.0 / double(pcl_num);
@@ -32,11 +32,11 @@ void test_me_1D_bspline_mpm2(void)
 	model.set_pcl_num(pcl_num);
 	for (size_t i = 0; i < pcl_num; i++)
 	{
-		pcl.x = elem_len + (0.5 + i) * pcl_len;
+		pcl.x = (0.5 + i) * pcl_len;
 		model.add_pcl(pcl);
 	}
 
-	model.set_mesh(elem_num+3, elem_len);
+	model.set_mesh(elem_num+2, elem_len, -elem_len);
 
 	model.set_vbc_num(2);
 	VelocityBC vbc;
@@ -57,10 +57,10 @@ void test_me_1D_bspline_mpm2(void)
 	ResultFile_Text res_file;
 	res_file.set_filename("res_file");
 	
-	TimeHistory_Particle_1D_ME_AllPcl th1;
+	TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl th1;
 	th1.set_name("test_out1");
 	th1.set_interval_num(200);
-	th1.set_if_output_initial_state(false);
+	//th1.set_if_output_initial_state(false);
 	Particle_Field_1D_ME fld1[] = {
 		Particle_Field_1D_ME::x,
 		Particle_Field_1D_ME::density,

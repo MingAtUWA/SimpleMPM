@@ -17,7 +17,7 @@ TimeHistory_Particle_R2D_CHM_s::TimeHistory_Particle_R2D_CHM_s() :
 TimeHistory_Particle_R2D_CHM_s::~TimeHistory_Particle_R2D_CHM_s() {}
 
 int TimeHistory_Particle_R2D_CHM_s::set_model_output(Model_R2D_CHM_MPM_s *md,
-	Particle_Field_R2D_CHM_s *fld_ids, size_t fld_num, size_t *pcl_ids, size_t pcl_num)
+	Particle_Field_2D_CHM *fld_ids, size_t fld_num, size_t *pcl_ids, size_t pcl_num)
 {
 	assert(md);
 
@@ -46,7 +46,7 @@ int TimeHistory_Particle_R2D_CHM_s::add_particle(size_t obj_id, Particle_R2D_CHM
 	return 0;
 }
 
-int TimeHistory_Particle_R2D_CHM_s::add_field(Particle_Field_R2D_CHM_s fld)
+int TimeHistory_Particle_R2D_CHM_s::add_field(Particle_Field_2D_CHM fld)
 {
 	unsigned short int fld_us = (unsigned short int)fld;
 	if (fld_us > field_max_num || !output_field_funcs_map[fld_us])
@@ -101,7 +101,7 @@ int TimeHistory_Particle_R2D_CHM_s::output(void)
 }
 
 // Map listing relative location of each variable at the data point.
-#define FIELD_MAX_NUM 35
+#define FIELD_MAX_NUM 40
 const unsigned short int TimeHistory_Particle_R2D_CHM_s::field_max_num = FIELD_MAX_NUM;
 const TimeHistory_Particle_R2D_CHM_s::TimeHistoryFieldFunc
 TimeHistory_Particle_R2D_CHM_s::output_field_funcs_map[FIELD_MAX_NUM] =
@@ -121,26 +121,31 @@ TimeHistory_Particle_R2D_CHM_s::output_field_funcs_map[FIELD_MAX_NUM] =
 	&output_vy_s,      // 12
 	&output_vx_f,      // 13
 	&output_vy_f,      // 14
-	nullptr,
-	&output_s11,       // 16
-	&output_s22,       // 17
-	&output_s33,       // 18
-	&output_s12,       // 19
-	&output_s23,       // 20
-	&output_s31,       // 21
-	&output_p,         // 22
-	nullptr,           // 23
-	nullptr,           // 24
-	nullptr,           // 25
-	&output_e11,       // 26
-	&output_e22,       // 27
-	&output_e12,       // 28
-	&output_es11,      // 29
-	&output_es22,      // 30
-	&output_es12,      // 31
-	&output_ps11,      // 32
-	&output_ps22,      // 33
-	&output_ps12       // 34
+	nullptr,           // 15
+	nullptr,           // 16
+	nullptr,           // 17
+	nullptr,           // 18
+	nullptr,           // 19
+	nullptr,           // 20
+	&output_s11,       // 21
+	&output_s22,       // 22
+	&output_s33,       // 23
+	&output_s12,       // 24
+	&output_s23,       // 25
+	&output_s31,       // 26
+	&output_p,         // 27
+	nullptr,           // 28
+	nullptr,           // 29
+	nullptr,           // 30
+	&output_e11,       // 31
+	&output_e22,       // 32
+	&output_e12,       // 33
+	&output_es11,      // 34
+	&output_es22,      // 35
+	&output_es12,      // 36
+	&output_ps11,      // 37
+	&output_ps22,      // 38
+	&output_ps12       // 39
 };
 
 void TimeHistory_Particle_R2D_CHM_s::output_x(void)

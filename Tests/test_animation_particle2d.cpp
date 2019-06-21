@@ -9,7 +9,7 @@ void test_animation_particle2d(void)
 	//renderWindow->SetAlphaBitPlanes(1); //enable usage of alpha channel
 	vtkNew<vtkInteractorStyleTrackballCamera> interactor_style;
 
-	// must use smartpointer, otherwise timer won't work normally... wtf
+	// must use smartpointer, otherwise timer won't work normally...
 	vtkSmartPointer<vtkRenderWindowInteractor> interactor
 		= vtkSmartPointer<vtkRenderWindowInteractor>::New();
 	interactor->SetRenderWindow(renderWindow);

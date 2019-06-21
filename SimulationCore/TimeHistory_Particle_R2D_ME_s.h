@@ -2,40 +2,10 @@
 #define _TIMEHISTORY_PARTICLE_R2D_ME_S_H_
 
 #include "ItemArray.hpp"
+#include "Particle_Field.h"
 #include "TimeHistory.h"
 
 #include "Particle_R2D_ME_s.h"
-
-// Field variables that can be output from nodes
-enum class Particle_Field_R2D_ME_s : unsigned short int
-{
-	x   = 1,
-	y   = 2,
-	vol = 3,
-	density = 4,
-	m   = 5,
-	v_x = 6,
-	v_y = 7,
-	momentum_x = 8,
-	momentum_y = 9,
-
-	s11 = 11,
-	s22 = 12,
-	s33 = 13,
-	s12 = 14,
-	s23 = 15,
-	s31 = 16,
-
-	e11 = 20,
-	e22 = 21,
-	e12 = 22,
-	es11 = 23,
-	es22 = 24,
-	es12 = 25,
-	ps11 = 26,
-	ps22 = 27,
-	ps12 = 28
-};
 
 struct Model_R2D_ME_MPM_s;
 
@@ -49,7 +19,7 @@ public:
 	~TimeHistory_Particle_R2D_ME_s();
 	
 	int set_model_output(Model_R2D_ME_MPM_s *md,
-		Particle_Field_R2D_ME_s *fld_ids, size_t fld_num,
+		Particle_Field_2D_ME *fld_ids, size_t fld_num,
 		size_t *pcl_ids, size_t pcl_num);
 
 	// Initialize each steps
@@ -68,7 +38,7 @@ protected:
 	};
 	struct FieldInfo
 	{
-		Particle_Field_R2D_ME_s fld_id;
+		Particle_Field_2D_ME fld_id;
 		TimeHistoryFieldFunc out_func;
 	};
 	ParticleInfo *pcl_infos;
@@ -79,7 +49,7 @@ protected:
 	inline void set_particle_num(size_t num) { pcl_mem.reserve(num); }
 	int add_particle(size_t obj_id, Particle_R2D_ME_s *pcl);
 	inline void set_field_num(size_t num) { fld_mem.reserve(num); }
-	int add_field(Particle_Field_R2D_ME_s fld);
+	int add_field(Particle_Field_2D_ME fld);
 
 protected:
 	const static unsigned short int field_max_num;

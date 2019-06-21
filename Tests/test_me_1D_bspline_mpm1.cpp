@@ -6,7 +6,7 @@
 #include "Step_1D_ME_MPM_BSpline_APIC_s.h"
 
 #include "TimeHistory_ConsoleProgressBar.h"
-#include "TimeHistory_Particle_1D_ME_AllPcl.h"
+#include "TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl.h"
 
 #include "ResultFile_Text.h"
 
@@ -50,7 +50,7 @@ void test_me_1D_bspline_mpm1(void)
 	ResultFile_Text res_file;
 	res_file.set_filename("res_file");
 	
-	TimeHistory_Particle_1D_ME_AllPcl th1;
+	TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl th1;
 	th1.set_name("test_out1");
 	th1.set_interval_num(100);
 	th1.set_if_output_initial_state(false);

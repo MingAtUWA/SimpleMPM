@@ -13,6 +13,7 @@ add_library(
     BC.h                          # Boundary conditions
     Model.h
     Step.h Step.cpp               # Simulation step
+    Particle_Field.h
     TimeHistory.h TimeHistory.cpp # Time history output
     ResultFile.h ResultFile.cpp   # Result file
     # Common
@@ -57,13 +58,17 @@ add_library(
     # Purely mechanics (1D, B-spline, Single object)
     Model_1D_ME_MPM_BSpline_s.h Model_1D_ME_MPM_BSpline_s.cpp
     Step_1D_ME_MPM_BSpline_s.h Step_1D_ME_MPM_BSpline_s.cpp
-    TimeHistory_Particle_1D_ME_AllPcl.h TimeHistory_Particle_1D_ME_AllPcl.cpp
+    TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl.h TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl.cpp
     # Purely mechanics APIC
     Step_1D_ME_MPM_BSpline_APIC_s.h Step_1D_ME_MPM_BSpline_APIC_s.cpp
-    # Purely mechanics (2D, B-spline, APIC)
+    # Purely mechanics (2D, b-spline, APIC)
     Model_R2D_ME_MPM_BSpline_s.h Model_R2D_ME_MPM_BSpline_s.cpp
     Step_R2D_ME_MPM_BSpline_APIC_s.h Step_R2D_ME_MPM_BSpline_APIC_s.cpp
-    TimeHistory_Particle_2D_ME_AllPcl_s.h TimeHistory_Particle_2D_ME_AllPcl_s.cpp
+    TimeHistory_Particle_2D_ME_MPM_BSpline_s_AllPcl.h TimeHistory_Particle_2D_ME_MPM_BSpline_s_AllPcl.cpp
+    # Purely CHM (2D, b-spline, APIC)
+    Model_R2D_CHM_MPM_BSpline_s.h Model_R2D_CHM_MPM_BSpline_s.cpp
+    Step_R2D_CHM_MPM_BSpline_APIC_s.h Step_R2D_CHM_MPM_BSpline_APIC_s.cpp
+    TimeHistory_Particle_2D_CHM_MPM_BSpline_s_AllPcl.h TimeHistory_Particle_2D_CHM_MPM_BSpline_s_AllPcl.cpp
     )
 
 target_include_directories(

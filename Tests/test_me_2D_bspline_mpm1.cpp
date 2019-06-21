@@ -5,7 +5,7 @@
 #include "Step_R2D_ME_MPM_BSpline_APIC_s.h"
 
 #include "TimeHistory_ConsoleProgressBar.h"
-#include "TimeHistory_Particle_2D_ME_AllPcl_s.h"
+#include "TimeHistory_Particle_2D_ME_MPM_BSpline_s_AllPcl.h"
 
 #include "ResultFile_Text.h"
 
@@ -26,23 +26,15 @@ void test_me_2D_bspline_mpm1(void)
 	model.set_pcl_num(4);
 	pcl.x = 2.5;
 	pcl.y = 2.5;
-	pcl.vx = 3.0;
-	pcl.vy = 2.0;
 	model.add_pcl(pcl);
 	pcl.x = 3.5;
 	pcl.y = 2.5;
-	pcl.vx = 3.0;
-	pcl.vy = 3.0;
 	model.add_pcl(pcl);
 	pcl.x = 2.5;
 	pcl.y = 3.5;
-	pcl.vx = 3.0;
-	pcl.vy = 3.0;
 	model.add_pcl(pcl);
 	pcl.x = 3.5;
 	pcl.y = 3.5;
-	pcl.vx = 3.0;
-	pcl.vy = 4.0;
 	model.add_pcl(pcl);
 	
 	model.set_mesh(3, 3, 2.0);
@@ -76,7 +68,7 @@ void test_me_2D_bspline_mpm1(void)
 	ResultFile_Text res_file;
 	res_file.set_filename("res_file");
 	
-	TimeHistory_Particle_2D_ME_AllPcl_s th1;
+	TimeHistory_Particle_2D_ME_MPM_BSpline_s_AllPcl th1;
 	th1.set_name("test_out1");
 	th1.set_interval_num(100);
 	th1.set_if_output_initial_state(false);
@@ -101,6 +93,5 @@ void test_me_2D_bspline_mpm1(void)
 	step1.set_dt(1.0e-3);
 	step1.add_output(&th1);
 
-	//step1.solve();
-	step1.init_B_matrix();
+	step1.solve();
 }

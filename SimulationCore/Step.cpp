@@ -43,7 +43,10 @@ int Step::solve(void)
 	current_time = 0.0;
 
 	assert(res_file);
-	if (is_first_step) res_file->init();
+	if (is_first_step)
+	{
+		res_file->init();
+	}
 
 	init(); // initialize calculation
 	init_output();
@@ -83,7 +86,8 @@ int Step::init_output(void)
 	if (time_history_output_num)
 	{
 		info_for_time_history_output = new InfoForTimeHistoryOutput[time_history_output_num];
-		for (pth = time_history_list, i = 0; pth; pth = pth->next_for_step_class, ++i) 
+		for (pth = time_history_list, i = 0; pth;
+			 pth = pth->next_for_step_class, ++i) 
 		{
 			info_for_time_history_output[i].time_history = pth;
 			info_for_time_history_output[i].next_output_time = step_time * pth->init_next_time_ratio();

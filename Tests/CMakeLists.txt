@@ -22,6 +22,8 @@ add_executable(
     test_me_1D_bspline_mpm1.cpp
     test_me_1D_bspline_mpm2.cpp
     test_me_2D_bspline_mpm1.cpp
+    test_me_2D_bspline_mpm2.cpp
+    test_me_2D_bspline_mpm3.cpp
     test_chm_mpm1.cpp
     test_chm_mpm2.cpp
     test_chm_visdamp_mpm1.cpp

@@ -170,17 +170,17 @@ void test_chm_mpm1(void)
 	th1 = new TimeHistory_Particle_R2D_CHM_s;
 	th1->set_name("test_out1");
 	th1->set_if_output_initial_state(true);
-	Particle_Field_R2D_CHM_s fld1[10] = {
-		Particle_Field_R2D_CHM_s::x,
-		Particle_Field_R2D_CHM_s::y,
-		Particle_Field_R2D_CHM_s::vol,
-		Particle_Field_R2D_CHM_s::p,
-		Particle_Field_R2D_CHM_s::n,
-		Particle_Field_R2D_CHM_s::vx_s,
-		Particle_Field_R2D_CHM_s::vy_s,
-		Particle_Field_R2D_CHM_s::e11,
-		Particle_Field_R2D_CHM_s::e12,
-		Particle_Field_R2D_CHM_s::e22
+	Particle_Field_2D_CHM fld1[10] = {
+		Particle_Field_2D_CHM::x,
+		Particle_Field_2D_CHM::y,
+		Particle_Field_2D_CHM::vol,
+		Particle_Field_2D_CHM::p,
+		Particle_Field_2D_CHM::n,
+		Particle_Field_2D_CHM::vx_s,
+		Particle_Field_2D_CHM::vy_s,
+		Particle_Field_2D_CHM::e11,
+		Particle_Field_2D_CHM::e12,
+		Particle_Field_2D_CHM::e22
 	};
 	size_t *pcl_ids1;
 	pcl_ids1 = new size_t[model.pcl_num];

@@ -1,6 +1,6 @@
 #include "SimulationCore_pcp.h"
 
-#include <fstream>
+//#include <fstream>
 #include "Step_R2D_ME_MPM_BSpline_APIC_s.h"
 
 #define Mat_Set_Zero(mat) \
@@ -61,8 +61,8 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 		pn.vx = 0.0;
 		pn.vy = 0.0;
 		pn.fx_ext = 0.0;
-		pn.fy_ext = 0.0;
 		pn.fx_int = 0.0;
+		pn.fy_ext = 0.0;
 		pn.fy_int = 0.0;
 	}
 	
@@ -294,10 +294,18 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 }
 
 
+//****************************** Utility Functions *******************************
 void Step_R2D_ME_MPM_BSpline_APIC_s::init_B_matrix(void)
 {
 	invD = 4.0 / (model->h * model->h);
 
+	// init nodes
+	for (size_t n_id = 0; n_id < model->node_num; ++n_id)
+	{
+		model->nodes[n_id].cal_flag = 0;
+	}
+
+	size_t cal_node_num = 0;
 	for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
 	{
 		auto &pcl = model->pcls[pcl_id];
@@ -306,33 +314,28 @@ void Step_R2D_ME_MPM_BSpline_APIC_s::init_B_matrix(void)
 		for (size_t nx_id = 0; nx_id < 3; ++nx_id)
 			for (size_t ny_id = 0; ny_id < 3; ++ny_id)
 			{
-				if (pcl.N[ny_id][nx_id] != 0.0)
+				if (pcl.N[ny_id][nx_id] != 0.0 &&
+					!pcl.pn[ny_id][nx_id]->cal_flag)
+				{
+					++cal_node_num;
 					pcl.pn[ny_id][nx_id]->cal_flag = 1;
+				}
 			}
 		Mat_Set_Zero(pcl.C);
-	}
-
-	size_t cal_node_num = 0;
-	for (size_t n_id = 0; n_id < model->node_num; ++n_id)
-	{
-		if (model->nodes[n_id].cal_flag)
-			++cal_node_num;
 	}
 	double *nv1 = new double[cal_node_num * 2];
 	double *nv2 = nv1 + cal_node_num;
 	memset(nv1, 0, cal_node_num * 2 * sizeof(double));
 
-	std::fstream file("ddd.txt", std::ios::out);
+	//std::fstream file("init_B_Matrix.txt", std::ios::out);
 	size_t iter_id = 0;
-	double vx_norm, dvx_norm;
-	double vy_norm, dvy_norm;
+	double vx_norm, dvx_norm, vy_norm, dvy_norm;
 	do
 	{
 		// init nodes
 		for (size_t n_id = 0; n_id < model->node_num; ++n_id)
 		{
 			auto &pn = model->nodes[n_id];
-			pn.cal_flag = 0;
 			pn.m = 0.0;
 			pn.vx = 0.0;
 			pn.vy = 0.0;
@@ -365,6 +368,7 @@ void Step_R2D_ME_MPM_BSpline_APIC_s::init_B_matrix(void)
 		dvx_norm = 0.0;
 		vy_norm = 0.0;
 		dvy_norm = 0.0;
+		size_t cal_n_id = 0;
 		for (size_t n_id = 0; n_id < model->node_num; ++n_id)
 		{
 			auto &pn = model->nodes[n_id];
@@ -376,14 +380,17 @@ void Step_R2D_ME_MPM_BSpline_APIC_s::init_B_matrix(void)
 				vx_norm += pn.vx * pn.vx;
 				vy_norm += pn.vy * pn.vy;
 				double tmp;
-				tmp = pn.vx - nv1[n_id];
+				tmp = pn.vx - nv1[cal_n_id];
 				dvx_norm += tmp * tmp;
-				tmp = pn.vy - nv2[n_id];
+				tmp = pn.vy - nv2[cal_n_id];
 				dvy_norm += tmp * tmp;
+				nv1[cal_n_id] = pn.vx;
+				nv2[cal_n_id] = pn.vy;
+				++cal_n_id;
 			}
-			file << pn.vx << ", ";
+			//file << pn.vx << ", ";
 		}
-		file << "\n";
+		//file << "\n";
 
 		// form C matrix for APIC
 		for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
@@ -410,16 +417,16 @@ void Step_R2D_ME_MPM_BSpline_APIC_s::init_B_matrix(void)
 			}
 		}
 
-		if (vx_norm == 0.0)
-		{
-			if (vy_norm == 0.0)
-				break;
-		}
-			
-		dvx_norm / vx_norm > 0.01 || dvy_norm / vy_norm > 0.01) // ||dv|| / ||v|| < 0.1
-		
 		++iter_id;
-	} while (iter_id < 100); // max iteration num
+
+		// Convergence criteria
+		// ||dv|| / ||v|| < 0.01
+		//if ((vx_norm == 0.0 || dvx_norm / vx_norm < 0.0001) &&
+		//	(vy_norm == 0.0 || dvy_norm / vy_norm < 0.0001))
+		//	break;
+	} while (!((vx_norm == 0.0 || dvx_norm / vx_norm < 0.0001)
+			&& (vy_norm == 0.0 || dvy_norm / vy_norm < 0.0001))
+			&& iter_id < 100); // maximum number of iteration
 
 	delete[] nv1;
 }

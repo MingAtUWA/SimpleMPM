@@ -97,7 +97,7 @@ int TimeHistory_Particle_2D_ME_AllPcl::output(void)
 }
 
 // Map listing relative location of each variable at the data point.
-#define FIELD_MAX_NUM 29
+#define FIELD_MAX_NUM 30
 const unsigned short int TimeHistory_Particle_2D_ME_AllPcl::field_max_num = FIELD_MAX_NUM;
 const TimeHistory_Particle_2D_ME_AllPcl::TimeHistoryFieldFunc
 TimeHistory_Particle_2D_ME_AllPcl::output_field_funcs_map[FIELD_MAX_NUM] =
@@ -122,15 +122,16 @@ TimeHistory_Particle_2D_ME_AllPcl::output_field_funcs_map[FIELD_MAX_NUM] =
 	nullptr,            // 17
 	nullptr,            // 18
 	nullptr,            // 19
-	&output_e11,        // 20
-	&output_e22,        // 21
-	&output_e12,        // 22
-	&output_es11,       // 23
-	&output_es22,       // 24
-	&output_es12,       // 25
-	&output_ps11,       // 26
-	&output_ps22,       // 27
-	&output_ps12,       // 28
+	nullptr,            // 20
+	&output_e11,        // 21
+	&output_e22,        // 22
+	&output_e12,        // 23
+	&output_es11,       // 24
+	&output_es22,       // 25
+	&output_es12,       // 26
+	&output_ps11,       // 27
+	&output_ps22,       // 28
+	&output_ps12,       // 29
 };
 
 void TimeHistory_Particle_2D_ME_AllPcl::output_x(void)

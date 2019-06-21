@@ -55,12 +55,12 @@ void test_hdf5_resultfile(void)
 	th1->set_name("test_out");
 	th1->set_interval_num(2);
 	th1->set_if_output_initial_state(false);
-	Particle_Field_R2D_ME_s fld[5] = {
-		Particle_Field_R2D_ME_s::x,
-		Particle_Field_R2D_ME_s::y,
-		Particle_Field_R2D_ME_s::e11,
-		Particle_Field_R2D_ME_s::e12,
-		Particle_Field_R2D_ME_s::e22
+	Particle_Field_2D_ME fld[5] = {
+		Particle_Field_2D_ME::x,
+		Particle_Field_2D_ME::y,
+		Particle_Field_2D_ME::e11,
+		Particle_Field_2D_ME::e12,
+		Particle_Field_2D_ME::e22
 	};
 	size_t pcl_ids[4] = { 0, 1, 2, 3 };
 	th1->set_model_output(&model, fld, 5, pcl_ids, 4);

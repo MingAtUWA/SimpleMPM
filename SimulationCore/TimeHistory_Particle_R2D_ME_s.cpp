@@ -17,7 +17,7 @@ TimeHistory_Particle_R2D_ME_s::TimeHistory_Particle_R2D_ME_s() :
 TimeHistory_Particle_R2D_ME_s::~TimeHistory_Particle_R2D_ME_s() {}
 
 int TimeHistory_Particle_R2D_ME_s::set_model_output(Model_R2D_ME_MPM_s *md,
-	Particle_Field_R2D_ME_s *fld_ids, size_t fld_num, size_t *pcl_ids, size_t pcl_num)
+	Particle_Field_2D_ME *fld_ids, size_t fld_num, size_t *pcl_ids, size_t pcl_num)
 {
 	assert(md);
 
@@ -46,7 +46,7 @@ int TimeHistory_Particle_R2D_ME_s::add_particle(size_t obj_id, Particle_R2D_ME_s
 	return 0;
 }
 
-int TimeHistory_Particle_R2D_ME_s::add_field(Particle_Field_R2D_ME_s fld)
+int TimeHistory_Particle_R2D_ME_s::add_field(Particle_Field_2D_ME fld)
 {
 	unsigned short int fld_us = (unsigned short int)fld;
 	if (fld_us > field_max_num || !output_field_funcs_map[fld_us])
@@ -101,7 +101,7 @@ int TimeHistory_Particle_R2D_ME_s::output(void)
 }
 
 // Map listing relative location of each variable at the data point.
-#define FIELD_MAX_NUM 29
+#define FIELD_MAX_NUM 30
 const unsigned short int TimeHistory_Particle_R2D_ME_s::field_max_num = FIELD_MAX_NUM;
 const TimeHistory_Particle_R2D_ME_s::TimeHistoryFieldFunc
 TimeHistory_Particle_R2D_ME_s::output_field_funcs_map[FIELD_MAX_NUM] =
@@ -126,15 +126,16 @@ TimeHistory_Particle_R2D_ME_s::output_field_funcs_map[FIELD_MAX_NUM] =
 	nullptr,            // 17
 	nullptr,            // 18
 	nullptr,            // 19
-	&output_e11,        // 20
-	&output_e22,        // 21
-	&output_e12,        // 22
-	&output_es11,       // 23
-	&output_es22,       // 24
-	&output_es12,       // 25
-	&output_ps11,       // 26
-	&output_ps22,       // 27
-	&output_ps12,       // 28
+	nullptr,            // 20
+	&output_e11,        // 21
+	&output_e22,        // 22
+	&output_e12,        // 23
+	&output_es11,       // 24
+	&output_es22,       // 25
+	&output_es12,       // 26
+	&output_ps11,       // 27
+	&output_ps22,       // 28
+	&output_ps12,       // 29
 };
 
 void TimeHistory_Particle_R2D_ME_s::output_x(void)

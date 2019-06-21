@@ -133,15 +133,15 @@ void test_me_mpm3(void)
 	th1->set_name("test_out1");
 	th1->set_interval_num(10);
 	th1->set_if_output_initial_state(false);
-	Particle_Field_R2D_ME_s fld1[8] = {
-		Particle_Field_R2D_ME_s::x,
-		Particle_Field_R2D_ME_s::y,
-		Particle_Field_R2D_ME_s::vol,
-		Particle_Field_R2D_ME_s::v_x,
-		Particle_Field_R2D_ME_s::v_y,
-		Particle_Field_R2D_ME_s::e11,
-		Particle_Field_R2D_ME_s::e12,
-		Particle_Field_R2D_ME_s::e22
+	Particle_Field_2D_ME fld1[8] = {
+		Particle_Field_2D_ME::x,
+		Particle_Field_2D_ME::y,
+		Particle_Field_2D_ME::vol,
+		Particle_Field_2D_ME::vx,
+		Particle_Field_2D_ME::vy,
+		Particle_Field_2D_ME::e11,
+		Particle_Field_2D_ME::e12,
+		Particle_Field_2D_ME::e22
 	};
 	size_t pcl_ids1[16];
 	for (i = 0; i < 16; i++) pcl_ids1[i] = i;

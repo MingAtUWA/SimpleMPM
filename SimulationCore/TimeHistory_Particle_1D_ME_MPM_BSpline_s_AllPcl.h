@@ -1,31 +1,20 @@
-#ifndef _TIMEHISTORY_PARTICLE_1D_ME_ALLPCL_H_
-#define _TIMEHISTORY_PARTICLE_1D_ME_ALLPCL_H_
+#ifndef _TIMEHISTORY_PARTICLE_1D_ME_MPM_BSPLINE_S_ALLPCL_H_
+#define _TIMEHISTORY_PARTICLE_1D_ME_MPM_BSPLINE_S_ALLPCL_H_
 
 #include "ItemArray.hpp"
+#include "Particle_Field.h"
 #include "TimeHistory.h"
 
 #include "Model_1D_ME_MPM_BSpline_s.h"
 
-// Field variables that can be output from nodes
-enum class Particle_Field_1D_ME : unsigned short int
-{
-	x   = 1,
-	density = 2,
-	m   = 3,
-	mv  = 4,
-	v   = 5,
-	s11 = 6,
-	e11 = 7,
-};
-
 /* ===========================================================
-Class TimeHistory_Particle_1D_ME_AllPcl
+Class TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl
    =========================================================== */
-class TimeHistory_Particle_1D_ME_AllPcl : public TimeHistory
+class TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl : public TimeHistory
 {
 public:
-	TimeHistory_Particle_1D_ME_AllPcl();
-	~TimeHistory_Particle_1D_ME_AllPcl();
+	TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl();
+	~TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl();
 	
 	// Initialize each steps
 	int init_per_step(void);
@@ -38,7 +27,7 @@ protected:
 	Particle_1D_ME **pcls;
 	MemoryUtilities::ItemArray<Particle_1D_ME *> pcl_mem;
 
-	typedef void(TimeHistory_Particle_1D_ME_AllPcl::* TimeHistoryFieldFunc)(void);
+	typedef void(TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl::* TimeHistoryFieldFunc)(void);
 	struct FieldInfo
 	{
 		Particle_Field_1D_ME fld_id;

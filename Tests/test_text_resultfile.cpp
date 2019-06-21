@@ -56,12 +56,12 @@ void test_text_resultfile(void)
 	th1->set_name("test_out1");
 	th1->set_interval_num(2);
 	th1->set_if_output_initial_state(false);
-	Particle_Field_R2D_ME_s fld1[5] = {
-		Particle_Field_R2D_ME_s::x,
-		Particle_Field_R2D_ME_s::y,
-		Particle_Field_R2D_ME_s::e11,
-		Particle_Field_R2D_ME_s::e12,
-		Particle_Field_R2D_ME_s::e22
+	Particle_Field_2D_ME fld1[5] = {
+		Particle_Field_2D_ME::x,
+		Particle_Field_2D_ME::y,
+		Particle_Field_2D_ME::e11,
+		Particle_Field_2D_ME::e12,
+		Particle_Field_2D_ME::e22
 	};
 	size_t pcl_ids1[4] = { 0, 1, 2, 3 };
 	th1->set_model_output(&model, fld1, 5, pcl_ids1, 4);
@@ -71,10 +71,10 @@ void test_text_resultfile(void)
 	th2->set_name("test_out2");
 	th2->set_interval_num(2);
 	th2->set_if_output_initial_state(false);
-	Particle_Field_R2D_ME_s fld2[3] = {
-		Particle_Field_R2D_ME_s::s11,
-		Particle_Field_R2D_ME_s::s12,
-		Particle_Field_R2D_ME_s::s22
+	Particle_Field_2D_ME fld2[3] = {
+		Particle_Field_2D_ME::s11,
+		Particle_Field_2D_ME::s12,
+		Particle_Field_2D_ME::s22
 	};
 	size_t pcl_ids2[4] = { 0, 1, 2, 3 };
 	th2->set_model_output(&model, fld2, 3, pcl_ids2, 4);
