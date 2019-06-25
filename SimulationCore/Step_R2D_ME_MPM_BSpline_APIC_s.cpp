@@ -208,6 +208,7 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 		auto &pcl = model->pcls[pcl_id];
 		if (pcl.is_in_mesh)
 		{
+			// map velocity (and B matrix)
 			pcl.vx = 0.0;
 			pcl.vy = 0.0;
 			double B[2][2]; // B matrix for APIC
@@ -250,12 +251,12 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 					auto &n = *pcl.pn[ny_id][nx_id];
 					dux = n.vx * self->dt;
 					duy = n.vy * self->dt;
-					de11 += dux * pcl.dN_dx[ny_id][nx_id];
-					de22 += duy * pcl.dN_dy[ny_id][nx_id];
-					de12 += (dux * pcl.dN_dy[ny_id][nx_id]
-						   + duy * pcl.dN_dx[ny_id][nx_id]) * 0.5;
-					dw12 += (dux * pcl.dN_dy[ny_id][nx_id]
-						   - duy * pcl.dN_dx[ny_id][nx_id]) * 0.5;
+					double dN_dx = pcl.dN_dx[ny_id][nx_id];
+					double dN_dy = pcl.dN_dy[ny_id][nx_id];
+					de11 += dux * dN_dx;
+					de22 += duy * dN_dy;
+					de12 += (dux * dN_dy + duy * dN_dx) * 0.5;
+					dw12 += (dux * dN_dy - duy * dN_dx) * 0.5;
 				}
 			
 			/* update variables at particles */
@@ -301,27 +302,28 @@ void Step_R2D_ME_MPM_BSpline_APIC_s::init_B_matrix(void)
 
 	// init nodes
 	for (size_t n_id = 0; n_id < model->node_num; ++n_id)
-	{
 		model->nodes[n_id].cal_flag = 0;
-	}
 
 	size_t cal_node_num = 0;
 	for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
 	{
 		auto &pcl = model->pcls[pcl_id];
 		pcl.is_in_mesh = model->is_in_mesh(pcl.x, pcl.y);
-		model->cal_shape_func(pcl);
-		for (size_t nx_id = 0; nx_id < 3; ++nx_id)
-			for (size_t ny_id = 0; ny_id < 3; ++ny_id)
-			{
-				if (pcl.N[ny_id][nx_id] != 0.0 &&
-					!pcl.pn[ny_id][nx_id]->cal_flag)
+		if (pcl.is_in_mesh)
+		{
+			model->cal_shape_func(pcl);
+			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
+				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
 				{
-					++cal_node_num;
-					pcl.pn[ny_id][nx_id]->cal_flag = 1;
+					if (pcl.N[ny_id][nx_id] != 0.0 &&
+						!pcl.pn[ny_id][nx_id]->cal_flag)
+					{
+						++cal_node_num;
+						pcl.pn[ny_id][nx_id]->cal_flag = 1;
+					}
 				}
-			}
-		Mat_Set_Zero(pcl.C);
+			Mat_Set_Zero(pcl.C);
+		}
 	}
 	double *nv1 = new double[cal_node_num * 2];
 	double *nv2 = nv1 + cal_node_num;

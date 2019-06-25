@@ -27,6 +27,8 @@ struct Node_R2D_CHM_Grid
 	double vx_s, vy_s;
 	// mass
 	double m_s;
+	// kinetic term of fluid phase
+	double fx_kin_f, fy_kin_f;
 	// external force
 	double fx_ext_m, fy_ext_m;
 	// internal force
@@ -53,6 +55,8 @@ struct Node_R2D_CHM_Grid
 		vx_s = 0.0;
 		vy_s = 0.0;
 		m_s = 0.0;
+		fx_kin_f = 0.0;
+		fy_kin_f = 0.0;
 		fx_ext_m = 0.0;
 		fy_ext_m = 0.0;
 		fx_int_m = 0.0;
@@ -126,6 +130,8 @@ public:
 public: // calculation variables
 	double x_ori, y_ori;
 	double ux_s, uy_s;
+
+	double vol;
 
 	bool is_in_mesh;
 	size_t base_node_x_id;
