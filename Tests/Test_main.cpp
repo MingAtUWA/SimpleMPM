@@ -34,6 +34,9 @@ int main(int argc, char *argv[])
 	//test_chm_kindamp_mpm1();
 	//test_chm_kindamp_mpm2();
 
+	//test_chm_2D_bspline_mpm1();
+	test_chm_2D_bspline_mpm2();
+
 	//test_multi_object_me1();
 
 	//test_file_char_array();
@@ -45,7 +48,7 @@ int main(int argc, char *argv[])
 
 	//test_animation();
 	// animation for 2d particle
-	test_animation_particle2d();
+	//test_animation_particle2d();
 
 	system("pause");
 	return 0;

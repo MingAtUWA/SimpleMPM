@@ -35,6 +35,9 @@ void test_chm_visdamp_mpm4(void);
 //void test_chm_kindamp_mpm1(void);
 void test_chm_kindamp_mpm2(void);
 
+void test_chm_2D_bspline_mpm1(void);
+void test_chm_2D_bspline_mpm2(void);
+
 // multiple objects
 void test_multi_object_me1(void);
 

@@ -25,6 +25,7 @@ Step_R2D_ME_MPM_BSpline_APIC_s::
 
 int Step_R2D_ME_MPM_BSpline_APIC_s::init()
 {
+	invD = 4.0 / (model->h * model->h);
 	if (is_first_step)
 	{
 		// initialize B matrix of each particles
@@ -298,8 +299,6 @@ int solve_substep_R2D_ME_MPM_BSpline_APIC_s(void *_self)
 //****************************** Utility Functions *******************************
 void Step_R2D_ME_MPM_BSpline_APIC_s::init_B_matrix(void)
 {
-	invD = 4.0 / (model->h * model->h);
-
 	// init nodes
 	for (size_t n_id = 0; n_id < model->node_num; ++n_id)
 		model->nodes[n_id].cal_flag = 0;

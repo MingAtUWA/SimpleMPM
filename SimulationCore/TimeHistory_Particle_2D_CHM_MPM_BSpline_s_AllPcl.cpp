@@ -37,6 +37,7 @@ int TimeHistory_Particle_2D_CHM_MPM_BSpline_s_AllPcl::init_per_step(void)
 		= static_cast<Model_R2D_CHM_MPM_BSpline_s *>(step->get_model());
 	Particle_R2D_CHM_Grid *ppcl;
 
+	pcl_mem.reset();
 	pcl_mem.reserve(model->pcl_num);
 	for (size_t i = 0; i < model->pcl_num; i++)
 	{
@@ -151,7 +152,7 @@ void TimeHistory_Particle_2D_CHM_MPM_BSpline_s_AllPcl::output_vol(void)
 	double *pdata = buffer_pos;
 	for (size_t i = pcl_id_range_start; i < pcl_id_range_end; ++i)
 	{
-		*pdata = pcls[i]->m_s / pcls[i]->density_s;
+		*pdata = pcls[i]->m_s / ((1.0 - pcls[i]->n) * pcls[i]->density_s);
 		pdata += field_num;
 	}
 }

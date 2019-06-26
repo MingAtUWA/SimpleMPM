@@ -1,5 +1,6 @@
 #include "SimulationCore_pcp.h"
 
+//#include <fstream>
 #include "Step_R2D_CHM_MPM_BSpline_APIC_s.h"
 
 #define Mat_Set_Zero(mat) \
@@ -24,6 +25,7 @@ Step_R2D_CHM_MPM_BSpline_APIC_s::
 
 int Step_R2D_CHM_MPM_BSpline_APIC_s::init()
 {
+	invD = 4.0 / (model->h * model->h);
 	if (is_first_step)
 	{
 		init_B_matrix(); // for APIC
@@ -85,8 +87,8 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 					Qy = pcl.C_s[1][0] * x_dist + pcl.C_s[1][1] * y_dist;
 					n.vx_s += m_prod_N * (pcl.vx_s + Qx);
 					n.vy_s += m_prod_N * (pcl.vy_s + Qy);
-					n.fx_int_m += (dN_dx * pcl.s11 + dN_dy * pcl.s12) * vol;
-					n.fy_int_m += (dN_dx * pcl.s12 + dN_dy * pcl.s22) * vol;
+					n.fx_int_m += (dN_dx * (pcl.s11 - pcl.p) + dN_dy * pcl.s12) * vol;
+					n.fy_int_m += (dN_dx * pcl.s12 + dN_dy * (pcl.s22 - pcl.p)) * vol;
 					// fluid phase
 					m_prod_N = pcl.density_f * vol * N;
 					n.m_tf += m_prod_N;
@@ -165,6 +167,7 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 			n.ay_f = (n.fy_ext_tf - n.fy_int_tf - n.fy_drag_tf) / n.m_tf;
 		}
 	}
+
 	// acceleration bcs
 	for (size_t i = 0; i < model->afx_num; i++)
 	{
@@ -202,8 +205,6 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 	}
 
 	// map variables back to and update variables particles
-	double pcl_ax_f, pcl_ay_f;
-	double pcl_max_f, pcl_may_f;
 	for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
 	{
 		auto &pcl = model->pcls[pcl_id];
@@ -376,10 +377,6 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 
 			// volumetric strain of solid phase
 			double de_vol_s = de11_s + de22_s;
-			// density of solid phase
-			pcl.density_s /= (1.0 + de_vol_s);
-			// porosity
-			pcl.n = (de_vol_s + pcl.n) / (1.0 + de_vol_s);
 			// "volumetric strain" of fluid phase
 			double de_vol_f = -(1.0 - pcl.n) / pcl.n * de_vol_s;
 			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
@@ -389,9 +386,10 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 					double dux_f = n.vx_f * self->dt;
 					double duy_f = n.vy_f * self->dt;
 					de_vol_f -= dux_f * pcl.dN_dx[ny_id][nx_id] + duy_f * pcl.dN_dy[ny_id][nx_id];
-					
 				}
 			
+			// porosity
+			pcl.n = (de_vol_s + pcl.n) / (1.0 + de_vol_s);
 			// pore pressure
 			pcl.p += pcl.Kf * de_vol_f;
 			// fluid density
@@ -406,8 +404,6 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 //****************************** Utility Functions *******************************
 void Step_R2D_CHM_MPM_BSpline_APIC_s::init_B_matrix(void)
 {
-	invD = 4.0 / (model->h * model->h);
-
 	// init nodes
 	for (size_t n_id = 0; n_id < model->node_num; ++n_id)
 		model->nodes[n_id].cal_flag = 0;
@@ -450,13 +446,13 @@ void Step_R2D_CHM_MPM_BSpline_APIC_s::init_B_matrix(void)
 		// init nodes
 		for (size_t n_id = 0; n_id < model->node_num; ++n_id)
 		{
-			auto &pn = model->nodes[n_id];
-			pn.m_s = 0.0;
-			pn.vx_s = 0.0;
-			pn.vy_s = 0.0;
-			pn.m_tf = 0.0;
-			pn.vx_f = 0.0;
-			pn.vy_f = 0.0;
+			auto &n = model->nodes[n_id];
+			n.m_s = 0.0;
+			n.vx_s = 0.0;
+			n.vy_s = 0.0;
+			n.m_tf = 0.0;
+			n.vx_f = 0.0;
+			n.vy_f = 0.0;
 		}
 
 		// map mass and momentum
@@ -476,13 +472,6 @@ void Step_R2D_CHM_MPM_BSpline_APIC_s::init_B_matrix(void)
 						double y_dist = pcl.y_dist[ny_id];
 						double m_prod_N;
 						double Qx, Qy;
-						// solid phase
-						m_prod_N = pcl.m_s * N;
-						n.m_s += m_prod_N;
-						Qx = pcl.C_s[0][0] * x_dist + pcl.C_s[0][1] * y_dist;
-						Qy = pcl.C_s[1][0] * x_dist + pcl.C_s[1][1] * y_dist;
-						n.vx_s += m_prod_N * (pcl.vx_s + Qx);
-						n.vy_s += m_prod_N * (pcl.vy_s + Qy);
 						// fluid phase
 						m_prod_N = pcl.density_f * pcl.vol * N;
 						n.m_tf += m_prod_N;
@@ -490,6 +479,13 @@ void Step_R2D_CHM_MPM_BSpline_APIC_s::init_B_matrix(void)
 						Qy = pcl.C_f[1][0] * x_dist + pcl.C_f[1][1] * y_dist;
 						n.vx_f += m_prod_N * (pcl.vx_f + Qx);
 						n.vy_f += m_prod_N * (pcl.vy_f + Qy);
+						// solid phase
+						m_prod_N = pcl.m_s * N;
+						n.m_s += m_prod_N;
+						Qx = pcl.C_s[0][0] * x_dist + pcl.C_s[0][1] * y_dist;
+						Qy = pcl.C_s[1][0] * x_dist + pcl.C_s[1][1] * y_dist;
+						n.vx_s += m_prod_N * (pcl.vx_s + Qx);
+						n.vy_s += m_prod_N * (pcl.vy_s + Qy);
 					}
 			}
 		}
@@ -528,16 +524,16 @@ void Step_R2D_CHM_MPM_BSpline_APIC_s::init_B_matrix(void)
 				vx_s_norm += pn.vx_s * pn.vx_s;
 				tmp = pn.vx_s - nvx_s[cal_n_id];
 				dvx_s_norm += tmp * tmp;
-				nvx_s[cal_n_id] = pn.vx_f;
+				nvx_s[cal_n_id] = pn.vx_s;
 				// vy_s
 				vy_s_norm += pn.vy_s * pn.vy_s;
 				tmp = pn.vy_s - nvy_s[cal_n_id];
 				dvy_s_norm += tmp * tmp;
-				nvy_s[cal_n_id] = pn.vy_f;
+				nvy_s[cal_n_id] = pn.vy_s;
 
 				++cal_n_id;
 			}
-			//file << pn.vx << ", ";
+			//file << pn.vy_f << ", ";
 		}
 		//file << "\n";
 
@@ -558,13 +554,9 @@ void Step_R2D_CHM_MPM_BSpline_APIC_s::init_B_matrix(void)
 						double N = pcl.N[ny_id][nx_id];
 						// map velocity
 						double vx_f_prod_N = n.vx_f * N;
-						pcl.vx_f += vx_f_prod_N;
 						double vy_f_prod_N = n.vy_f * N;
-						pcl.vy_f += vy_f_prod_N;
 						double vx_s_prod_N = n.vx_s * N;
-						pcl.vx_s += vx_s_prod_N;
 						double vy_s_prod_N = n.vy_s * N;
-						pcl.vy_s += vy_s_prod_N;
 						// B = sum (N * v * dist_T)
 						double x_dist = pcl.x_dist[nx_id];
 						double y_dist = pcl.y_dist[ny_id];
@@ -586,8 +578,8 @@ void Step_R2D_CHM_MPM_BSpline_APIC_s::init_B_matrix(void)
 		++iter_id;
 
 		// Convergence criteria
-#define MAXIMUM_ITERACTION_NUMBER 100
 #define VELOCITY_CONVERGENCE_LIMIT 0.0001
+#define MAXIMUM_ITERACTION_NUMBER 100
 		// ||dv|| / ||v|| < 0.01
 		//if ((vx_f_norm == 0.0 || dvx_f_norm / vx_f_norm < 0.0001) &&
 		//	  (vy_f_norm == 0.0 || dvy_f_norm / vy_f_norm < 0.0001) &&

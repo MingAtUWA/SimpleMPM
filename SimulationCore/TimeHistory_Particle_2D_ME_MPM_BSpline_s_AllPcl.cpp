@@ -36,6 +36,7 @@ int TimeHistory_Particle_2D_ME_MPM_BSpline_s_AllPcl::init_per_step(void)
 		= static_cast<Model_R2D_ME_MPM_BSpline_s *>(step->get_model());
 	Particle_R2D_ME_Grid *ppcl;
 
+	pcl_mem.reset();
 	pcl_mem.reserve(model->pcl_num);
 	for (size_t i = 0; i < model->pcl_num; i++)
 	{

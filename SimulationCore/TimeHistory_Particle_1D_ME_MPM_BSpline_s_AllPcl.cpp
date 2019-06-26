@@ -35,6 +35,7 @@ int TimeHistory_Particle_1D_ME_MPM_BSpline_s_AllPcl::init_per_step(void)
 	Model_1D_ME_MPM_BSpline_s *model = static_cast<Model_1D_ME_MPM_BSpline_s *>(step->get_model());
 	Particle_1D_ME *ppcl;
 
+	pcl_mem.reset();
 	pcl_mem.reserve(model->pcl_num);
 	for (size_t i = 0; i < model->pcl_num; i++)
 	{

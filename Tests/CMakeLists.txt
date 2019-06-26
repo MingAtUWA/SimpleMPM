@@ -31,6 +31,8 @@ add_executable(
     test_chm_visdamp_mpm3.cpp
     test_chm_visdamp_mpm4.cpp
     test_chm_kindamp_mpm2.cpp
+    test_chm_2D_bspline_mpm1.cpp
+    test_chm_2D_bspline_mpm2.cpp
     # multiple object
     test_multi_object_me1.cpp
     # write result file

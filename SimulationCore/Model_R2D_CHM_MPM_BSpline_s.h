@@ -256,22 +256,30 @@ public:
 	// Accleration bc
 	void set_asx_num(size_t num) { asxs_mem.reserve(num); }
 	void add_asx(AccelerationBC &abc) { asxs_mem.add(abc); }
+	void clear_asx(void) { asxs_mem.reset(); }
 	void set_asy_num(size_t num) { asys_mem.reserve(num); }
 	void add_asy(AccelerationBC &abc) { asys_mem.add(abc); }
+	void clear_asy(void) { asys_mem.reset(); }
 	void set_afx_num(size_t num) { afxs_mem.reserve(num); }
 	void add_afx(AccelerationBC &abc) { afxs_mem.add(abc); }
+	void clear_afx(void) { afxs_mem.reset(); }
 	void set_afy_num(size_t num) { afys_mem.reserve(num); }
 	void add_afy(AccelerationBC &abc) { afys_mem.add(abc); }
+	void clear_afy(void) { afys_mem.reset(); }
 
 	// Velocity bc
 	void set_vsx_num(size_t num) { vsxs_mem.reserve(num); }
 	void add_vsx(VelocityBC &vbc) { vsxs_mem.add(vbc); }
+	void clear_vsx(void) { vsxs_mem.reset(); }
 	void set_vsy_num(size_t num) { vsys_mem.reserve(num); }
 	void add_vsy(VelocityBC &vbc) { vsys_mem.add(vbc); }
+	void clear_vsy(void) { vsys_mem.reset(); }
 	void set_vfx_num(size_t num) { vfxs_mem.reserve(num); }
 	void add_vfx(VelocityBC &vbc) { vfxs_mem.add(vbc); }
+	void clear_vfx(void) { vfxs_mem.reset(); }
 	void set_vfy_num(size_t num) { vfys_mem.reserve(num); }
 	void add_vfy(VelocityBC &vbc) { vfys_mem.add(vbc); }
+	void clear_vfy(void) { vfys_mem.reset(); }
 
 	int update(void);
 	void clear(void);

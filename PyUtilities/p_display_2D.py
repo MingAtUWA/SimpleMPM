@@ -40,8 +40,8 @@ with open(abs_file_path, 'r') as res_file:
             for i in range(output_pcl_num):
                 line_text = res_file.readline()
                 line_data = list(map(lambda x: float(x.strip('\n')), line_text.split(',')))
-                if i == 2: # node at the bottom
-                #if i == output_pcl_num - 1: # node at the boundary
+                if i == 1: # particle at bottom (impermeable)
+                #if i == output_pcl_num - 1: # particle on top (free draining)
                     field_value = line_data[3] # p
                     y_data.append(field_value)
                     if not is_init:
@@ -62,17 +62,17 @@ Es = (1 - niu) / (1 + niu) / (1 - 2.0*niu) * E # Es = (1-v) / (1 + v) / (1-2v) *
 kv = 1.0e-4
 miu = 1.0 # dynamic viscosity
 Cv = kv * Es / miu
-u0 = 100.0
+u0 = 10.0
 H = 1.0
 con_res = oc.OneDConsolidation(Cv, Es, u0, H)
 
-time = 80.0 # time of consolidation
+time = 30.0 # time of consolidation
 data_num = 100
 t_list = np.zeros(data_num + 2)
 u_list = np.zeros(data_num + 2)
 t_list[0] = 0.0
 u_list[0] = u0 * 166666.67 / (166666.67 + 120)
-t_list[1] = 20.0
+t_list[1] = 10.0
 u_list[1] = u_list[0]
 for i in range(data_num):
     t_list[i + 2] = time * float(i) / float(data_num)
