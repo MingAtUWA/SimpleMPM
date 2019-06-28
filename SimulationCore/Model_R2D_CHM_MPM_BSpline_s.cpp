@@ -26,7 +26,11 @@ int Model_R2D_CHM_MPM_BSpline_s::update(void)
 	nodes_mem.clear();
 	nodes_mem.reserve(node_num);
 	nodes = nodes_mem.get_mem();
-	
+	for (size_t i = 0; i < node_num; i++)
+	{
+		nodes[i].index = i;
+	}
+
 	// particles
 	pcl_num = pcls_mem.get_num();
 	pcls = pcls_mem.get_mem();

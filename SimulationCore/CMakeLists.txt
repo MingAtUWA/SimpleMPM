@@ -69,6 +69,8 @@ add_library(
     Model_R2D_CHM_MPM_BSpline_s.h Model_R2D_CHM_MPM_BSpline_s.cpp
     Step_R2D_CHM_MPM_BSpline_APIC_s.h Step_R2D_CHM_MPM_BSpline_APIC_s.cpp
     TimeHistory_Particle_2D_CHM_MPM_BSpline_s_AllPcl.h TimeHistory_Particle_2D_CHM_MPM_BSpline_s_AllPcl.cpp
+    # Purely mechanics (complete set of quadriatic b-spline)
+    Step_1D_ME_MPM_qBSpline_APIC_s.h Step_1D_ME_MPM_qBSpline_APIC_s.cpp
     )
 
 target_include_directories(

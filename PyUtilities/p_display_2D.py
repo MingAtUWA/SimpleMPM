@@ -40,7 +40,7 @@ with open(abs_file_path, 'r') as res_file:
             for i in range(output_pcl_num):
                 line_text = res_file.readline()
                 line_data = list(map(lambda x: float(x.strip('\n')), line_text.split(',')))
-                if i == 1: # particle at bottom (impermeable)
+                if i == 9: # particle at bottom (impermeable)
                 #if i == output_pcl_num - 1: # particle on top (free draining)
                     field_value = line_data[3] # p
                     y_data.append(field_value)

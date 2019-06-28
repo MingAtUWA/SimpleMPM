@@ -60,13 +60,13 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 	for (size_t pcl_id = 0; pcl_id < model->pcl_num; ++pcl_id)
 	{
 		auto &pcl = model->pcls[pcl_id];
-		pcl.is_in_mesh = model->is_in_mesh(pcl.x, pcl.y);
 		if (pcl.is_in_mesh)
 		{
+			pcl.is_in_mesh = model->is_in_mesh(pcl.x, pcl.y);
 			model->cal_shape_func(pcl);
 			double vol = pcl.m_s / ((1.0 - pcl.n) * pcl.density_s);
 			pcl.vol = vol;
-			double k_div_miu = pcl.k / pcl.miu;
+			double n_miu_div_k = pcl.n * pcl.miu / pcl.k;
 			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
 				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
 				{
@@ -98,8 +98,8 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 					n.vy_f += m_prod_N * (pcl.vy_f + Qy);					
 					n.fx_int_tf += (dN_dx * -pcl.p) * vol;
 					n.fy_int_tf += (dN_dy * -pcl.p) * vol;
-					n.fx_drag_tf += pcl.n / k_div_miu * (pcl.vx_f - pcl.vx_s) * vol * N;
-					n.fy_drag_tf += pcl.n / k_div_miu * (pcl.vy_f - pcl.vy_s) * vol * N;
+					n.fx_drag_tf += n_miu_div_k * (pcl.vx_f - pcl.vx_s) * vol * N;
+					n.fy_drag_tf += n_miu_div_k * (pcl.vy_f - pcl.vy_s) * vol * N;
 				}
 		}
 	}
@@ -113,21 +113,21 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 		for (size_t nx_id = 0; nx_id < 3; ++nx_id)
 			for (size_t ny_id = 0; ny_id < 3; ++ny_id)
 			{
-				auto &n = *pcl.pn[ny_id][nx_id];
-				n.fx_ext_m += pcl.N[ny_id][nx_id] * bf_m;
+				auto &n     = *pcl.pn[ny_id][nx_id];
+				n.fx_ext_m  += pcl.N[ny_id][nx_id] * bf_m;
 				n.fx_ext_tf += pcl.N[ny_id][nx_id] * bf_tf;
 			}
 	}
 	for (size_t i = 0; i < model->bfy_num; i++)
 	{
 		auto &pcl = model->pcls[model->bfys[i].pcl_id];
-		double bf_m = pcl.vol * ((1.0 - pcl.n) * pcl.density_s + pcl.n * pcl.density_f) * model->bfys[i].bf;
+		double bf_m  = pcl.vol * ((1.0 - pcl.n) * pcl.density_s + pcl.n * pcl.density_f) * model->bfys[i].bf;
 		double bf_tf = pcl.vol * pcl.density_f * model->bfys[i].bf;
 		for (size_t nx_id = 0; nx_id < 3; ++nx_id)
 			for (size_t ny_id = 0; ny_id < 3; ++ny_id)
 			{
-				auto &n = *pcl.pn[ny_id][nx_id];
-				n.fy_ext_m += pcl.N[ny_id][nx_id] * bf_m;
+				auto &n     = *pcl.pn[ny_id][nx_id];
+				n.fy_ext_m  += pcl.N[ny_id][nx_id] * bf_m;
 				n.fy_ext_tf += pcl.N[ny_id][nx_id] * bf_tf;
 			}
 	}
@@ -215,7 +215,7 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
 				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
 				{
-					auto &n = *pcl.pn[ny_id][nx_id];
+					auto &n   = *pcl.pn[ny_id][nx_id];
 					pcl_max_f += pcl.N[ny_id][nx_id] * n.ax_f;
 					pcl_may_f += pcl.N[ny_id][nx_id] * n.ay_f;
 				}
@@ -226,7 +226,7 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
 				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
 				{
-					auto &n = *pcl.pn[ny_id][nx_id];
+					auto &n    = *pcl.pn[ny_id][nx_id];
 					n.fx_kin_f += pcl.N[ny_id][nx_id] * pcl_max_f;
 					n.fy_kin_f += pcl.N[ny_id][nx_id] * pcl_may_f;
 				}
@@ -335,20 +335,28 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 			double de22_s = 0.0;
 			double de12_s = 0.0;
 			double dw12_s = 0.0;
+			double de_vol_s; // volumetric strain of solid phase
+			double de_vol_f = 0.0; // "volumetric strain" of fluid phase
 			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
 				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
 				{
 					auto &n = *pcl.pn[ny_id][nx_id];
-					double dux_s = n.vx_s * self->dt;
-					double duy_s = n.vy_s * self->dt;
 					double dN_dx = pcl.dN_dx[ny_id][nx_id];
 					double dN_dy = pcl.dN_dy[ny_id][nx_id];
+					double dux_s = n.vx_s * self->dt;
+					double duy_s = n.vy_s * self->dt;
 					de11_s += dux_s * dN_dx;
 					de22_s += duy_s * dN_dy;
 					de12_s += (dux_s * dN_dy + duy_s * dN_dx) * 0.5;
 					dw12_s += (dux_s * dN_dy - duy_s * dN_dx) * 0.5;
+					double dux_f = n.vx_f * self->dt;
+					double duy_f = n.vy_f * self->dt;
+					de_vol_f -= dux_f * dN_dx + duy_f * dN_dy;
 				}
-			
+			de_vol_s = de11_s + de22_s;
+			de_vol_f -= (1.0 - pcl.n) / pcl.n * de_vol_s;
+
+
 			// update strain (also assume that strain increment is Jaumann rate)
 			//ppcl->de11 +=  dw12 * e12 * 2.0;
 			//ppcl->de22 += -dw12 * e12 * 2.0;
@@ -374,19 +382,6 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 			pcl.s11 += ds11;
 			pcl.s22 += ds22;
 			pcl.s12 += ds12;
-
-			// volumetric strain of solid phase
-			double de_vol_s = de11_s + de22_s;
-			// "volumetric strain" of fluid phase
-			double de_vol_f = -(1.0 - pcl.n) / pcl.n * de_vol_s;
-			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
-				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
-				{
-					auto &n = *pcl.pn[ny_id][nx_id];
-					double dux_f = n.vx_f * self->dt;
-					double duy_f = n.vy_f * self->dt;
-					de_vol_f -= dux_f * pcl.dN_dx[ny_id][nx_id] + duy_f * pcl.dN_dy[ny_id][nx_id];
-				}
 			
 			// porosity
 			pcl.n = (de_vol_s + pcl.n) / (1.0 + de_vol_s);

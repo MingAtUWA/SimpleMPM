@@ -8,6 +8,7 @@
 
 struct Node_R2D_CHM_Grid
 {
+	size_t index;
 	// ------------- fluid phase -------------
 	// acceleration, velocity
 	double ax_f, ay_f;

@@ -15,8 +15,8 @@
 // 1D compression
 void test_me_2D_bspline_mpm2(void)
 {
-	size_t elem_div_num = 50;
-	size_t pcl_div_num = 5;
+	size_t elem_div_num = 20;
+	size_t pcl_div_num = 4;
 	double bar_len = 1.0;
 
 	Model_R2D_ME_MPM_BSpline_s model;
@@ -85,6 +85,7 @@ void test_me_2D_bspline_mpm2(void)
 		Particle_Field_2D_ME::x,
 		Particle_Field_2D_ME::y,
 		Particle_Field_2D_ME::vol,
+		Particle_Field_2D_ME::s22,
 		Particle_Field_2D_ME::vy,
 		Particle_Field_2D_ME::density,
 		Particle_Field_2D_ME::vx,

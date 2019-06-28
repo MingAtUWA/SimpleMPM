@@ -4,12 +4,7 @@
 #include "Model_1D_ME_MPM_BSpline_s.h"
 #include "Step.h"
 
-// Only use the sysmetric quadratic spline
-// ignore spline at the boundary
-// treat fix boundary coniditions by assigning zero coefficient to the two spline at the boundary 
-// This approach is not correct, not successful
-
-// but the APIC method adopted is quite good
+// use complete set of quadratic spline
 
 int solve_substep_1D_ME_MPM_BSpline_APIC_s(void *_self);
 

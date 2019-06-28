@@ -21,11 +21,11 @@ void test_chm_2D_bspline_mpm2(void)
 
 	Model_R2D_CHM_MPM_BSpline_s model;
 	double elem_len = bar_len / double(elem_div_num);
-	size_t elem_x_num = 2 + 2;
+	size_t elem_x_num = 1 + 2;
 	size_t elem_y_num = elem_div_num + 2;
 	double pcl_len = elem_len / double(pcl_div_num);
-	size_t pcl_x_num = 2 * pcl_div_num;
-	size_t pcl_y_num = elem_div_num * pcl_div_num;
+	size_t pcl_x_num = (elem_x_num - 2) * pcl_div_num;
+	size_t pcl_y_num = (elem_y_num - 2) * pcl_div_num;
 	size_t pcl_num = pcl_x_num * pcl_y_num;
 
 	Particle_R2D_CHM_Grid pcl;
@@ -84,13 +84,13 @@ void test_chm_2D_bspline_mpm2(void)
 	model.set_vfx_num((elem_y_num + 1) * 4);
 	for (size_t i = 0; i < elem_y_num + 1; i++)
 	{
-		vbc.node_id = (elem_x_num + 1) * i;
+		vbc.node_id = (elem_x_num+1) * i;
 		model.add_vfx(vbc);
-		vbc.node_id = (elem_x_num + 1) * i + 1;
+		vbc.node_id = (elem_x_num+1) * i + 1;
 		model.add_vfx(vbc);
-		vbc.node_id = (elem_x_num + 1) * (i + 1) - 2;
+		vbc.node_id = (elem_x_num+1) * (i+1) - 2;
 		model.add_vfx(vbc);
-		vbc.node_id = (elem_x_num + 1) * (i + 1) - 1;
+		vbc.node_id = (elem_x_num+1) * (i+1) - 1;
 		model.add_vfx(vbc);
 	}
 
@@ -118,6 +118,7 @@ void test_chm_2D_bspline_mpm2(void)
 		Particle_Field_2D_CHM::y,
 		Particle_Field_2D_CHM::vol,
 		Particle_Field_2D_CHM::p,
+		Particle_Field_2D_CHM::n,
 		Particle_Field_2D_CHM::density_f,
 		Particle_Field_2D_CHM::density_s,
 		Particle_Field_2D_CHM::vx_f,
@@ -139,7 +140,7 @@ void test_chm_2D_bspline_mpm2(void)
 	step1.set_model(&model);
 	step1.set_result_file(&res_file);
 	step1.set_step_time(10.0);
-	step1.set_dt(1.0e-4); // smaller time step when load is larger
+	step1.set_dt(5.0e-4); // smaller time step when load is larger
 	th1.set_interval_num(20);
 	step1.add_output(&th1);
 	step1.add_output(&th2);
@@ -160,7 +161,7 @@ void test_chm_2D_bspline_mpm2(void)
 	step2.set_name("consolidation_step");
 	step2.set_prev_step(&step1);
 	step2.set_step_time(30.0);
-	step2.set_dt(1.0e-4); // smaller time step when load is larger
+	step2.set_dt(5.0e-4); // smaller time step when load is larger
 	th1.set_interval_num(60);
 	step2.add_output(&th1);
 	step2.add_output(&th2);

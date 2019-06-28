@@ -4,6 +4,13 @@
 #include "Model_1D_ME_MPM_BSpline_s.h"
 #include "Step.h"
 
+// Only use the sysmetric quadratic spline
+// ignore spline at the boundary
+// treat fix boundary coniditions by assigning zero coefficient to the two spline at the boundary 
+// This approach is not correct, not successful
+
+// but the blended method for node/particle mapping is OK
+
 int solve_substep_1D_ME_MPM_BSpline_s(void *_self);
 
 // for single object only
