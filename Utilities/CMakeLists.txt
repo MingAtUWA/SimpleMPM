@@ -18,6 +18,7 @@ add_library(
     MemoryBuffer.h
     PreAllocStringBuffer.hpp
     StringBuffer.h
+    StackLikeBuffer.hpp
     )
 
 if (WIN32)

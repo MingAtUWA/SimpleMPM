@@ -71,6 +71,12 @@ add_library(
     TimeHistory_Particle_2D_CHM_MPM_BSpline_s_AllPcl.h TimeHistory_Particle_2D_CHM_MPM_BSpline_s_AllPcl.cpp
     # Purely mechanics (complete set of quadriatic b-spline)
     Step_1D_ME_MPM_qBSpline_APIC_s.h Step_1D_ME_MPM_qBSpline_APIC_s.cpp
+    # Purely mechanics GIMP
+    Model_S2D_ME_MPM_s.h
+    Step_S2D_ME_MPM_s_GIMP.h Step_S2D_ME_MPM_s_GIMP.cpp
+    # Coupled hydro-mechanics GIMP
+    Model_S2D_CHM_MPM_s.h
+    Step_S2D_CHM_MPM_s_GIMP.h Step_S2D_CHM_MPM_s_GIMP.cpp
     )
 
 target_include_directories(
