@@ -4,26 +4,26 @@
 #include "Mesh.h"
 
 /* ===============================================
-Class Element_R2D_CHM_MPM
+	Class Element_R2D_CHM_MPM
 
-local coordinate:
-	eta
-	/\
-	|
-	O ---> xi
+	local coordinate:
+		eta
+		/\
+		|
+		O ---> xi
 
-local node number for each element:
-	4________________3
-	|                |
-	|                |
-	|                |
-	|                |
-	|________________|
-	1                2
-edge 1: node 1 -- node 2;
-edge 2: node 2 -- node 3;
-edge 3: node 3 -- node 4;
-edge 4: node 4 -- node 1;
+	local node number for each element:
+		4________________3
+		|                |
+		|                |
+		|                |
+		|                |
+		|________________|
+		1                2
+	edge 1: node 1 -- node 2;
+	edge 2: node 2 -- node 3;
+	edge 3: node 3 -- node 4;
+	edge 4: node 4 -- node 1;
  =============================================== */
 struct Element_R2D_CHM_MPM_s : public Element
 {

@@ -40,12 +40,13 @@ with open(abs_file_path, 'r') as res_file:
             for i in range(output_pcl_num):
                 line_text = res_file.readline()
                 line_data = list(map(lambda x: float(x.strip('\n')), line_text.split(',')))
-                if i == 9: # particle at bottom (impermeable)
+                if i == 1: # particle at bottom (impermeable)
                 #if i == output_pcl_num - 1: # particle on top (free draining)
                     field_value = line_data[3] # p
                     y_data.append(field_value)
                     if not is_init:
                         z = line_data[1] # position
+                        print(z)
                         is_init = True
 
 #plot1.set_xlim([0.0, 110.0])
@@ -62,7 +63,7 @@ Es = (1 - niu) / (1 + niu) / (1 - 2.0*niu) * E # Es = (1-v) / (1 + v) / (1-2v) *
 kv = 1.0e-4
 miu = 1.0 # dynamic viscosity
 Cv = kv * Es / miu
-u0 = 10.0
+u0 = 400.0
 H = 1.0
 con_res = oc.OneDConsolidation(Cv, Es, u0, H)
 

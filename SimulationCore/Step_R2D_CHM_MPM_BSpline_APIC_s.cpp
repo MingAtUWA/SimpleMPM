@@ -63,44 +63,49 @@ int solve_substep_R2D_CHM_MPM_BSpline_APIC_s(void *_self)
 		if (pcl.is_in_mesh)
 		{
 			pcl.is_in_mesh = model->is_in_mesh(pcl.x, pcl.y);
-			model->cal_shape_func(pcl);
-			double vol = pcl.m_s / ((1.0 - pcl.n) * pcl.density_s);
-			pcl.vol = vol;
-			double n_miu_div_k = pcl.n * pcl.miu / pcl.k;
-			for (size_t nx_id = 0; nx_id < 3; ++nx_id)
-				for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+			if (pcl.is_in_mesh)
+			{
+				model->cal_shape_func(pcl);
+				double vol = pcl.m_s / ((1.0 - pcl.n) * pcl.density_s);
+				pcl.vol = vol;
+				double n_miu_div_k = pcl.n * pcl.miu / pcl.k;
+				for (size_t nx_id = 0; nx_id < 3; ++nx_id)
 				{
-					auto &n = *pcl.pn[ny_id][nx_id];
-					double N = pcl.N[ny_id][nx_id];
-					double dN_dx = pcl.dN_dx[ny_id][nx_id];
-					double dN_dy = pcl.dN_dy[ny_id][nx_id];
-					double x_dist = pcl.x_dist[nx_id];
-					double y_dist = pcl.y_dist[ny_id];
-					if (N != 0.0)
-						n.cal_flag = 1;
-					double m_prod_N;
-					double Qx, Qy;
-					// solid phase
-					m_prod_N = pcl.m_s * N;
-					n.m_s += m_prod_N;
-					Qx = pcl.C_s[0][0] * x_dist + pcl.C_s[0][1] * y_dist;
-					Qy = pcl.C_s[1][0] * x_dist + pcl.C_s[1][1] * y_dist;
-					n.vx_s += m_prod_N * (pcl.vx_s + Qx);
-					n.vy_s += m_prod_N * (pcl.vy_s + Qy);
-					n.fx_int_m += (dN_dx * (pcl.s11 - pcl.p) + dN_dy * pcl.s12) * vol;
-					n.fy_int_m += (dN_dx * pcl.s12 + dN_dy * (pcl.s22 - pcl.p)) * vol;
-					// fluid phase
-					m_prod_N = pcl.density_f * vol * N;
-					n.m_tf += m_prod_N;
-					Qx = pcl.C_f[0][0] * x_dist + pcl.C_f[0][1] * y_dist;
-					Qy = pcl.C_f[1][0] * x_dist + pcl.C_f[1][1] * y_dist;
-					n.vx_f += m_prod_N * (pcl.vx_f + Qx);
-					n.vy_f += m_prod_N * (pcl.vy_f + Qy);					
-					n.fx_int_tf += (dN_dx * -pcl.p) * vol;
-					n.fy_int_tf += (dN_dy * -pcl.p) * vol;
-					n.fx_drag_tf += n_miu_div_k * (pcl.vx_f - pcl.vx_s) * vol * N;
-					n.fy_drag_tf += n_miu_div_k * (pcl.vy_f - pcl.vy_s) * vol * N;
+					for (size_t ny_id = 0; ny_id < 3; ++ny_id)
+					{
+						auto &n = *pcl.pn[ny_id][nx_id];
+						double N = pcl.N[ny_id][nx_id];
+						double dN_dx = pcl.dN_dx[ny_id][nx_id];
+						double dN_dy = pcl.dN_dy[ny_id][nx_id];
+						double x_dist = pcl.x_dist[nx_id];
+						double y_dist = pcl.y_dist[ny_id];
+						if (N != 0.0)
+							n.cal_flag = 1;
+						double m_prod_N;
+						double Qx, Qy;
+						// solid phase
+						m_prod_N = pcl.m_s * N;
+						n.m_s += m_prod_N;
+						Qx = pcl.C_s[0][0] * x_dist + pcl.C_s[0][1] * y_dist;
+						Qy = pcl.C_s[1][0] * x_dist + pcl.C_s[1][1] * y_dist;
+						n.vx_s += m_prod_N * (pcl.vx_s + Qx);
+						n.vy_s += m_prod_N * (pcl.vy_s + Qy);
+						n.fx_int_m += (dN_dx * (pcl.s11 - pcl.p) + dN_dy * pcl.s12) * vol;
+						n.fy_int_m += (dN_dx * pcl.s12 + dN_dy * (pcl.s22 - pcl.p)) * vol;
+						// fluid phase
+						m_prod_N = pcl.density_f * vol * N;
+						n.m_tf += m_prod_N;
+						Qx = pcl.C_f[0][0] * x_dist + pcl.C_f[0][1] * y_dist;
+						Qy = pcl.C_f[1][0] * x_dist + pcl.C_f[1][1] * y_dist;
+						n.vx_f += m_prod_N * (pcl.vx_f + Qx);
+						n.vy_f += m_prod_N * (pcl.vy_f + Qy);
+						n.fx_int_tf += (dN_dx * -pcl.p) * vol;
+						n.fy_int_tf += (dN_dy * -pcl.p) * vol;
+						n.fx_drag_tf += n_miu_div_k * (pcl.vx_f - pcl.vx_s) * vol * N;
+						n.fy_drag_tf += n_miu_div_k * (pcl.vy_f - pcl.vy_s) * vol * N;
+					}
 				}
+			}
 		}
 	}
 

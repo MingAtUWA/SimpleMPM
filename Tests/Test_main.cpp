@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	//test_chm_kindamp_mpm2();
 
 	//test_chm_2D_bspline_mpm1();
-	//test_chm_2D_bspline_mpm2();
+	test_chm_2D_bspline_mpm2();
 
 	//test_multi_object_me1();
 

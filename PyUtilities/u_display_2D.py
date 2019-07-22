@@ -59,7 +59,7 @@ Es = (1 - niu) / (1 + niu) / (1 - 2.0*niu) * E # Es = (1-v) / (1 + v) / (1-2v) *
 kv = 1.0e-4
 miu = 1.0 # dynamic viscosity
 Cv = kv * Es / miu
-u0 = 10.0
+u0 = 400.0
 H = 1.0
 con_res = oc.OneDConsolidation(Cv, Es, u0, H)
 

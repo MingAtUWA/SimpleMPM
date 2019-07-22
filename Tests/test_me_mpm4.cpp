@@ -155,7 +155,7 @@ void test_me_mpm4(void)
 	step1.set_model(&model);
 	step1.set_result_file(&res_file);
 	step1.set_step_time(100.0);
-	step1.set_dt(1.0e-4);
+	step1.set_dt(1.0e-3);
 	//step1.set_auto_dt(0.01);
 	step1.add_output(&th1);
 	step1.add_output(&th2);

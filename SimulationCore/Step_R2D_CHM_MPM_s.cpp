@@ -507,7 +507,7 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 			Rotate as Jaumann rate:
 				tensor_rate = tensor_Jaumann_rate + tensor * dW_T + dW * tensor
 			  ------------------------------------------------------------------- */
-			  /*			ds11 +=  ppcl->dw12 * ppcl->s12 * 2.0;
+			/*			  ds11 +=  ppcl->dw12 * ppcl->s12 * 2.0;
 						  ds22 += -ppcl->dw12 * ppcl->s12 * 2.0;
 						  ds12 +=  ppcl->dw12 * (ppcl->s22 - ppcl->s11);	*/
 			ppcl->s11 += ds11;

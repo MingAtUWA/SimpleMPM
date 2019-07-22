@@ -15,7 +15,7 @@
 // 1D compression
 void test_chm_2D_bspline_mpm2(void)
 {
-	size_t elem_div_num = 50;
+	size_t elem_div_num = 10;
 	size_t pcl_div_num = 4;
 	double bar_len = 1.0;
 
@@ -96,7 +96,7 @@ void test_chm_2D_bspline_mpm2(void)
 
 	model.set_ty_num(2);
 	TractionBC_MPM tbc;
-	tbc.t = -10.0 * pcl_len;
+	tbc.t = -400.0 * pcl_len;
 	for (size_t i = 0; i < pcl_x_num; i++)
 	{
 		tbc.pcl_id = pcl_num - i - 1;
@@ -140,7 +140,7 @@ void test_chm_2D_bspline_mpm2(void)
 	step1.set_model(&model);
 	step1.set_result_file(&res_file);
 	step1.set_step_time(10.0);
-	step1.set_dt(5.0e-4); // smaller time step when load is larger
+	step1.set_dt(2.0e-4); // smaller time step when load is larger
 	th1.set_interval_num(20);
 	step1.add_output(&th1);
 	step1.add_output(&th2);
@@ -161,7 +161,7 @@ void test_chm_2D_bspline_mpm2(void)
 	step2.set_name("consolidation_step");
 	step2.set_prev_step(&step1);
 	step2.set_step_time(30.0);
-	step2.set_dt(5.0e-4); // smaller time step when load is larger
+	step2.set_dt(2.0e-4); // smaller time step when load is larger
 	th1.set_interval_num(60);
 	step2.add_output(&th1);
 	step2.add_output(&th2);

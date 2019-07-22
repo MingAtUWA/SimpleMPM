@@ -16,8 +16,8 @@
 // compression
 void test_me_1D_bspline_mpm2(void)
 {
-	size_t elem_num = 100;
-	size_t pcl_per_elem_num = 5;
+	size_t elem_num = 10;
+	size_t pcl_per_elem_num = 2;
 	
 	Model_1D_ME_MPM_BSpline_s model;
 	double elem_len = 1.0 / double(elem_num);
