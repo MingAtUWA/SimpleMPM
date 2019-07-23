@@ -42,6 +42,8 @@ int solve_substep_S2D_ME_MPM_s_GIMP(void *_self)
 	Step_S2D_ME_MPM_s_GIMP &self = *((Step_S2D_ME_MPM_s_GIMP *)_self);
 	Model_S2D_ME_MPM_s &model = *(self.model);
 
+	model.pcl_var_mem.reset_optimize();
+
 	// init nodes
 	for (size_t i = 0; i < model.node_num; i++)
 	{
@@ -89,10 +91,10 @@ int solve_substep_S2D_ME_MPM_s_GIMP(void *_self)
 				pcl_var.N3 = Nx_high * Ny_high;
 				pcl_var.N4 = Nx_low  * Ny_high;
 				double dxi_dx = 2.0 / model.h; // = deta_dy
-				pcl_var.dN1_dx = dNx_dxi_low  * Ny_low  * dxi_dx;
-				pcl_var.dN2_dx = dNx_dxi_high * Ny_low  * dxi_dx;
-				pcl_var.dN3_dx = dNx_dxi_high * Ny_high * dxi_dx;
-				pcl_var.dN4_dx = dNx_dxi_low  * Ny_high * dxi_dx;
+				pcl_var.dN1_dx = dNx_dxi_low  * Ny_low   * dxi_dx;
+				pcl_var.dN2_dx = dNx_dxi_high * Ny_low   * dxi_dx;
+				pcl_var.dN3_dx = dNx_dxi_high * Ny_high  * dxi_dx;
+				pcl_var.dN4_dx = dNx_dxi_low  * Ny_high  * dxi_dx;
 				pcl_var.dN1_dy = Nx_low  * dNy_deta_low  * dxi_dx;
 				pcl_var.dN2_dy = Nx_high * dNy_deta_low  * dxi_dx;
 				pcl_var.dN3_dy = Nx_high * dNy_deta_high * dxi_dx;
@@ -159,7 +161,7 @@ int solve_substep_S2D_ME_MPM_s_GIMP(void *_self)
 			pcl_var.pn4->fy_ext_m += bf_tmp * pcl_var.N4;
 		}
 	}
-	// surface force
+	// surface force !!!! not correct
 	for (size_t tf_id = 0; tf_id < model.tx_num; ++tf_id)
 	{
 		Particle_S2D_ME &pcl = model.pcls[model.txs[tf_id].pcl_id];
@@ -210,9 +212,9 @@ int solve_substep_S2D_ME_MPM_s_GIMP(void *_self)
 		if (n.m != 0.0)
 		{
 			n.vx /= n.m;
-			n.vx += n.ax;
+			n.vx += n.ax * self.dt;
 			n.vy /= n.m;
-			n.vy += n.ay;
+			n.vy += n.ay * self.dt;
 		}
 	}
 	// velocity boundary conditions
@@ -273,20 +275,20 @@ int solve_substep_S2D_ME_MPM_s_GIMP(void *_self)
 			for (size_t i = 0; i < pcl.elem_num; ++i)
 			{
 				ParticleVar_S2D_ME &pcl_var = pcl.vars[i];
-				pcl_avg_var.vol += pcl_var.vol;
-				pcl_avg_var.dvx += pcl_var.dvx * pcl_var.vol;
-				pcl_avg_var.dvy += pcl_var.dvy * pcl_var.vol;
-				pcl_avg_var.dux += pcl_var.dux * pcl_var.vol;
-				pcl_avg_var.duy += pcl_var.duy * pcl_var.vol;
+				pcl_avg_var.vol  += pcl_var.vol;
+				pcl_avg_var.dvx  += pcl_var.dvx  * pcl_var.vol;
+				pcl_avg_var.dvy  += pcl_var.dvy  * pcl_var.vol;
+				pcl_avg_var.dux  += pcl_var.dux  * pcl_var.vol;
+				pcl_avg_var.duy  += pcl_var.duy  * pcl_var.vol;
 				pcl_avg_var.de11 += pcl_var.de11 * pcl_var.vol;
 				pcl_avg_var.de22 += pcl_var.de22 * pcl_var.vol;
 				pcl_avg_var.de12 += pcl_var.de12 * pcl_var.vol;
 				pcl_avg_var.dw12 += pcl_var.dw12 * pcl_var.vol;
 			}
-			pcl_avg_var.dvx /= pcl_avg_var.vol;
-			pcl_avg_var.dvy /= pcl_avg_var.vol;
-			pcl_avg_var.dux /= pcl_avg_var.vol;
-			pcl_avg_var.duy /= pcl_avg_var.vol;
+			pcl_avg_var.dvx  /= pcl_avg_var.vol;
+			pcl_avg_var.dvy  /= pcl_avg_var.vol;
+			pcl_avg_var.dux  /= pcl_avg_var.vol;
+			pcl_avg_var.duy  /= pcl_avg_var.vol;
 			pcl_avg_var.de11 /= pcl_avg_var.vol;
 			pcl_avg_var.de22 /= pcl_avg_var.vol;
 			pcl_avg_var.de12 /= pcl_avg_var.vol;
@@ -302,10 +304,13 @@ int solve_substep_S2D_ME_MPM_s_GIMP(void *_self)
 		{
 			ParticleVar_S2D_ME &pcl_var = pcl.var;
 
-			pcl.x  += pcl_var.dux;
-			pcl.y  += pcl_var.duy;
 			pcl.vx += pcl_var.dvx;
 			pcl.vy += pcl_var.dvy;
+
+			pcl.ux += pcl_var.dux;
+			pcl.uy += pcl_var.duy;
+			pcl.x = pcl.x_ori + pcl.ux;
+			pcl.y = pcl.y_ori + pcl.uy;
 
 			// update strain (also assume that strain increment is Jaumann rate)
 			//ppcl->de11 +=  ppcl->dw12 * ppcl->e12 * 2.0;

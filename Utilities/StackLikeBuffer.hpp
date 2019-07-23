@@ -13,7 +13,7 @@ template <class Item>
 class StackLikeBuffer
 {
 protected:
-	class MemPoolHeader
+	struct MemPoolHeader
 	{
 		MemPoolHeader *next;
 		size_t size;
@@ -58,7 +58,7 @@ public:
 			}
 			new_mem_pool(num);
 			next_pool = nullptr;
-			cur = top_pool->cur;
+			cur = top_pool->mem;
 			end = cur + top_pool->size;
 		memory_found:	
 			res = cur;
@@ -70,6 +70,24 @@ public:
 	// clear items in buffer
 	// preserve allocated memory
 	inline void reset(void)
+	{
+		// reset and delete all items
+		if (top_pool)
+		{
+			next_pool = top_pool->next;
+			cur = top_pool->mem;
+			end = cur + top_pool->size;
+		}
+		else
+		{
+			next_pool = nullptr;
+			cur = nullptr;
+			end = nullptr;
+		}
+	}
+	// Optimize performance by reallocating
+	// the whole chunk of memory
+	inline void reset_optimize(void)
 	{
 		// optimize performance
 		if (pool_num > 1)
@@ -130,7 +148,7 @@ protected:
 		pool_header->size = size;
 		// memory alignment
 		mem += sizeof(MemPoolHeader);
-		mem += MEMORY_ALIGNMENT_PADDING(mem);
+		mem += MEMORY_ALIGNMENT_PADDING(size_t(mem));
 		pool_header->mem = reinterpret_cast<Item *>(mem);
 		++pool_num;
 		total_size += size;

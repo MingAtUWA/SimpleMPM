@@ -6,10 +6,10 @@
 
 // use complete set of quadratic spline
 
-int solve_substep_1D_ME_MPM_BSpline_APIC_s(void *_self);
+int solve_substep_1D_ME_MPM_qBSpline_APIC_s(void *_self);
 
 // for single object only
-class Step_1D_ME_MPM_BSpline_APIC_s : public Step
+class Step_1D_ME_MPM_qBSpline_APIC_s : public Step
 {
 protected:
 	Model_1D_ME_MPM_BSpline_s *model;
@@ -18,8 +18,8 @@ protected:
 	double invD;
 
 public:
-	Step_1D_ME_MPM_BSpline_APIC_s();
-	~Step_1D_ME_MPM_BSpline_APIC_s();
+	Step_1D_ME_MPM_qBSpline_APIC_s();
+	~Step_1D_ME_MPM_qBSpline_APIC_s();
 
 	inline void set_model(Model_1D_ME_MPM_BSpline_s *md)
 	{
@@ -27,7 +27,7 @@ public:
 		model = md;
 	}
 	// Restart version
-	inline void set_prev_step(Step_1D_ME_MPM_BSpline_APIC_s *prev_step)
+	inline void set_prev_step(Step_1D_ME_MPM_qBSpline_APIC_s *prev_step)
 	{
 		Step::set_prev_step(prev_step);
 		model = prev_step->model;
@@ -35,7 +35,7 @@ public:
 
 protected:
 	int init(void);
-	friend int solve_substep_1D_ME_MPM_BSpline_APIC_s(void *_self);
+	friend int solve_substep_1D_ME_MPM_qBSpline_APIC_s(void *_self);
 	int finalize(void);
 
 };

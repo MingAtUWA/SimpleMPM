@@ -31,16 +31,12 @@ struct ParticleVar_S2D_ME
 struct Particle_S2D_ME
 {
 	size_t index;
-	double m, density;
-	double vx, vy;
-	union // position and calculation variables
-	{
-		struct { double x, y, vol; };
-		ParticleVar_S2D_ME var;
-	};
-
+	double x, y;
 	double x_ori, y_ori;
 	double ux, uy;
+
+	double vx, vy;
+	double m, density;
 
 	double s11, s22, s12;
 	double e11, e22, e12;
@@ -48,13 +44,14 @@ struct Particle_S2D_ME
 	double ps11, ps22, ps12;
 
 	size_t elem_num; // The number of elements that this particle covers
+	ParticleVar_S2D_ME var;
 	ParticleVar_S2D_ME *vars;
 
 	// constitutive model
 	double E, niu;
 };
 
-class Model_S2D_ME_MPM_s : public Model
+struct Model_S2D_ME_MPM_s : public Model
 {
 public:
 	double h;
@@ -77,8 +74,12 @@ public:
 	MemoryUtilities::StackLikeBuffer<ParticleVar_S2D_ME> pcl_var_mem;
 
 public:
-	Model_S2D_ME_MPM_s() :
+	Model_S2D_ME_MPM_s() : Model("Model_S2D_ME_MPM_s"),
 		nodes(nullptr), node_x_num(0), node_y_num(0),
+		bfx_num(0), bfy_num(0), bfxs(nullptr), bfys(nullptr),
+		tx_num(0), ty_num(0), txs(nullptr), tys(nullptr),
+		ax_num(0), ay_num(0), axs(nullptr), ays(nullptr),
+		vx_num(0), vy_num(0), vxs(nullptr), vys(nullptr),
 		pcl_var_mem(10) {}
 	~Model_S2D_ME_MPM_s()
 	{
@@ -86,25 +87,32 @@ public:
 		clear_pcl();
 		if (bfxs) delete[] bfxs;
 		bfxs = nullptr;
+		bfx_num = 0;
 		if (bfys) delete[] bfys;
 		bfys = nullptr;
+		bfy_num = 0;
 		if (txs) delete[] txs;
 		txs = nullptr;
+		tx_num = 0;
 		if (tys) delete[] tys;
 		tys = nullptr;
+		ty_num = 0;
 		if (axs) delete[] axs;
 		axs = nullptr;
+		ax_num = 0;
 		if (ays) delete[] ays;
 		ays = nullptr;
+		ay_num = 0;
 		if (vxs) delete[] vxs;
 		vxs = nullptr;
+		vx_num = 0;
 		if (vys) delete[] vys;
 		vys = nullptr;
-		pcl_var_mem.clear();
+		vy_num = 0;
 	}
 
-	void init_mesh(double grid_size, double x_start, double y_start,
-				   size_t elem_x_num, size_t elem_y_num)
+	void init_mesh(double grid_size, size_t elem_x_num, size_t elem_y_num,
+				   double x_start = 0.0, double y_start = 0.0)
 	{
 		clear_mesh();
 		h = grid_size;
@@ -156,22 +164,23 @@ public:
 			pcl.s11 = 0.0;
 			pcl.s12 = 0.0;
 			pcl.s22 = 0.0;
-			pcl_var_mem.set_default_pool_size(pcl_num/2);
 		}
+		// init buffer for particle vars
+		pcl_var_mem.set_default_pool_size(pcl_num);
 	}
 	void clear_pcl(void)
 	{
 		if (pcls) delete[] pcls;
 		pcls = nullptr;
 		pcl_num = 0;
+		pcl_var_mem.clear();
 	}
 
 	// Only suitable for case when particle is smaller than element
 	// The calculation may not be good with particles larger than element
 	void get_elements_overlapped_by_particle(Particle_S2D_ME &pcl)
 	{
-		pcl.vol = pcl.m / pcl.density;
-		double hlen = sqrt(pcl.vol) * 0.5; // half length
+		double hlen = sqrt(pcl.m / pcl.density) * 0.5; // half length
 		double xl = pcl.x - hlen;
 		if (xl < x0) xl = x0; // xl = max(xl, x0)
 		double xu = pcl.x + hlen;
@@ -190,10 +199,10 @@ public:
 
 		size_t xl_id = size_t((xl - x0) / h);
 		size_t xu_id = size_t((xu - x0) / h);
-		if (xu - x0 > h * double(xu_id)) ++xu_id;
+		if (xu - x0 > h * double(xu_id) && xu != xn) ++xu_id;
 		size_t yl_id = size_t((yl - y0) / h);
 		size_t yu_id = size_t((yu - y0) / h);
-		if (yu - y0 > h * double(yu_id)) ++yu_id;
+		if (yu - y0 > h * double(yu_id) && yu != yn) ++yu_id;
 		size_t x_num = xu_id - xl_id;
 		size_t y_num = yu_id - yl_id;
 		pcl.elem_num = x_num * y_num;
@@ -201,6 +210,9 @@ public:
 		if (pcl.elem_num == 1)
 		{
 			pcl.vars = &pcl.var;
+			pcl.var.x = (xl + xu) * 0.5;
+			pcl.var.y = (yl + yu) * 0.5;
+			pcl.var.vol = (xu - xl) * (yu - yl);
 			pcl.var.elem_x_id = xl_id;
 			pcl.var.elem_y_id = yl_id;
 		}
@@ -210,17 +222,17 @@ public:
 			double x_len1, x_len2, y_len1, y_len2;
 			if (x_num == 1)
 			{
-				x_len1 = hlen * 2.0;
+				x_len1 = xu - xl;
 				// y_num must == 2
 				y_len1 = y0 + double(yl_id + 1) * h - yl;
-				y_len2 = yu - y0 - double(yu_id) * h;
+				y_len2 = yu - yl - y_len1;
 				pcl.vars[0].x = pcl.x;
-				pcl.vars[0].y = ;
+				pcl.vars[0].y = yl + y_len1 * 0.5;
 				pcl.vars[0].vol = x_len1 * y_len1;
 				pcl.vars[0].elem_x_id = xl_id;
 				pcl.vars[0].elem_y_id = yl_id;
 				pcl.vars[1].x = pcl.x;
-				pcl.vars[1].y = ;
+				pcl.vars[1].y = yu - y_len2 * 0.5;
 				pcl.vars[1].vol = x_len1 * y_len2;
 				pcl.vars[1].elem_x_id = xl_id;
 				pcl.vars[1].elem_y_id = yl_id + 1;
@@ -228,16 +240,16 @@ public:
 			else
 			{
 				x_len1 = x0 + double(xl_id + 1) * h - xl;
-				x_len2 = xu - x0 - double(xu_id) * h;
+				x_len2 = xu - xl - x_len1;
 				if (y_num == 1)
 				{
-					y_len1 = hlen * 2.0;
-					pcl.vars[0].x = ;
+					y_len1 = yu - yl;
+					pcl.vars[0].x = xl + x_len1 * 0.5;
 					pcl.vars[0].y = pcl.y;
 					pcl.vars[0].vol = x_len1 * y_len1;
 					pcl.vars[0].elem_x_id = xl_id;
 					pcl.vars[0].elem_y_id = yl_id;
-					pcl.vars[1].x = ;
+					pcl.vars[1].x = xu - x_len2 * 0.5;
 					pcl.vars[1].y = pcl.y;
 					pcl.vars[1].vol = x_len2 * y_len1;
 					pcl.vars[1].elem_x_id = xl_id + 1;
@@ -246,31 +258,30 @@ public:
 				else
 				{
 					y_len1 = y0 + double(yl_id + 1) * h - yl;
-					y_len2 = yu - y0 - double(yu_id) * h;
-					pcl.vars[0].x = ;
-					pcl.vars[0].y = ;
+					y_len2 = yu - yl - y_len1;
+					pcl.vars[0].x = xl + x_len1 * 0.5;
+					pcl.vars[0].y = yl + y_len1 * 0.5;
 					pcl.vars[0].vol = x_len1 * y_len1;
 					pcl.vars[0].elem_x_id = xl_id;
 					pcl.vars[0].elem_y_id = yl_id;
-					pcl.vars[1].x = ;
-					pcl.vars[1].y = ;
+					pcl.vars[1].x = xu - x_len2 * 0.5;
+					pcl.vars[1].y = yl + y_len1 * 0.5;
 					pcl.vars[1].vol = x_len2 * y_len1;
 					pcl.vars[1].elem_x_id = xl_id + 1;
 					pcl.vars[1].elem_y_id = yl_id;
-					pcl.vars[2].x = ;
-					pcl.vars[2].y = ;
+					pcl.vars[2].x = xl + x_len1 * 0.5;
+					pcl.vars[2].y = yu - y_len2 * 0.5;
 					pcl.vars[2].vol = x_len1 * y_len2;
 					pcl.vars[2].elem_x_id = xl_id;
 					pcl.vars[2].elem_y_id = yl_id + 1;
-					pcl.vars[3].x = ;
-					pcl.vars[3].y = ;
+					pcl.vars[3].x = xu - x_len2 * 0.5;
+					pcl.vars[3].y = yu - y_len2 * 0.5;
 					pcl.vars[3].vol = x_len2 * y_len2;
 					pcl.vars[3].elem_x_id = xl_id + 1;
 					pcl.vars[3].elem_y_id = yl_id + 1;
 				}
 			}
 		}
-
 	}
 };
 

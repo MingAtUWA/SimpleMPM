@@ -8,6 +8,9 @@ void display_model(void);
 void test_mesh(void);
 void test_cal_shape_func(void);
 
+void test_me_mpm_gimp1(void);
+void test_me_mpm_gimp2(void);
+
 void test_me_mpm1(void);
 void test_me_mpm2(void);
 void test_me_mpm3(void);
@@ -40,5 +43,7 @@ void test_chm_2D_bspline_mpm2(void);
 
 // multiple objects
 void test_multi_object_me1(void);
+
+void test_Model_S2D_ME_s(void);
 
 #endif

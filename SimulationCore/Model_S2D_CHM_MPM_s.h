@@ -65,7 +65,7 @@ struct Particle_S2D_CHM
 	double ps12;
 };
 
-class Model_S2D_CHM_MPM_s
+struct Model_S2D_CHM_MPM_s
 {
 public:
 	double h;
@@ -79,7 +79,7 @@ public:
 public:
 	Model_S2D_CHM_MPM_s() :
 		nodes(nullptr), node_x_num(0), node_y_num(0) {}
-	~Modle_S2D_CHM_MPM_s()
+	~Model_S2D_CHM_MPM_s()
 	{
 		clear_mesh();
 		clear_pcl();
@@ -116,7 +116,7 @@ public:
 	void init_pcl(size_t num)
 	{
 		pcl_num = num;
-		pcls = Particle_S2D_CHM[num];
+		pcls = new Particle_S2D_CHM[num];
 	}
 	void clear_pcl(void)
 	{

@@ -1,14 +1,14 @@
 #include "SimulationCore_pcp.h"
 
-#include "Step_1D_ME_MPM_BSpline_APIC_s.h"
+#include "Step_1D_ME_MPM_qBSpline_APIC_s.h"
 
-Step_1D_ME_MPM_BSpline_APIC_s::Step_1D_ME_MPM_BSpline_APIC_s() :
-	Step(&solve_substep_1D_ME_MPM_BSpline_APIC_s),
+Step_1D_ME_MPM_qBSpline_APIC_s::Step_1D_ME_MPM_qBSpline_APIC_s() :
+	Step(&solve_substep_1D_ME_MPM_qBSpline_APIC_s),
 	model(nullptr), N_tol(1.0e-8) {}
 
-Step_1D_ME_MPM_BSpline_APIC_s::~Step_1D_ME_MPM_BSpline_APIC_s() {}
+Step_1D_ME_MPM_qBSpline_APIC_s::~Step_1D_ME_MPM_qBSpline_APIC_s() {}
 
-int Step_1D_ME_MPM_BSpline_APIC_s::init()
+int Step_1D_ME_MPM_qBSpline_APIC_s::init()
 {
 	if (is_first_step)
 	{
@@ -51,11 +51,11 @@ int Step_1D_ME_MPM_BSpline_APIC_s::init()
 	return 0;
 }
 
-int Step_1D_ME_MPM_BSpline_APIC_s::finalize() { return 0; }
+int Step_1D_ME_MPM_qBSpline_APIC_s::finalize() { return 0; }
 
-int solve_substep_1D_ME_MPM_BSpline_APIC_s(void *_self)
+int solve_substep_1D_ME_MPM_qBSpline_APIC_s(void *_self)
 {
-	Step_1D_ME_MPM_BSpline_APIC_s *self = static_cast<Step_1D_ME_MPM_BSpline_APIC_s *>(_self);
+	Step_1D_ME_MPM_qBSpline_APIC_s *self = static_cast<Step_1D_ME_MPM_qBSpline_APIC_s *>(_self);
 	Model_1D_ME_MPM_BSpline_s *model = self->model;
 
 	// init nodes

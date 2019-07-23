@@ -7,6 +7,11 @@
 
 int main(int argc, char *argv[])
 {
+	//test_Model_S2D_ME_s();
+
+	//test_me_mpm_gimp1();
+	test_me_mpm_gimp2();
+
 	//test_me_mpm1();
 	//test_me_mpm2();
 	//test_me_mpm3();
@@ -35,12 +40,13 @@ int main(int argc, char *argv[])
 	//test_chm_kindamp_mpm2();
 
 	//test_chm_2D_bspline_mpm1();
-	test_chm_2D_bspline_mpm2();
+	//test_chm_2D_bspline_mpm2();
 
 	//test_multi_object_me1();
 
 	//test_file_char_array();
 	//test_item_array();
+	//test_StackLikeBuffer();
 	//test_frame_pcl2d();
 	//test_result_file_parser();
 	//display_model();

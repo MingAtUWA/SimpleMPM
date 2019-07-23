@@ -15,6 +15,7 @@
 #include "Model_R2D_CHM_MPM_s.h"
 #include "Model_R2D_ME_MPM_BSpline_s.h"
 #include "Model_R2D_CHM_MPM_BSpline_s.h"
+#include "Model_S2D_ME_MPM_s.h"
 
 // Information for step
 struct Step_Text
@@ -606,6 +607,82 @@ int ResultFile_Text::output_model_state(Model_R2D_CHM_MPM_BSpline_s &md)
 		for (size_t i = 0; i < md.pcl_num - 1; i++)
 			model_data_file << md.pcls[i].density_f << ", ";
 		model_data_file << md.pcls[md.pcl_num - 1].density_f;
+		// constitutive model
+		// permeability
+	}
+	model_data_file << "\n  *end\n";
+
+	// output boundary conditions
+	//...
+
+	model_data_file << "\n*end\n";
+	model_data_file.close();
+
+	return 0;
+}
+
+int ResultFile_Text::output_model_state(Model_S2D_ME_MPM_s &md)
+{
+	init();
+
+	MemoryUtilities::PreAllocStringBuffer<256> model_data_file_name;
+	model_data_file_name << file_name << "\\ModelState.txt";
+	std::ofstream model_data_file(model_data_file_name.c_str());
+
+	model_data_file << "**\n\nModel State Data\n\n**\n\n";
+
+	model_data_file << "*ModelState\n";
+	if (md.get_name() && strlen(md.get_name()))
+		model_data_file << "  Name = " << md.get_name() << "\n";
+	model_data_file << "  Type = " << md.get_type() << "\n";
+
+	// output background mesh
+	model_data_file << "\n  *BackgroundMesh\n"
+		<< "    Type = R2D\n"
+		<< "    XCoordinateNum = " << md.node_x_num << "\n"
+		<< "    YCoordinateNum = " << md.node_y_num << "\n";
+	if (md.node_x_num)
+	{
+		model_data_file << "    XCoordinates = ";
+		for (size_t i = 0; i < md.node_x_num - 1; i++)
+			model_data_file << md.x0 + i * md.h << ", ";
+		model_data_file << md.x0 + (md.node_x_num - 1) * md.h;
+	}
+	if (md.node_y_num)
+	{
+		model_data_file << "\n    YCoordinates = ";
+		for (size_t i = 0; i < md.node_y_num - 1; i++)
+			model_data_file << md.y0 + i * md.h << ", ";
+		model_data_file << md.y0 + (md.node_y_num - 1) * md.h;
+	}
+	model_data_file << "\n  *end\n";
+
+	// output particles
+	model_data_file << "\n  *Object\n"
+		<< "    Type = ME_MPM\n"
+		<< "    ParticleNum = " << md.pcl_num << "\n";
+	if (md.pcl_num)
+	{
+		// x
+		model_data_file << "    x = ";
+		for (size_t i = 0; i < md.pcl_num - 1; i++)
+			model_data_file << md.pcls[i].x << ", ";
+		model_data_file << md.pcls[md.pcl_num - 1].x;
+		// y
+		model_data_file << "\n    y = ";
+		for (size_t i = 0; i < md.pcl_num - 1; i++)
+			model_data_file << md.pcls[i].y << ", ";
+		model_data_file << md.pcls[md.pcl_num - 1].y;
+		// vol
+		model_data_file << "\n    vol = ";
+		for (size_t i = 0; i < md.pcl_num - 1; i++)
+			model_data_file << md.pcls[i].m / md.pcls[i].density << ", ";
+		model_data_file << md.pcls[md.pcl_num - 1].m / md.pcls[md.pcl_num - 1].density;
+		// density;
+		model_data_file << "\n    density = ";
+		for (size_t i = 0; i < md.pcl_num - 1; i++)
+			model_data_file << md.pcls[i].density << ", ";
+		model_data_file << md.pcls[md.pcl_num - 1].density;
 		// constitutive model
 		// permeability
 	}

@@ -24,6 +24,8 @@ add_executable(
     test_me_2D_bspline_mpm1.cpp
     test_me_2D_bspline_mpm2.cpp
     test_me_2D_bspline_mpm3.cpp
+    test_me_mpm_gimp1.cpp
+    test_me_mpm_gimp2.cpp
     test_chm_mpm1.cpp
     test_chm_mpm2.cpp
     test_chm_visdamp_mpm1.cpp
@@ -33,6 +35,7 @@ add_executable(
     test_chm_kindamp_mpm2.cpp
     test_chm_2D_bspline_mpm1.cpp
     test_chm_2D_bspline_mpm2.cpp
+    test_Model_S2D.cpp
     # multiple object
     test_multi_object_me1.cpp
     # write result file
@@ -47,6 +50,7 @@ add_executable(
     test_file_char_array.cpp
     # utilities
     test_item_array.cpp
+    test_StackLikeBuffer.cpp
     )
 
 target_include_directories(
