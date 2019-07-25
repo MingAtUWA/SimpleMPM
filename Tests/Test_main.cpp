@@ -7,10 +7,10 @@
 
 int main(int argc, char *argv[])
 {
-	//test_Model_S2D_ME_s();
+	test_Model_S2D_ME_s();
 
 	//test_me_mpm_gimp1();
-	test_me_mpm_gimp2();
+	//test_me_mpm_gimp2();
 
 	//test_me_mpm1();
 	//test_me_mpm2();
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
 	//test_animation();
 	// animation for 2d particle
-	test_animation_particle2d();
+	//test_animation_particle2d();
 
 	system("pause");
 	return 0;

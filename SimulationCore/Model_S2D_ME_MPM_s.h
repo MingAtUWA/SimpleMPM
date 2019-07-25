@@ -32,9 +32,6 @@ struct ParticleVar_S2D_ME
 struct Particle_S2D_ME
 {
 	size_t index;
-	double x, y;
-	double x_ori, y_ori;
-	double ux, uy;
 
 	double vx, vy;
 	double m, density;
@@ -49,14 +46,13 @@ struct Particle_S2D_ME
 	size_t elem_num; 
 	union
 	{
-		struct
-		{
-			double x, y, vol;
-			size_t elem_x_id, elem_y_id;
-		};
+		struct { double x, y, vol; size_t elem_x_id, elem_y_id; };
 		ParticleVar_S2D_ME var;
 	};
 	ParticleVar_S2D_ME *vars;
+	// allow more precise position
+	double x_ori, y_ori;
+	double ux, uy;
 
 	// constitutive model
 	double E, niu;
@@ -152,12 +148,7 @@ public:
 		pcl_var_mem.clear();
 	}
 
-protected:
-	friend int solve_substep_S2D_ME_MPM_s_GIMP(void *_self);
-	MemoryUtilities::StackLikeBuffer<ParticleVar_S2D_ME> pcl_var_mem;
-	MemoryUtilities::ItemArray<double> x_len_buf;
-	MemoryUtilities::ItemArray<double> y_len_buf;
-	
+public:	
 #define N_LOW(xi)  (1.0 - (xi)) / 2.0
 #define N_HIGH(xi) (1.0 + (xi)) / 2.0
 #define dN_dxi_LOW(xi) -0.5
@@ -197,6 +188,15 @@ protected:
 #undef dN_dxi_LOW
 #undef dN_dxi_HIGH
 
+protected:
+	friend int solve_substep_S2D_ME_MPM_s_GIMP(void *_self);
+	MemoryUtilities::StackLikeBuffer<ParticleVar_S2D_ME> pcl_var_mem;
+	struct PclVarInfo // Immediate structure
+	{
+		double pos, len;
+		size_t elem_id;
+	};
+	MemoryUtilities::ItemArray<PclVarInfo> x_var_info_buf, y_var_info_buf;
 public:
 	// if coordinate of the particle is outside the mesh,
 	// the whole particle is ignored

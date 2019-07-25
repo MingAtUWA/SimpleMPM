@@ -9,7 +9,7 @@ Model_S2D_ME_MPM_s::Model_S2D_ME_MPM_s() :
 	tx_num(0), ty_num(0), txs(nullptr), tys(nullptr),
 	ax_num(0), ay_num(0), axs(nullptr), ays(nullptr),
 	vx_num(0), vy_num(0), vxs(nullptr), vys(nullptr),
-	pcl_var_mem(10), x_len_buf(20), y_len_buf(20) {}
+	pcl_var_mem(10), x_var_info_buf(20), y_var_info_buf(20) {}
 
 Model_S2D_ME_MPM_s::~Model_S2D_ME_MPM_s()
 {
@@ -39,112 +39,6 @@ Model_S2D_ME_MPM_s::~Model_S2D_ME_MPM_s()
 	if (vys) delete[] vys;
 	vys = nullptr;
 	vy_num = 0;
-}
-
-void Model_S2D_ME_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_ME &pcl)
-{
-	double hlen = sqrt(pcl.m / pcl.density) * 0.5; // half length
-	double xl = pcl.x - hlen;
-	if (xl < x0) xl = x0; // xl = max(xl, x0)
-	double xu = pcl.x + hlen;
-	if (xu > xn) xu = xn; // xu = min(xu, xn)
-	double yl = pcl.y - hlen;
-	if (yl < y0) yl = y0; // yl = max(yl, y0)
-	double yu = pcl.y + hlen;
-	if (yu > yn) yu = yn;
-	// particle out of mesh
-	if (xl >= xu || yl >= yu)
-	{
-		pcl.elem_num = 0;
-		pcl.vars = nullptr;
-		return;
-	}
-
-	size_t xl_id = size_t((xl - x0) / h);
-	size_t xu_id = size_t((xu - x0) / h);
-	if (xu - x0 > h * double(xu_id) && xu != xn) ++xu_id;
-	size_t yl_id = size_t((yl - y0) / h);
-	size_t yu_id = size_t((yu - y0) / h);
-	if (yu - y0 > h * double(yu_id) && yu != yn) ++yu_id;
-	size_t x_num = xu_id - xl_id;
-	size_t y_num = yu_id - yl_id;
-	pcl.elem_num = x_num * y_num;
-
-	if (pcl.elem_num == 1)
-	{
-		pcl.vars = &pcl.var;
-		pcl.var.x = (xl + xu) * 0.5;
-		pcl.var.y = (yl + yu) * 0.5;
-		pcl.var.vol = (xu - xl) * (yu - yl);
-		pcl.var.elem_x_id = xl_id;
-		pcl.var.elem_y_id = yl_id;
-	}
-	else
-	{
-		pcl.vars = pcl_var_mem.alloc(pcl.elem_num);
-		double x_len1, x_len2, y_len1, y_len2;
-		if (x_num == 1)
-		{
-			x_len1 = xu - xl;
-			// y_num must == 2
-			y_len1 = y0 + double(yl_id + 1) * h - yl;
-			y_len2 = yu - yl - y_len1;
-			pcl.vars[0].x = pcl.x;
-			pcl.vars[0].y = yl + y_len1 * 0.5;
-			pcl.vars[0].vol = x_len1 * y_len1;
-			pcl.vars[0].elem_x_id = xl_id;
-			pcl.vars[0].elem_y_id = yl_id;
-			pcl.vars[1].x = pcl.x;
-			pcl.vars[1].y = yu - y_len2 * 0.5;
-			pcl.vars[1].vol = x_len1 * y_len2;
-			pcl.vars[1].elem_x_id = xl_id;
-			pcl.vars[1].elem_y_id = yl_id + 1;
-		}
-		else
-		{
-			x_len1 = x0 + double(xl_id + 1) * h - xl;
-			x_len2 = xu - xl - x_len1;
-			if (y_num == 1)
-			{
-				y_len1 = yu - yl;
-				pcl.vars[0].x = xl + x_len1 * 0.5;
-				pcl.vars[0].y = pcl.y;
-				pcl.vars[0].vol = x_len1 * y_len1;
-				pcl.vars[0].elem_x_id = xl_id;
-				pcl.vars[0].elem_y_id = yl_id;
-				pcl.vars[1].x = xu - x_len2 * 0.5;
-				pcl.vars[1].y = pcl.y;
-				pcl.vars[1].vol = x_len2 * y_len1;
-				pcl.vars[1].elem_x_id = xl_id + 1;
-				pcl.vars[1].elem_y_id = yl_id;
-			}
-			else
-			{
-				y_len1 = y0 + double(yl_id + 1) * h - yl;
-				y_len2 = yu - yl - y_len1;
-				pcl.vars[0].x = xl + x_len1 * 0.5;
-				pcl.vars[0].y = yl + y_len1 * 0.5;
-				pcl.vars[0].vol = x_len1 * y_len1;
-				pcl.vars[0].elem_x_id = xl_id;
-				pcl.vars[0].elem_y_id = yl_id;
-				pcl.vars[1].x = xu - x_len2 * 0.5;
-				pcl.vars[1].y = yl + y_len1 * 0.5;
-				pcl.vars[1].vol = x_len2 * y_len1;
-				pcl.vars[1].elem_x_id = xl_id + 1;
-				pcl.vars[1].elem_y_id = yl_id;
-				pcl.vars[2].x = xl + x_len1 * 0.5;
-				pcl.vars[2].y = yu - y_len2 * 0.5;
-				pcl.vars[2].vol = x_len1 * y_len2;
-				pcl.vars[2].elem_x_id = xl_id;
-				pcl.vars[2].elem_y_id = yl_id + 1;
-				pcl.vars[3].x = xu - x_len2 * 0.5;
-				pcl.vars[3].y = yu - y_len2 * 0.5;
-				pcl.vars[3].vol = x_len2 * y_len2;
-				pcl.vars[3].elem_x_id = xl_id + 1;
-				pcl.vars[3].elem_y_id = yl_id + 1;
-			}
-		}
-	}
 }
 
 void Model_S2D_ME_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_ME &pcl)
@@ -300,49 +194,58 @@ void Model_S2D_ME_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_ME &pc
 		return;
 	}
 
-	x_len_buf.reset();
-	y_len_buf.reset();
-	double *x_lens, *y_lens;
-	if (x_num == 1)
+	PclVarInfo *x_var_infos, *y_var_infos;
+	// x
+	x_var_info_buf.reset();
+	x_var_info_buf.reserve(x_num);
+	x_var_infos = x_var_info_buf.get_mem();
+	x_var_infos[0].len = x0 + double(xl_id + 1) * h - xl;
+	x_var_infos[0].pos = xl + x_var_infos[0].len * 0.5;
+	x_var_infos[0].elem_id = size_t((x_var_infos[0].pos - x0) / h);
+	if (x_num > 1)
 	{
-		x_lens = x_len_buf.get_mem();
-		x_lens[0] = xu - xl;
-	}
-	else
-	{
-		x_len_buf.reserve(x_num);
-		x_lens = x_len_buf.get_mem();
-		x_lens[0] = x0 + double(xl_id + 1) * h - xl;
 		for (size_t i = 1; i < x_num - 1; ++i)
-			x_lens[i] = h;
-		x_lens[x_num - 1] = xu - double(xu_id - 1) * h - x0;
+		{
+			PclVarInfo &var_info = x_var_infos[i];
+			var_info.len = h;
+			var_info.pos = x_var_infos[i-1].pos + (x_var_infos[i-1].len + h) * 0.5;
+			var_info.elem_id = x_var_infos[i-1].elem_id + 1;
+		}
+		x_var_infos[x_num-1].len = xu - double(xu_id - 1) * h - x0;
+		x_var_infos[x_num-1].pos = xu - x_var_infos[x_num-1].len * 0.5;
+		x_var_infos[x_num-1].elem_id = x_var_infos[x_num-2].elem_id + 1;
 	}
-
-	if (y_num == 1)
+	// y
+	y_var_info_buf.reset();
+	y_var_info_buf.reserve(y_num);
+	y_var_infos = y_var_info_buf.get_mem();
+	y_var_infos[0].len = y0 + double(yl_id + 1) * h - yl;
+	y_var_infos[0].pos = yl + y_var_infos[0].len * 0.5;
+	y_var_infos[0].elem_id = size_t((y_var_infos[0].pos - y0) / h);
+	if (y_num > 1)
 	{
-		y_lens = y_len_buf.get_mem();
-		y_lens[0] = yu - yl;
-	}
-	else
-	{
-		y_len_buf.reserve(y_num);
-		y_lens = y_len_buf.get_mem();
-		y_lens[0] = y0 + double(yl_id + 1) * h - yl;
 		for (size_t i = 1; i < y_num - 1; ++i)
-			y_lens[i] = h;
-		y_lens[y_num - 1] = yu - double(yu_id - 1) * h - y0;
+		{
+			PclVarInfo &var_info = y_var_infos[i];
+			var_info.len = h;
+			var_info.pos = y_var_infos[i-1].pos + (y_var_infos[i-1].len + h) * 0.5;
+			var_info.elem_id = y_var_infos[i-1].elem_id + 1;
+		}
+		y_var_infos[y_num-1].len = yu - double(yu_id - 1) * h - x0;
+		y_var_infos[y_num-1].pos = yu - y_var_infos[y_num - 1].len * 0.5;
+		y_var_infos[y_num-1].elem_id = size_t((y_var_infos[y_num - 1].pos - y0) / h);
 	}
-
+	
 	size_t k = 0;
 	for (size_t j = 0; j < y_num; ++j)
 		for (size_t i = 0; i < x_num; ++i)
 		{
 			ParticleVar_S2D_ME &pcl_var = pcl.vars[k];
-			pcl_var.x = ;
-			pcl_var.y = ;
-			pcl_var.vol = x_lens[i] * y_lens[j];
-			pcl_var.elem_x_id = ;
-			pcl_var.elem_y_id = ;
+			pcl_var.x = x_var_infos[i].pos;
+			pcl_var.y = y_var_infos[j].pos;
+			pcl_var.vol = x_var_infos[i].len * y_var_infos[j].len;
+			pcl_var.elem_x_id = x_var_infos[i].elem_id;
+			pcl_var.elem_y_id = y_var_infos[j].elem_id;
 			cal_shape_func(pcl_var);
 			++k;
 		}

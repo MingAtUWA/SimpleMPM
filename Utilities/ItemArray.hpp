@@ -94,7 +94,7 @@ namespace MemoryUtilities
 				pos[i] = data[i];
 			pos += num;
 		}
-		void reserve(size_t reserve_num)
+		inline void reserve(size_t reserve_num)
 		{
 			if (reserve_num > get_capacity())
 			{
