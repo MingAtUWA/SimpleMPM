@@ -22,12 +22,11 @@ struct ParticleVar_S2D_ME
 	double x, y;
 	double vol;
 	size_t elem_x_id, elem_y_id;
+	
 	Node_S2D_ME *pn1, *pn2, *pn3, *pn4;
 	double N1, N2, N3, N4;
 	double dN1_dx, dN2_dx, dN3_dx, dN4_dx;
 	double dN1_dy, dN2_dy, dN3_dy, dN4_dy;
-	double dvx, dvy, dux, duy;
-	double de11, de22, de12, dw12;
 };
 
 struct Particle_S2D_ME
@@ -45,8 +44,18 @@ struct Particle_S2D_ME
 	double es11, es22, es12;
 	double ps11, ps22, ps12;
 
-	size_t elem_num; // The number of elements that this particle covers
-	ParticleVar_S2D_ME var;
+	// The number of elements that this particle covers
+	// when elem_num == 0, the particle is out of mesh
+	size_t elem_num; 
+	union
+	{
+		struct
+		{
+			double x, y, vol;
+			size_t elem_x_id, elem_y_id;
+		};
+		ParticleVar_S2D_ME var;
+	};
 	ParticleVar_S2D_ME *vars;
 
 	// constitutive model
@@ -72,8 +81,6 @@ public:
 	AccelerationBC *axs, *ays;
 	size_t vx_num, vy_num;
 	VelocityBC *vxs, *vys;
-
-	MemoryUtilities::StackLikeBuffer<ParticleVar_S2D_ME> pcl_var_mem;
 
 public:
 	Model_S2D_ME_MPM_s();
@@ -134,6 +141,7 @@ public:
 			pcl.s22 = 0.0;
 		}
 		// init buffer for particle vars
+		pcl_var_mem.reset();
 		pcl_var_mem.set_default_pool_size(pcl_num);
 	}
 	void clear_pcl(void)
@@ -144,16 +152,56 @@ public:
 		pcl_var_mem.clear();
 	}
 
-	// Only suitable for case when particle is smaller than element
-	// The calculation may not be good with particles larger than element
-	void get_elements_overlapped_by_particle(Particle_S2D_ME &pcl);
-
+protected:
+	friend int solve_substep_S2D_ME_MPM_s_GIMP(void *_self);
+	MemoryUtilities::StackLikeBuffer<ParticleVar_S2D_ME> pcl_var_mem;
 	MemoryUtilities::ItemArray<double> x_len_buf;
 	MemoryUtilities::ItemArray<double> y_len_buf;
+	
+#define N_LOW(xi)  (1.0 - (xi)) / 2.0
+#define N_HIGH(xi) (1.0 + (xi)) / 2.0
+#define dN_dxi_LOW(xi) -0.5
+#define dN_dxi_HIGH(xi) 0.5
+	inline void cal_shape_func(ParticleVar_S2D_ME &pcl_var)
+	{
+		pcl_var.pn1 = nodes + node_x_num * pcl_var.elem_y_id + pcl_var.elem_x_id;
+		pcl_var.pn2 = pcl_var.pn1 + 1;
+		pcl_var.pn3 = pcl_var.pn2 + node_x_num;
+		pcl_var.pn4 = pcl_var.pn3 - 1;
+		double xi  = 2.0 * ((pcl_var.x - x0) / h - double(pcl_var.elem_x_id)) - 1.0;
+		double Nx_low  = N_LOW(xi);
+		double Nx_high = N_HIGH(xi);
+		double dNx_dxi_low  = dN_dxi_LOW(xi);
+		double dNx_dxi_high = dN_dxi_HIGH(xi);
+		double eta = 2.0 * ((pcl_var.y - y0) / h - double(pcl_var.elem_y_id)) - 1.0;
+		double Ny_low  = N_LOW(eta);
+		double Ny_high = N_HIGH(eta);
+		double dNy_deta_low  = dN_dxi_LOW(eta);
+		double dNy_deta_high = dN_dxi_HIGH(eta);
+		pcl_var.N1 = Nx_low  * Ny_low;
+		pcl_var.N2 = Nx_high * Ny_low;
+		pcl_var.N3 = Nx_high * Ny_high;
+		pcl_var.N4 = Nx_low  * Ny_high;
+		double dxi_dx = 2.0 / h; // = deta_dy
+		pcl_var.dN1_dx = dNx_dxi_low  * Ny_low   * dxi_dx;
+		pcl_var.dN2_dx = dNx_dxi_high * Ny_low   * dxi_dx;
+		pcl_var.dN3_dx = dNx_dxi_high * Ny_high  * dxi_dx;
+		pcl_var.dN4_dx = dNx_dxi_low  * Ny_high  * dxi_dx;
+		pcl_var.dN1_dy = Nx_low  * dNy_deta_low  * dxi_dx;
+		pcl_var.dN2_dy = Nx_high * dNy_deta_low  * dxi_dx;
+		pcl_var.dN3_dy = Nx_high * dNy_deta_high * dxi_dx;
+		pcl_var.dN4_dy = Nx_low  * dNy_deta_high * dxi_dx;
+	}
+#undef N_LOW
+#undef N_HIGH
+#undef dN_dxi_LOW
+#undef dN_dxi_HIGH
+
+public:
 	// if coordinate of the particle is outside the mesh,
 	// the whole particle is ignored
 	// support large particle (allow more stable calculation)
-	void get_elements_overlapped_by_particle2(Particle_S2D_ME &pcl);
+	void get_elements_overlapped_by_particle(Particle_S2D_ME &pcl);
 };
 
 #endif

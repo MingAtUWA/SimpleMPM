@@ -32,11 +32,6 @@ int Step_S2D_ME_MPM_s_GIMP::init()
 
 int Step_S2D_ME_MPM_s_GIMP::finalize() { return 0; }
 
-#define N_LOW(xi)  (1.0 - (xi)) / 2.0
-#define N_HIGH(xi) (1.0 + (xi)) / 2.0
-#define dN_dxi_LOW(xi) -0.5
-#define dN_dxi_HIGH(xi) 0.5
-
 int solve_substep_S2D_ME_MPM_s_GIMP(void *_self)
 {
 	Step_S2D_ME_MPM_s_GIMP &self = *((Step_S2D_ME_MPM_s_GIMP *)_self);
@@ -70,36 +65,7 @@ int solve_substep_S2D_ME_MPM_s_GIMP(void *_self)
 			for (size_t i = 0; i < pcl.elem_num; ++i)
 			{
 				ParticleVar_S2D_ME &pcl_var = pcl.vars[i];
-				pcl_var.pn1 = model.nodes + model.node_x_num * pcl_var.elem_y_id + pcl_var.elem_x_id;
-				pcl_var.pn2 = pcl_var.pn1 + 1;
-				pcl_var.pn3 = pcl_var.pn2 + model.node_x_num;
-				pcl_var.pn4 = pcl_var.pn3 - 1;
-
-				// Cal shape function
-				double xi  = 2.0 * ((pcl_var.x - model.x0) / model.h - double(pcl_var.elem_x_id)) - 1.0;
-				double Nx_low  = N_LOW(xi);
-				double Nx_high = N_HIGH(xi);
-				double dNx_dxi_low  = dN_dxi_LOW(xi);
-				double dNx_dxi_high = dN_dxi_HIGH(xi);
-				double eta = 2.0 * ((pcl_var.y - model.y0) / model.h - double(pcl_var.elem_y_id)) - 1.0;
-				double Ny_low  = N_LOW(eta);
-				double Ny_high = N_HIGH(eta);
-				double dNy_deta_low  = dN_dxi_LOW(eta);
-				double dNy_deta_high = dN_dxi_HIGH(eta);
-				pcl_var.N1 = Nx_low  * Ny_low;
-				pcl_var.N2 = Nx_high * Ny_low;
-				pcl_var.N3 = Nx_high * Ny_high;
-				pcl_var.N4 = Nx_low  * Ny_high;
-				double dxi_dx = 2.0 / model.h; // = deta_dy
-				pcl_var.dN1_dx = dNx_dxi_low  * Ny_low   * dxi_dx;
-				pcl_var.dN2_dx = dNx_dxi_high * Ny_low   * dxi_dx;
-				pcl_var.dN3_dx = dNx_dxi_high * Ny_high  * dxi_dx;
-				pcl_var.dN4_dx = dNx_dxi_low  * Ny_high  * dxi_dx;
-				pcl_var.dN1_dy = Nx_low  * dNy_deta_low  * dxi_dx;
-				pcl_var.dN2_dy = Nx_high * dNy_deta_low  * dxi_dx;
-				pcl_var.dN3_dy = Nx_high * dNy_deta_high * dxi_dx;
-				pcl_var.dN4_dy = Nx_low  * dNy_deta_high * dxi_dx;
-
+				
 				// Map to nodes
 				double m_tmp = pcl_var.vol * pcl.density;
 				// node 1
