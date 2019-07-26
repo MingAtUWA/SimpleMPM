@@ -115,6 +115,7 @@ public:
 
 	void init_pcl(size_t num, double m, double density, double E, double niu)
 	{
+		clear_pcl();
 		pcl_num = num;
 		pcls = new Particle_S2D_ME[num];
 		for (size_t i = 0; i < num; ++i)
@@ -125,16 +126,18 @@ public:
 			pcl.y = 0.0;
 			pcl.vx = 0.0;
 			pcl.vy = 0.0;
+			pcl.ux = 0.0;
+			pcl.uy = 0.0;
 			pcl.m = m;
 			pcl.density = density;
 			pcl.E = E;
 			pcl.niu = niu;
-			pcl.e11 = 0.0;
-			pcl.e12 = 0.0;
-			pcl.e22 = 0.0;
 			pcl.s11 = 0.0;
 			pcl.s12 = 0.0;
 			pcl.s22 = 0.0;
+			pcl.e11 = 0.0;
+			pcl.e12 = 0.0;
+			pcl.e22 = 0.0;
 		}
 		// init buffer for particle vars
 		pcl_var_mem.reset();
@@ -175,12 +178,12 @@ public:
 		pcl_var.N4 = Nx_low  * Ny_high;
 		double dxi_dx = 2.0 / h; // = deta_dy
 		pcl_var.dN1_dx = dNx_dxi_low  * Ny_low   * dxi_dx;
-		pcl_var.dN2_dx = dNx_dxi_high * Ny_low   * dxi_dx;
-		pcl_var.dN3_dx = dNx_dxi_high * Ny_high  * dxi_dx;
-		pcl_var.dN4_dx = dNx_dxi_low  * Ny_high  * dxi_dx;
 		pcl_var.dN1_dy = Nx_low  * dNy_deta_low  * dxi_dx;
+		pcl_var.dN2_dx = dNx_dxi_high * Ny_low   * dxi_dx;
 		pcl_var.dN2_dy = Nx_high * dNy_deta_low  * dxi_dx;
+		pcl_var.dN3_dx = dNx_dxi_high * Ny_high  * dxi_dx;
 		pcl_var.dN3_dy = Nx_high * dNy_deta_high * dxi_dx;
+		pcl_var.dN4_dx = dNx_dxi_low  * Ny_high  * dxi_dx;
 		pcl_var.dN4_dy = Nx_low  * dNy_deta_high * dxi_dx;
 	}
 #undef N_LOW

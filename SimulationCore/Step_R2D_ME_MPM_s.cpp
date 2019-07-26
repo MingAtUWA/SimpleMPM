@@ -169,6 +169,12 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 		}
 	}
 
+	for (size_t n_id = 0; n_id < model->node_num; ++n_id)
+	{
+		Node_R2D_ME_s &n = model->nodes[n_id];
+		//std::cout << "2 mvy: " << n.mmy << "\n";
+	}
+
 	// body force
 	double bf_tmp;
 	for (size_t i = 0; i < model->bfx_num; i++)
@@ -228,6 +234,7 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 		{
 			pn->ax = (pn->fx_ext_m - pn->fx_int_m) / pn->m;
 			pn->ay = (pn->fy_ext_m - pn->fy_int_m) / pn->m;
+			//std::cout << "2 " << pn->fy_ext_m << " " << pn->fy_int_m << " " << pn->ay << "\n";
 		}
 	}
 	// apply acceleration boundary conditions
@@ -250,10 +257,12 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 		pn = model->nodes + i;
 		if (pn->cal_flag)
 		{
+			//std::cout << "2 " << pn->mmy;
 			pn->dmmx = pn->m * pn->ax * self->dt;
 			pn->dmmy = pn->m * pn->ay * self->dt;
 			pn->mmx += pn->dmmx;
 			pn->mmy += pn->dmmy;
+			//std::cout << " " << pn->mmy / pn->m << "\n";
 		}
 	}
 	// apply velocity boundary conditions
@@ -289,6 +298,7 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 			pn->dux = pn->vx * self->dt;
 			pn->duy = pn->vy * self->dt;
 		}
+		//std::cout << "2 m:" << pn->m << " " << pn->vy << "\n";
 	}
 
 	// map variables back to and update variables particles
@@ -314,7 +324,8 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 			// momentum (velocity)
 			ppcl->mmx += ppcl->m * self->dt * (pn1->ax * N1_tmp + pn2->ax * N2_tmp + pn3->ax * N3_tmp + pn4->ax * N4_tmp);
 			ppcl->mmy += ppcl->m * self->dt * (pn1->ay * N1_tmp + pn2->ay * N2_tmp + pn3->ay * N3_tmp + pn4->ay * N4_tmp);
-						
+			//std::cout << "2 v: " << ppcl->mmx / ppcl->m << " " << ppcl->mmy / ppcl->m << "\n";
+
 			// displacement
 			ppcl->ux += pn1->dux * N1_tmp + pn2->dux * N2_tmp
 					  + pn3->dux * N3_tmp + pn4->dux * N4_tmp;
@@ -323,7 +334,8 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 			// update position
 			ppcl->x = ppcl->x_ori + ppcl->ux;
 			ppcl->y = ppcl->y_ori + ppcl->uy;
-			
+			//std::cout << "2 u: " << ppcl->ux << " " << ppcl->uy << "\n";
+
 			// strain increment
 			ppcl->de11 = pn1->dux * ppcl->dN1_dx + pn2->dux * ppcl->dN2_dx
 					   + pn3->dux * ppcl->dN3_dx + pn4->dux * ppcl->dN4_dx;
@@ -337,10 +349,12 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 						+ pn3->dux * ppcl->dN3_dy + pn4->dux * ppcl->dN4_dy
 						- pn1->duy * ppcl->dN1_dx - pn2->duy * ppcl->dN2_dx
 						- pn3->duy * ppcl->dN3_dx - pn4->duy * ppcl->dN4_dx) * 0.5;
-			
+			//std::cout << "2 " << ppcl->de11 << " " << ppcl->de12 << " " << ppcl->de22 << "\n";
+
 			/* update variables at particles */
 			de_vol = ppcl->de11 + ppcl->de22;
 			ppcl->density /= (1.0 + de_vol);
+			//std::cout << ppcl->density << "\n";
 
 			// update strain (also assume that strain increment is Jaumann rate)
 			//ppcl->de11 +=  ppcl->dw12 * ppcl->e12 * 2.0;
@@ -355,6 +369,7 @@ int solve_substep_R2D_ME_MPM_s(void *_self)
 			ds11 = E_tmp * ((1.0 - ppcl->niu) * ppcl->de11 + ppcl->niu * ppcl->de22);
 			ds12 = 2.0 * ppcl->de12 * ppcl->E / (2.0 * (1.0 + ppcl->niu));
 			ds22 = E_tmp * (ppcl->niu * ppcl->de11 + (1.0 - ppcl->niu) * ppcl->de22);
+			//std::cout << "2 " << ds11 << " " << ds12 << " " << ds22 << "\n";
 
 			/* ------------------------------------------------------------------
 			Rotate as Jaumann rate:

@@ -9,6 +9,11 @@ int solve_substep_S2D_ME_MPM_s_GIMP(void *_self);
 // for single object only
 class Step_S2D_ME_MPM_s_GIMP : public Step
 {
+protected:
+	double min_dt, max_dt;
+	double h_elem_raio, h_pcl_ratio;
+	// pcl_ratio part not yet finished
+
 public:
 	Step_S2D_ME_MPM_s_GIMP();
 	~Step_S2D_ME_MPM_s_GIMP();
@@ -24,6 +29,22 @@ public:
 	{
 		Step::set_prev_step(prev_step);
 		model = prev_step->model;
+	}
+
+	inline void set_dt(double _dt,
+						double dt_max_min_raio = 1.0e-3 /*ad hoc number*/,
+						double t_tol_r = 0.01)
+	{
+		max_dt = _dt;
+		min_dt = max_dt * dt_max_min_raio;
+		time_tol_ratio = t_tol_r;
+		time_tol = min_dt * t_tol_r;
+	}
+
+	inline void set_dt_ratio(double _h_elem_ratio, double _h_pcl_ratio)
+	{
+		h_elem_raio = _h_elem_ratio;
+		h_pcl_ratio = _h_pcl_ratio;
 	}
 
 protected:

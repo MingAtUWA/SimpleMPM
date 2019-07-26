@@ -39,7 +39,7 @@ void test_me_mpm_gimp2(void)
 	for (size_t i = 0; i < model.ty_num; ++i)
 	{
 		model.tys[i].pcl_id = ((elem_y_num-1) * 2 - 1) * elem_x_num * 2 + i;
-		model.tys[i].t = -50.0 * 0.5 * elem_len;
+		model.tys[i].t = -100.0 * 0.5 * elem_len;
 	}
 
 	model.vx_num = model.node_y_num * 2;
@@ -85,7 +85,7 @@ void test_me_mpm_gimp2(void)
 	step1.set_model(&model);
 	step1.set_result_file(&res_file);
 	step1.set_step_time(2.0);
-	step1.set_dt(1.0e-4);
+	step1.set_dt(1.0e-3);
 	step1.add_output(&th1);
 	step1.add_output(&th2);
 

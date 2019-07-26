@@ -94,25 +94,25 @@ void test_me_mpm3(void)
 	model.ty_bcs[1].pcl_id = 3;
 	model.ty_bcs[1].t = -1.0 * 0.5;
 
-	model.vx_s_bc_num = 0;
-	model.vx_s_bcs = nullptr;
-	model.ax_s_bc_num = model.node_y_num * 2;
-	model.ax_s_bcs = new AccelerationBC[model.ax_s_bc_num];
+	model.ax_s_bc_num = 0;
+	model.ax_s_bcs = nullptr;
+	model.vx_s_bc_num = model.node_y_num * 2;
+	model.vx_s_bcs = new VelocityBC[model.vx_s_bc_num];
 	for (i = 0; i < model.node_y_num; i++)
 	{
-		model.ax_s_bcs[i].node_id = i * model.node_x_num;
-		model.ax_s_bcs[i].a = 0.0;
-		model.ax_s_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
-		model.ax_s_bcs[i + model.node_y_num].a = 0.0;
+		model.vx_s_bcs[i].node_id = i * model.node_x_num;
+		model.vx_s_bcs[i].v = 0.0;
+		model.vx_s_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
+		model.vx_s_bcs[i + model.node_y_num].v = 0.0;
 	}
-	model.vy_s_bc_num = 0;
-	model.vy_s_bcs = nullptr;
-	model.ay_s_bc_num = model.node_x_num;
-	model.ay_s_bcs = new AccelerationBC[model.ay_s_bc_num];
-	for (i = 0; i < model.ay_s_bc_num; i++)
+	model.ay_s_bc_num = 0;
+	model.ay_s_bcs = nullptr;
+	model.vy_s_bc_num = model.node_x_num;
+	model.vy_s_bcs = new VelocityBC[model.vy_s_bc_num];
+	for (i = 0; i < model.vy_s_bc_num; i++)
 	{
-		model.ay_s_bcs[i].node_id = i;
-		model.ay_s_bcs[i].a = 0.0;
+		model.vy_s_bcs[i].node_id = i;
+		model.vy_s_bcs[i].v = 0.0;
 	}
 
 	ResultFile_Text res_file;
@@ -125,7 +125,7 @@ void test_me_mpm3(void)
 	step1->set_name("initial_step");
 	step1->set_model(&model);
 	step1->set_result_file(&res_file);
-	step1->set_step_time(1.0); // total_time
+	step1->set_step_time(5.0e-3); // total_time
 	step1->set_dt(1.0e-3);
 
 	TimeHistory_Particle_R2D_ME_s *th1;
@@ -133,15 +133,11 @@ void test_me_mpm3(void)
 	th1->set_name("test_out1");
 	th1->set_interval_num(10);
 	th1->set_if_output_initial_state(false);
-	Particle_Field_2D_ME fld1[8] = {
+	Particle_Field_2D_ME fld1[4] = {
 		Particle_Field_2D_ME::x,
 		Particle_Field_2D_ME::y,
 		Particle_Field_2D_ME::vol,
-		Particle_Field_2D_ME::vx,
 		Particle_Field_2D_ME::vy,
-		Particle_Field_2D_ME::e11,
-		Particle_Field_2D_ME::e12,
-		Particle_Field_2D_ME::e22
 	};
 	size_t pcl_ids1[16];
 	for (i = 0; i < 16; i++) pcl_ids1[i] = i;
@@ -149,7 +145,7 @@ void test_me_mpm3(void)
 	step1->add_output(th1);
 
 	TimeHistory_ConsoleProgressBar th2;
-	step1->add_output(&th2);
+	//step1->add_output(&th2);
 
 	step1->solve();
 
