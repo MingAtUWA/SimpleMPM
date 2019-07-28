@@ -27,6 +27,9 @@ void test_me_2D_bspline_mpm1(void);
 void test_me_2D_bspline_mpm2(void);
 void test_me_2D_bspline_mpm3(void);
 
+void test_chm_mpm_gimp1(void);
+void test_chm_mpm_gimp2(void);
+
 void test_chm_mpm1(void);
 void test_chm_mpm2(void);
 

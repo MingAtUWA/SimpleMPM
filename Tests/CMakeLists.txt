@@ -28,6 +28,8 @@ add_executable(
     test_me_mpm_gimp2.cpp
     test_chm_mpm1.cpp
     test_chm_mpm2.cpp
+    test_chm_mpm_gimp1.cpp
+    test_chm_mpm_gimp2.cpp
     test_chm_visdamp_mpm1.cpp
     test_chm_visdamp_mpm2.cpp
     test_chm_visdamp_mpm3.cpp

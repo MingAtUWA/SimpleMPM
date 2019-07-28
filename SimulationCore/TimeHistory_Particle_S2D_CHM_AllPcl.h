@@ -30,7 +30,7 @@ protected:
 	typedef void(TimeHistory_Particle_S2D_CHM_AllPcl::* TimeHistoryFieldFunc)(void);
 	struct FieldInfo
 	{
-		Particle_Field_2D_ME fld_id;
+		Particle_Field_2D_CHM fld_id;
 		TimeHistoryFieldFunc out_func;
 	};
 	FieldInfo *fld_infos;
@@ -38,7 +38,7 @@ protected:
 
 public:
 	inline void set_field_num(size_t num) { fld_mem.reserve(num); }
-	int add_field(Particle_Field_2D_ME fld);
+	int add_field(Particle_Field_2D_CHM fld);
 
 protected:
 	const static unsigned short int field_max_num;

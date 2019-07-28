@@ -14,7 +14,7 @@ TimeHistory_Particle_S2D_CHM_AllPcl::TimeHistory_Particle_S2D_CHM_AllPcl() :
 
 TimeHistory_Particle_S2D_CHM_AllPcl::~TimeHistory_Particle_S2D_CHM_AllPcl() {}
 
-int TimeHistory_Particle_S2D_CHM_AllPcl::add_field(Particle_Field_2D_ME fld)
+int TimeHistory_Particle_S2D_CHM_AllPcl::add_field(Particle_Field_2D_CHM fld)
 {
 	unsigned short int fld_us = (unsigned short int)fld;
 	if (fld_us > field_max_num || !output_field_funcs_map[fld_us])

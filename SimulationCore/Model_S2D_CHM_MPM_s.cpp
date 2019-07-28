@@ -6,12 +6,10 @@ Model_S2D_CHM_MPM_s::Model_S2D_CHM_MPM_s() :
 	Model("Model_S2D_CHM_MPM_s"),
 	nodes(nullptr), node_x_num(0), node_y_num(0),
 	pcls(nullptr), pcl_num(0),
-	bfsx_num(0), bfsy_num(0), bfsxs(nullptr), bfsys(nullptr),
-	tsx_num(0), tsy_num(0), tsxs(nullptr), tsys(nullptr),
+	bfx_num(0), bfy_num(0), bfxs(nullptr), bfys(nullptr),
+	tx_num(0),  ty_num(0),  txs(nullptr),  tys(nullptr),
 	asx_num(0), asy_num(0), asxs(nullptr), asys(nullptr),
 	vsx_num(0), vsy_num(0), vsxs(nullptr), vsys(nullptr),
-	bffx_num(0), bffy_num(0), bffxs(nullptr), bffys(nullptr),
-	tfx_num(0), tfy_num(0), tfxs(nullptr), tfys(nullptr),
 	afx_num(0), afy_num(0), afxs(nullptr), afys(nullptr),
 	vfx_num(0), vfy_num(0), vfxs(nullptr), vfys(nullptr),
 	pcl_var_mem(10), x_var_info_buf(20), y_var_info_buf(20) {}
@@ -20,19 +18,19 @@ Model_S2D_CHM_MPM_s::~Model_S2D_CHM_MPM_s()
 {
 	clear_mesh();
 	clear_pcl();
+	if (bfxs) delete[] bfxs;
+	bfxs = nullptr;
+	bfx_num = 0;
+	if (bfys) delete[] bfys;
+	bfys = nullptr;
+	bfy_num = 0;
+	if (txs) delete[] txs;
+	txs = nullptr;
+	tx_num = 0;
+	if (tys) delete[] tys;
+	tys = nullptr;
+	ty_num = 0;
 	// solid
-	if (bfsxs) delete[] bfsxs;
-	bfsxs = nullptr;
-	bfsx_num = 0;
-	if (bfsys) delete[] bfsys;
-	bfsys = nullptr;
-	bfsy_num = 0;
-	if (tsxs) delete[] tsxs;
-	tsxs = nullptr;
-	tsx_num = 0;
-	if (tsys) delete[] tsys;
-	tsys = nullptr;
-	tsy_num = 0;
 	if (asxs) delete[] asxs;
 	asxs = nullptr;
 	asx_num = 0;
@@ -46,18 +44,6 @@ Model_S2D_CHM_MPM_s::~Model_S2D_CHM_MPM_s()
 	vsys = nullptr;
 	vsy_num = 0;
 	// fluid
-	if (bffxs) delete[] bffxs;
-	bffxs = nullptr;
-	bffx_num = 0;
-	if (bffys) delete[] bffys;
-	bffys = nullptr;
-	bffy_num = 0;
-	if (tfxs) delete[] tfxs;
-	tfxs = nullptr;
-	tfx_num = 0;
-	if (tfys) delete[] tfys;
-	tfys = nullptr;
-	tfy_num = 0;
 	if (afxs) delete[] afxs;
 	afxs = nullptr;
 	afx_num = 0;
@@ -91,31 +77,31 @@ void Model_S2D_CHM_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_CHM &
 	//pcl.elem_num = 1;
 	//return;
 
-	bool is_at_edge = false;
+	pcl.is_at_edge = 0;
 	double hlen = sqrt(pcl.vol) * 0.5; // half length
 	double xl = pcl.x - hlen;
 	if (xl < x0)
 	{
 		xl = x0; // xl = max(xl, x0)
-		is_at_edge = true;
+		pcl.is_at_edge = 1;
 	}
 	double xu = pcl.x + hlen;
 	if (xu > xn)
 	{
 		xu = xn; // xu = min(xu, xn)
-		is_at_edge = true;
+		pcl.is_at_edge = 1;
 	}
 	double yl = pcl.y - hlen;
 	if (yl < y0)
 	{
 		yl = y0; // yl = max(yl, y0)
-		is_at_edge = true;
+		pcl.is_at_edge = 1;
 	}
 	double yu = pcl.y + hlen;
 	if (yu > yn)
 	{
 		yu = yn;
-		is_at_edge = true;
+		pcl.is_at_edge = 1;
 	}
 	size_t xl_id = size_t((xl - x0) / h);
 	size_t xu_id = size_t((xu - x0) / h);
@@ -130,7 +116,7 @@ void Model_S2D_CHM_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_CHM &
 	if (pcl.elem_num == 1)
 	{
 		// part of the particle is outside the edge
-		if (is_at_edge)
+		if (pcl.is_at_edge == 1)
 		{
 			pcl.vars = pcl_var_mem.alloc(1);
 			ParticleVar_S2D_CHM &pcl_var = pcl.vars[0];
@@ -171,6 +157,9 @@ void Model_S2D_CHM_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_CHM &
 		cal_shape_func(pcl_var2);
 		return;
 	}
+
+	// particle is at internal edge
+	pcl.is_at_edge = 2;
 
 	if (x_num == 2)
 	{

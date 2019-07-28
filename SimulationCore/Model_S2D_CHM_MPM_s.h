@@ -70,6 +70,10 @@ struct Particle_S2D_CHM
 	double x_ori, y_ori;
 	double n_prod_k_div_miu;
 
+	// == 1 at external edge
+	// == 2 at internal edge
+	unsigned char is_at_edge; 
+
 	// Constitutive model
 	double E;   // Elastic modulus
 	double niu; // Poisson ratio
@@ -90,20 +94,16 @@ public:
 	Particle_S2D_CHM *pcls;
 
 	// boundary conditions
+	size_t bfx_num, bfy_num;
+	BodyForce *bfxs, *bfys;
+	size_t tx_num, ty_num;
+	TractionBC_MPM *txs, *tys;
 	// solid phase
-	size_t bfsx_num, bfsy_num;
-	BodyForce *bfsxs, *bfsys;
-	size_t tsx_num, tsy_num;
-	TractionBC_MPM *tsxs, *tsys;
 	size_t asx_num, asy_num;
 	AccelerationBC *asxs, *asys;
 	size_t vsx_num, vsy_num;
 	VelocityBC *vsxs, *vsys;
 	// fluid phase
-	size_t bffx_num, bffy_num;
-	BodyForce *bffxs, *bffys;
-	size_t tfx_num, tfy_num;
-	TractionBC_MPM *tfxs, *tfys;
 	size_t afx_num, afy_num;
 	AccelerationBC *afxs, *afys;
 	size_t vfx_num, vfy_num;
