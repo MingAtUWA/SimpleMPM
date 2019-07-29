@@ -217,29 +217,29 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 	double t_tmp;
 	for (size_t t_id = 0; t_id < model.tx_num; ++t_id)
 	{
-		ParticleVar_S2D_CHM &pcl_var = model.pcls[model.txs[t_id].pcl_id].var;
-		t_tmp = model.txs[t_id].t;
-		// node 1
-		pcl_var.pn1->fx_ext_m += pcl_var.N1 * t_tmp;
-		// node 2
-		pcl_var.pn2->fx_ext_m += pcl_var.N2 * t_tmp;
-		// node 3
-		pcl_var.pn3->fx_ext_m += pcl_var.N3 * t_tmp;
-		// node 4
-		pcl_var.pn4->fx_ext_m += pcl_var.N4 * t_tmp;
+		Particle_S2D_CHM &pcl = model.pcls[model.txs[t_id].pcl_id];
+		if (pcl.elem_num)
+		{
+			ParticleVar_S2D_CHM &pcl_var = pcl.var;
+			t_tmp = model.txs[t_id].t;
+			pcl_var.pn1->fx_ext_m += pcl_var.N1 * t_tmp;
+			pcl_var.pn2->fx_ext_m += pcl_var.N2 * t_tmp;
+			pcl_var.pn3->fx_ext_m += pcl_var.N3 * t_tmp;
+			pcl_var.pn4->fx_ext_m += pcl_var.N4 * t_tmp;
+		}
 	}
 	for (size_t t_id = 0; t_id < model.ty_num; ++t_id)
 	{
-		ParticleVar_S2D_CHM &pcl_var = model.pcls[model.tys[t_id].pcl_id].var;
-		t_tmp = model.tys[t_id].t;
-		// node 1
-		pcl_var.pn1->fy_ext_m += pcl_var.N1 * t_tmp;
-		// node 2
-		pcl_var.pn2->fy_ext_m += pcl_var.N2 * t_tmp;
-		// node 3
-		pcl_var.pn3->fy_ext_m += pcl_var.N3 * t_tmp;
-		// node 4
-		pcl_var.pn4->fy_ext_m += pcl_var.N4 * t_tmp;
+		Particle_S2D_CHM &pcl = model.pcls[model.tys[t_id].pcl_id];
+		if (pcl.elem_num)
+		{
+			ParticleVar_S2D_CHM &pcl_var = pcl.var;
+			t_tmp = model.tys[t_id].t;
+			pcl_var.pn1->fy_ext_m += pcl_var.N1 * t_tmp;
+			pcl_var.pn2->fy_ext_m += pcl_var.N2 * t_tmp;
+			pcl_var.pn3->fy_ext_m += pcl_var.N3 * t_tmp;
+			pcl_var.pn4->fy_ext_m += pcl_var.N4 * t_tmp;
+		}
 	}
 	// pore pressure bc here...
 
@@ -253,89 +253,18 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 			n.ay_f = (n.fy_ext_tf - n.fy_int_tf - n.fy_drag_tf) / n.m_tf;
 		}
 	}
+	// apply acceleration bc of fluid phase
 	for (size_t a_id = 0; a_id < model.afx_num; ++a_id)
 		model.nodes[model.afxs[a_id].node_id].ax_f = model.afxs[a_id].a;
 	for (size_t a_id = 0; a_id < model.afy_num; ++a_id)
 		model.nodes[model.afys[a_id].node_id].ay_f = model.afys[a_id].a;
-
-	self.dt = self.max_dt;
-	// Adjust time step
-	// 1. particle shouldn't travel more than 1/20 element size each steps (for strain calculation)
-	double alpha_h = model.h * self.h_elem_raio;
-	double v_max = 0.0;
-	for (size_t n_id = 0; n_id < model.node_num; ++n_id)
-	{
-		Node_S2D_CHM &n = model.nodes[n_id];
-		max(v_max, (abs(n.vx_s) + sqrt(n.vx_s*n.vx_s + 4.0*abs(n.ax_s)*alpha_h)) / 2.0);
-		max(v_max, (abs(n.vy_s) + sqrt(n.vy_s*n.vy_s + 4.0*abs(n.ay_s)*alpha_h)) / 2.0);
-		max(v_max, (abs(n.vx_f) + sqrt(n.vx_f*n.vx_f + 4.0*abs(n.ax_f)*alpha_h)) / 2.0);
-		max(v_max, (abs(n.vy_f) + sqrt(n.vy_f*n.vy_f + 4.0*abs(n.ay_f)*alpha_h)) / 2.0);
-	}
-	for (size_t vx_id = 0; vx_id < model.vsx_num; ++vx_id)
-		max(v_max, model.vsxs[vx_id].v);
-	for (size_t vy_id = 0; vy_id < model.vsy_num; ++vy_id)
-		max(v_max, model.vsys[vy_id].v);
-	for (size_t vx_id = 0; vx_id < model.vfx_num; ++vx_id)
-		max(v_max, model.vfxs[vx_id].v);
-	for (size_t vy_id = 0; vy_id < model.vfy_num; ++vy_id)
-		max(v_max, model.vfys[vy_id].v);
-	if (v_max != 0.0)
-	{
-		double dt_tmp = alpha_h / v_max;
-		// min_dt < dt_tmp < max_dt
-		if (dt_tmp < self.dt)
-			self.dt = dt_tmp;
-	}
-	// 2. particle at edge travel less than 1/10 particle size at each substeps (for gimp)
-	double beta_h_pcl;
-	for (size_t pcl_id = 0; pcl_id < model.pcl_num; ++pcl_id)
-	{
-		Particle_S2D_CHM &pcl = model.pcls[pcl_id];
-		if (pcl.is_at_edge) // either at internal or external edge
-		{
-			beta_h_pcl = self.h_pcl_ratio * sqrt(pcl.vol);
-			v_max = 0.0;
-			max(v_max, (abs(pcl.vx_s) + sqrt(pcl.vx_s*pcl.vx_s + 4.0*abs(pcl.ax_s)*alpha_h)) / 2.0);
-			max(v_max, (abs(pcl.vy_s) + sqrt(pcl.vy_s*pcl.vy_s + 4.0*abs(pcl.ay_s)*alpha_h)) / 2.0);
-			max(v_max, (abs(pcl.vx_f) + sqrt(pcl.vx_f*pcl.vx_f + 4.0*abs(pcl.ax_f)*alpha_h)) / 2.0);
-			max(v_max, (abs(pcl.vy_f) + sqrt(pcl.vy_f*pcl.vy_f + 4.0*abs(pcl.ay_f)*alpha_h)) / 2.0);
-			if (v_max != 0.0)
-			{
-				double dt_tmp = beta_h_pcl / (abs(n.vx_s) + sqrt(n.vx_s*n.vx_s + 4.0*abs(n.ax_s)*alpha_h)) / 2.0);
-				double dt_tmp = ;
-			}
-		}
-	}
-	// set lower bound of time step
-	max(self.dt, self.min_dt);
-
-	// update nodal velocity of both phase
-	for (size_t n_id = 0; n_id < model.node_num; ++n_id)
-	{
-		Node_S2D_CHM &n = model.nodes[n_id];
-		if (n.m_tf != 0.0)
-		{
-			n.vx_f /= n.m_tf;
-			n.vx_f += n.ax_f * self.dt;
-			n.vy_f /= n.m_tf;
-			n.vy_f += n.ay_f * self.dt;
-		}
-	}
-	// apply velocity boundary conditions of fluid phase
+	// apply velocity bc (acceleration part) of fluid phase
 	for (size_t v_id = 0; v_id < model.vfx_num; ++v_id)
-	{
-		Node_S2D_CHM &n = model.nodes[model.vfxs[v_id].node_id];
-		n.vx_f = model.vfxs[v_id].v;
-		n.ax_f = 0.0;
-	}
+		model.nodes[model.vfxs[v_id].node_id].ax_f = 0.0;
 	for (size_t v_id = 0; v_id < model.vfy_num; ++v_id)
-	{
-		Node_S2D_CHM &n = model.nodes[model.vfys[v_id].node_id];
-		n.vy_f = model.vfys[v_id].v;
-		n.ay_f = 0.0;
-	}
-
-	// calculate the inertial term of fluid in mixture formulation
+		model.nodes[model.vfys[v_id].node_id].ay_f = 0.0;
+	
+	// calculate inertial term of fluid phase in mixture formulation
 	double pcl_ax_f, pcl_ay_f, pcl_m_f, pcl_max_f, pcl_may_f;
 	for (size_t pcl_id = 0; pcl_id < model.pcl_num; ++pcl_id)
 	{
@@ -352,6 +281,8 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 					 + pcl_var.N3 * n3.ax_f + pcl_var.N4 * n4.ax_f;
 			pcl_ay_f = pcl_var.N1 * n1.ay_f + pcl_var.N2 * n2.ay_f
 					 + pcl_var.N3 * n3.ay_f + pcl_var.N4 * n4.ay_f;
+
+			// Interial term of fluid phase
 			pcl_m_f = pcl.n * pcl.density_f * pcl_var.vol;
 			pcl_max_f = pcl_m_f * pcl_ax_f;
 			pcl_may_f = pcl_m_f * pcl_ay_f;
@@ -380,37 +311,113 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 			n.ay_s = (n.fy_ext_m - n.fy_int_m - n.fy_kin_f) / n.m_s;
 		}
 	}
-	// apply acceleration boundary conditions
+	// apply acceleration boundary conditions of solid phase
 	for (size_t a_id = 0; a_id < model.asx_num; ++a_id)
 		model.nodes[model.asxs[a_id].node_id].ax_s = model.asxs[a_id].a;
 	for (size_t a_id = 0; a_id < model.asy_num; ++a_id)
 		model.nodes[model.asys[a_id].node_id].ay_s = model.asys[a_id].a;
+	// apply velocity boundary conditions of solid phase
+	for (size_t v_id = 0; v_id < model.vsx_num; ++v_id)
+		model.nodes[model.vsxs[v_id].node_id].ax_s = 0.0;
+	for (size_t v_id = 0; v_id < model.vsy_num; ++v_id)
+		model.nodes[model.vsys[v_id].node_id].ay_s = 0.0;
 
-	// update solid phase nodal velocity
+	self.dt = self.max_dt;
+	// Adjust time step
+	// 1. particle shouldn't travel more than 1/20 element size each steps (for strain calculation)
+	double alpha_h = model.h * self.h_elem_raio;
+	double v_max = 0.0, dt_tmp;
 	for (size_t n_id = 0; n_id < model.node_num; ++n_id)
 	{
 		Node_S2D_CHM &n = model.nodes[n_id];
 		if (n.m_s != 0.0)
 		{
+			max(v_max, (abs(n.vx_s) + sqrt(n.vx_s*n.vx_s + 4.0*abs(n.ax_s)*alpha_h)) / 2.0);
+			max(v_max, (abs(n.vy_s) + sqrt(n.vy_s*n.vy_s + 4.0*abs(n.ay_s)*alpha_h)) / 2.0);
+			max(v_max, (abs(n.vx_f) + sqrt(n.vx_f*n.vx_f + 4.0*abs(n.ax_f)*alpha_h)) / 2.0);
+			max(v_max, (abs(n.vy_f) + sqrt(n.vy_f*n.vy_f + 4.0*abs(n.ay_f)*alpha_h)) / 2.0);
+		}
+	}
+	for (size_t vx_id = 0; vx_id < model.vsx_num; ++vx_id)
+		max(v_max, abs(model.vsxs[vx_id].v));
+	for (size_t vy_id = 0; vy_id < model.vsy_num; ++vy_id)
+		max(v_max, abs(model.vsys[vy_id].v));
+	for (size_t vx_id = 0; vx_id < model.vfx_num; ++vx_id)
+		max(v_max, abs(model.vfxs[vx_id].v));
+	for (size_t vy_id = 0; vy_id < model.vfy_num; ++vy_id)
+		max(v_max, abs(model.vfys[vy_id].v));
+	if (v_max != 0.0)
+	{
+		dt_tmp = alpha_h / v_max;
+		if (dt_tmp < self.dt)
+			self.dt = dt_tmp;
+	}
+	// 2. particle at edge travel less than 1/10 particle size at each substeps (for gimp)
+	double beta_h_pcl;
+	for (size_t pcl_id = 0; pcl_id < model.pcl_num; ++pcl_id)
+	{
+		Particle_S2D_CHM &pcl = model.pcls[pcl_id];
+		if (pcl.elem_num)
+		{
+			ParticleVar_S2D_CHM &pcl_var = pcl.var;
+			Node_S2D_CHM &n1 = *pcl_var.pn1;
+			Node_S2D_CHM &n2 = *pcl_var.pn2;
+			Node_S2D_CHM &n3 = *pcl_var.pn3;
+			Node_S2D_CHM &n4 = *pcl_var.pn4;
+			pcl.ax_f = pcl_var.N1 * n1.ax_f + pcl_var.N2 * n2.ax_f
+					 + pcl_var.N3 * n3.ax_f + pcl_var.N4 * n4.ax_f;
+			pcl.ay_f = pcl_var.N1 * n1.ay_f + pcl_var.N2 * n2.ay_f
+					 + pcl_var.N3 * n3.ay_f + pcl_var.N4 * n4.ay_f;
+			pcl.ax_s = pcl_var.N1 * n1.ax_s + pcl_var.N2 * n2.ax_s
+					 + pcl_var.N3 * n3.ax_s + pcl_var.N4 * n4.ax_s;
+			pcl.ay_s = pcl_var.N1 * n1.ay_s + pcl_var.N2 * n2.ay_s
+					 + pcl_var.N3 * n3.ay_s + pcl_var.N4 * n4.ay_s;
+
+			if (pcl.is_at_edge) // either at internal or external edge
+			{
+				beta_h_pcl = self.h_pcl_ratio * sqrt(pcl.vol);
+				v_max = 0.0;
+				max(v_max, (abs(pcl.vx_s) + sqrt(pcl.vx_s*pcl.vx_s + 4.0*abs(pcl.ax_s)*alpha_h)) / 2.0);
+				max(v_max, (abs(pcl.vy_s) + sqrt(pcl.vy_s*pcl.vy_s + 4.0*abs(pcl.ay_s)*alpha_h)) / 2.0);
+				max(v_max, (abs(pcl.vx_f) + sqrt(pcl.vx_f*pcl.vx_f + 4.0*abs(pcl.ax_f)*alpha_h)) / 2.0);
+				max(v_max, (abs(pcl.vy_f) + sqrt(pcl.vy_f*pcl.vy_f + 4.0*abs(pcl.ay_f)*alpha_h)) / 2.0);
+				if (v_max != 0.0)
+				{
+					dt_tmp = beta_h_pcl / v_max;
+					if (dt_tmp < self.dt)
+						self.dt = dt_tmp;
+				}
+			}
+		}
+	}
+	// set lower bound of time step
+	max(self.dt, self.min_dt);
+
+	// update nodal velocity of both phase
+	for (size_t n_id = 0; n_id < model.node_num; ++n_id)
+	{
+		Node_S2D_CHM &n = model.nodes[n_id];
+		if (n.m_tf != 0.0)
+		{
+			n.vx_f /= n.m_tf;
+			n.vx_f += n.ax_f * self.dt;
+			n.vy_f /= n.m_tf;
+			n.vy_f += n.ay_f * self.dt;
 			n.vx_s /= n.m_s;
 			n.vx_s += n.ax_s * self.dt;
 			n.vy_s /= n.m_s;
 			n.vy_s += n.ay_s * self.dt;
 		}
 	}
-	// apply velocity boundary conditions of solid phase
+	// apply velocity boundary conditions of both phases
+	for (size_t v_id = 0; v_id < model.vfx_num; ++v_id)
+		model.nodes[model.vfxs[v_id].node_id].vx_f = model.vfxs[v_id].v;
+	for (size_t v_id = 0; v_id < model.vfy_num; ++v_id)
+		model.nodes[model.vfys[v_id].node_id].vy_f = model.vfys[v_id].v;
 	for (size_t v_id = 0; v_id < model.vsx_num; ++v_id)
-	{
-		Node_S2D_CHM &n = model.nodes[model.vsxs[v_id].node_id];
-		n.vx_s = model.vsxs[v_id].v;
-		n.ax_s = 0.0;
-	}
+		model.nodes[model.vsxs[v_id].node_id].vx_s = model.vsxs[v_id].v;
 	for (size_t v_id = 0; v_id < model.vsy_num; ++v_id)
-	{
-		Node_S2D_CHM &n = model.nodes[model.vsys[v_id].node_id];
-		n.vy_s = model.vsys[v_id].v;
-		n.ay_s = 0.0;
-	}
+		model.nodes[model.vsys[v_id].node_id].vy_s = model.vsys[v_id].v;
 
 	// map variables back to and update variables particles
 	double de11, de22, de12, dw12, de_vol_s, de_vol_f;
@@ -426,14 +433,10 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 			Node_S2D_CHM &n3 = *pcl_var.pn3;
 			Node_S2D_CHM &n4 = *pcl_var.pn4;
 
-			pcl.vx_s += (n1.ax_s * pcl_var.N1 + n2.ax_s * pcl_var.N2
-					   + n3.ax_s * pcl_var.N3 + n4.ax_s * pcl_var.N4) * self.dt;
-			pcl.vy_s += (n1.ay_s * pcl_var.N1 + n2.ay_s * pcl_var.N2
-					   + n3.ay_s * pcl_var.N3 + n4.ay_s * pcl_var.N4) * self.dt;
-			pcl.vx_f += (n1.ax_f * pcl_var.N1 + n2.ax_f * pcl_var.N2
-					   + n3.ax_f * pcl_var.N3 + n4.ax_f * pcl_var.N4) * self.dt;
-			pcl.vy_f += (n1.ay_f * pcl_var.N1 + n2.ay_f * pcl_var.N2
-					   + n3.ay_f * pcl_var.N3 + n4.ay_f * pcl_var.N4) * self.dt;
+			pcl.vx_s += pcl.ax_s * self.dt;
+			pcl.vy_s += pcl.ay_s * self.dt;
+			pcl.vx_f += pcl.ax_f * self.dt;
+			pcl.vy_f += pcl.ay_f * self.dt;
 
 			pcl.ux_s += (n1.vx_s * pcl_var.N1 + n2.vx_s * pcl_var.N2
 					   + n3.vx_s * pcl_var.N3 + n4.vx_s * pcl_var.N4) * self.dt;

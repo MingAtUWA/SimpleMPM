@@ -48,6 +48,7 @@ struct Particle_S2D_CHM
 	double m_s; // mass of solid phase 
 	double density_s, density_f;
 
+	double ax_s, ay_s, ax_f, ay_f;
 	double vx_s, vy_s, vx_f, vy_f;
 	double ux_s, uy_s, ux_f, uy_f;
 

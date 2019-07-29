@@ -37,8 +37,8 @@ void test_chm_mpm_gimp1(void)
 	model.tys = new TractionBC_MPM[model.ty_num];
 	for (size_t i = 0; i < model.ty_num; ++i)
 	{
-		model.tys[i].pcl_id = ((elem_y_num - 1) * 2 - 1) * elem_x_num * 2 + i;
-		model.tys[i].t = -10.0 * 0.5 * elem_len;
+		model.tys[i].pcl_id = (elem_y_num * 2 - 1) * elem_x_num * 2 + i;
+		model.tys[i].t = -1.0 * 0.5 * elem_len;
 	}
 
 	model.vsx_num = model.node_y_num * 2;
@@ -112,18 +112,18 @@ void test_chm_mpm_gimp1(void)
 
 	step1.solve();
 
-	// step2
-	Step_S2D_CHM_MPM_s_GIMP step2;
-	step2.set_name("consolidation_step");
-	step2.set_prev_step(&step1);
-	step2.set_step_time(30.0); // total_time
-	step2.set_dt(1.0e-4);
+	//// step2
+	//Step_S2D_CHM_MPM_s_GIMP step2;
+	//step2.set_name("consolidation_step");
+	//step2.set_prev_step(&step1);
+	//step2.set_step_time(30.0); // total_time
+	//step2.set_dt(1.0e-4);
 
-	// free drainage bcs
-	model.afy_num = model.node_x_num;
-	th1.set_interval_num(30);
-	step2.add_output(&th1);
-	step2.add_output(&th2);
+	//// free drainage bcs
+	//model.afy_num = model.node_x_num;
+	//th1.set_interval_num(30);
+	//step2.add_output(&th1);
+	//step2.add_output(&th2);
 
-	step2.solve();
+	//step2.solve();
 }
