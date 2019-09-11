@@ -79,6 +79,15 @@ add_library(
     Model_S2D_CHM_MPM_s.h Model_S2D_CHM_MPM_s.cpp
     Step_S2D_CHM_MPM_s_GIMP.h Step_S2D_CHM_MPM_s_GIMP.cpp
     TimeHistory_Particle_S2D_CHM_AllPcl.h TimeHistory_Particle_S2D_CHM_AllPcl.cpp
+    # Couple hydro-mechanics mixed integration
+    Node_S2D_CHM.h
+    Model_S2D_CHM_MPM_s_Mix.h Model_S2D_CHM_MPM_s_Mix.cpp
+    Step_S2D_CHM_MPM_s_Mix.h Step_S2D_CHM_MPM_s_Mix.cpp
+    TimeHistory_Particle_S2D_CHM_Mix_AllPcl.h TimeHistory_Particle_S2D_CHM_Mix_AllPcl.cpp
+    # Mechanics, material point and rigid-body contact
+    Model_S2D_ME_s_RigidBody.h Model_S2D_ME_s_RigidBody.cpp
+    Step_S2D_ME_s_RigidBody.h Step_S2D_ME_s_RigidBody.cpp
+    TimeHistory_S2D_ME_s_RigidBody.h TimeHistory_S2D_ME_s_RigidBody.cpp
     )
 
 target_include_directories(

@@ -73,9 +73,9 @@ void Model_S2D_CHM_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_CHM &
 	cal_shape_func(pcl.var);
 
 	// for debug purpose, no gimp
-	//pcl.vars = &pcl.var;
-	//pcl.elem_num = 1;
-	//return;
+	pcl.vars = &pcl.var;
+	pcl.elem_num = 1;
+	return;
 
 	pcl.is_at_edge = 0;
 	double hlen = sqrt(pcl.vol) * 0.5; // half length
@@ -116,7 +116,7 @@ void Model_S2D_CHM_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_CHM &
 	if (pcl.elem_num == 1)
 	{
 		// part of the particle is outside the edge
-		if (pcl.is_at_edge == 1)
+		if (pcl.is_at_edge)
 		{
 			pcl.vars = pcl_var_mem.alloc(1);
 			ParticleVar_S2D_CHM &pcl_var = pcl.vars[0];
@@ -134,6 +134,8 @@ void Model_S2D_CHM_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_CHM &
 		return;
 	}
 
+	// particle is at internal edge
+	pcl.is_at_edge = 2;
 	pcl.vars = pcl_var_mem.alloc(pcl.elem_num);
 	double x_len1, x_len2, y_len1, y_len2;
 	if (x_num == 1 && y_num == 2)
@@ -157,9 +159,6 @@ void Model_S2D_CHM_MPM_s::get_elements_overlapped_by_particle(Particle_S2D_CHM &
 		cal_shape_func(pcl_var2);
 		return;
 	}
-
-	// particle is at internal edge
-	pcl.is_at_edge = 2;
 
 	if (x_num == 2)
 	{

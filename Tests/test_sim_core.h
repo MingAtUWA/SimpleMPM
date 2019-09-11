@@ -30,6 +30,9 @@ void test_me_2D_bspline_mpm3(void);
 void test_chm_mpm_gimp1(void);
 void test_chm_mpm_gimp2(void);
 
+void test_chm_mpm_mix1(void);
+void test_chm_mpm_mix2(void);
+
 void test_chm_mpm1(void);
 void test_chm_mpm2(void);
 
@@ -48,5 +51,7 @@ void test_chm_2D_bspline_mpm2(void);
 void test_multi_object_me1(void);
 
 void test_Model_S2D_ME_s(void);
+
+void test_mesh_resterization(void);
 
 #endif

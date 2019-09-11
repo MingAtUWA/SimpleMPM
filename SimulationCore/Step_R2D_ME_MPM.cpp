@@ -41,10 +41,10 @@ int Step_R2D_ME_MPM::init()
 	}
 
 	// Initialize buffer for particle & nodal & contact variables
-	node_vars->set_default_pool_item_num(total_pcl_num);
+	node_vars->set_page_size(total_pcl_num);
 	pcl_vars->set_default_pool_item_num(total_pcl_num);
 	// assume 1 / 10 of particles are in contact 
-	contact_vars->set_default_pool_item_num(max(total_pcl_num, 10) / 10);
+	contact_vars->set_page_size(max(total_pcl_num, 10) / 10);
 
 	// Initialize particle variables
 	if (is_first_step)
@@ -90,7 +90,7 @@ inline NodeVar_2D_ME *Step_R2D_ME_MPM::init_node_variables(Particle_2D_ME *ppcl,
 	NodeVar_2D_ME *pnd_var = static_cast<NodeVar_2D_ME *>(pnd->first());
 	if (!pnd_var || pnd_var->object != static_cast<Object *>(ppcl->object))
 	{
-		pnd_var = node_vars->alloc();
+		//pnd_var = node_vars->alloc();
 		// add to stack at node
 		pnd->add(pnd_var);
 		// init node variable
@@ -284,11 +284,11 @@ int Step_R2D_ME_MPM::update_nodal_variables(void)
 	NodeVar_2D_ME *pnd_var;
 
 	// calculate acceleration
-	for (pnd_var = node_vars->top(); pnd_var; pnd_var = node_vars->prev(pnd_var))
-	{
-		pnd_var->ax = (pnd_var->fx_ext - pnd_var->fx_int) / pnd_var->m;
-		pnd_var->ay = (pnd_var->fy_ext - pnd_var->fy_int) / pnd_var->m;
-	}
+	//for (pnd_var = node_vars->top(); pnd_var; pnd_var = node_vars->prev(pnd_var))
+	//{
+	//	pnd_var->ax = (pnd_var->fx_ext - pnd_var->fx_int) / pnd_var->m;
+	//	pnd_var->ay = (pnd_var->fy_ext - pnd_var->fy_int) / pnd_var->m;
+	//}
 	
 	// apply acceleration boundary conditions
 	for (size_t i = 0; i < mesh->ax_bc_num; i++)
@@ -311,13 +311,13 @@ int Step_R2D_ME_MPM::update_nodal_variables(void)
 	}
 
 	// update nodal velocity
-	for (pnd_var = node_vars->top(); pnd_var; pnd_var = node_vars->prev(pnd_var))
-	{
-		pnd_var->vx = pnd_var->mmx / pnd_var->m;
-		pnd_var->vx += pnd_var->ax * dt;
-		pnd_var->vy = pnd_var->mmy / pnd_var->m;
-		pnd_var->vy += pnd_var->ay * dt;
-	}
+	//for (pnd_var = node_vars->top(); pnd_var; pnd_var = node_vars->prev(pnd_var))
+	//{
+	//	pnd_var->vx = pnd_var->mmx / pnd_var->m;
+	//	pnd_var->vx += pnd_var->ax * dt;
+	//	pnd_var->vy = pnd_var->mmy / pnd_var->m;
+	//	pnd_var->vy += pnd_var->ay * dt;
+	//}
 	
 	// apply velocity boundary conditions
 	for (size_t i = 0; i < mesh->vx_bc_num; i++)
@@ -347,12 +347,12 @@ int Step_R2D_ME_MPM::update_nodal_variables(void)
 int Step_R2D_ME_MPM::map_to_particles_and_update_particle_variables(void)
 {
 	// update displacement increment
-	for (NodeVar_2D_ME *pnd_var = node_vars->top(); 
-		 pnd_var; pnd_var = node_vars->prev(pnd_var))
-	{
-		pnd_var->dux = pnd_var->vx * dt;
-		pnd_var->duy = pnd_var->vy * dt;
-	}
+	//for (NodeVar_2D_ME *pnd_var = node_vars->top(); 
+	//	 pnd_var; pnd_var = node_vars->prev(pnd_var))
+	//{
+	//	pnd_var->dux = pnd_var->vx * dt;
+	//	pnd_var->duy = pnd_var->vy * dt;
+	//}
 
 	Particle_2D_ME *ppcl;
 	ParticleVar_R2D_ME *ppcl_var, *ppcl_var_end;

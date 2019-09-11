@@ -54,10 +54,18 @@ public:
 
 	inline void set_x_coord_num(size_t num) { node_x_coords_mem.reserve(num); }
 	inline void add_x_coord(double coord) { node_x_coords_mem.add(coord); }
-	inline void add_x_coord(size_t num, double *coords) { node_x_coords_mem.add(num, coords); }
+	inline void add_x_coord(size_t num, double *coords)
+	{
+		double *node_x_coords = node_x_coords_mem.alloc(num);
+		memcpy(node_x_coords, coords, sizeof(double) * num);
+	}
 	inline void set_y_coord_num(size_t num) { node_y_coords_mem.reserve(num); }
 	inline void add_y_coord(double coord) { node_y_coords_mem.add(coord); }
-	inline void add_y_coord(size_t num, double *coords) { node_y_coords_mem.add(num, coords); }
+	inline void add_y_coord(size_t num, double *coords)
+	{
+		double *node_y_coords = node_y_coords_mem.alloc(num);
+		memcpy(node_y_coords, coords, sizeof(double) * num);
+	}
 	void update(void)
 	{
 		size_t i, j, k;

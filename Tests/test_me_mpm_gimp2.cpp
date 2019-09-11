@@ -39,7 +39,7 @@ void test_me_mpm_gimp2(void)
 	for (size_t i = 0; i < model.ty_num; ++i)
 	{
 		model.tys[i].pcl_id = ((elem_y_num-1) * 2 - 1) * elem_x_num * 2 + i;
-		model.tys[i].t = -100.0 * 0.5 * elem_len;
+		model.tys[i].t = -400.0 * 0.5 * elem_len;
 	}
 
 	model.vx_num = model.node_y_num * 2;
@@ -68,7 +68,7 @@ void test_me_mpm_gimp2(void)
 	TimeHistory_Particle_S2D_ME_AllPcl th1;
 	th1.set_name("test_out1");
 	th1.set_interval_num(100);
-	th1.set_if_output_initial_state(false);
+	th1.set_if_output_initial_state(true);
 	Particle_Field_2D_ME fld1[4] = {
 		Particle_Field_2D_ME::x,
 		Particle_Field_2D_ME::y,

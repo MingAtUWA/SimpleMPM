@@ -9,6 +9,8 @@ struct Model_R2D_ME_MPM_BSpline_s;
 struct Model_R2D_CHM_MPM_BSpline_s;
 struct Model_S2D_ME_MPM_s;
 struct Model_S2D_CHM_MPM_s;
+struct Model_S2D_CHM_MPM_s_Mix;
+struct Model_S2D_ME_s_RigidBody;
 
 struct TimeHistoryFileInfo_Text : public TimeHistoryFileInfo
 {
@@ -59,6 +61,8 @@ public:
 	int output_model_state(Model_R2D_CHM_MPM_BSpline_s &md);
 	int output_model_state(Model_S2D_ME_MPM_s &md);
 	int output_model_state(Model_S2D_CHM_MPM_s &md);
+	int output_model_state(Model_S2D_CHM_MPM_s_Mix &md);
+	int output_model_state(Model_S2D_ME_s_RigidBody &md);
 };
 
 #endif

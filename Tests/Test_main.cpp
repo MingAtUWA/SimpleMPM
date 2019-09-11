@@ -28,8 +28,11 @@ int main(int argc, char *argv[])
 	//test_me_2D_bspline_mpm2();
 	//test_me_2D_bspline_mpm3();
 
+	//test_chm_mpm_mix1();
+	//test_chm_mpm_mix2();
+
 	//test_chm_mpm_gimp1();
-	test_chm_mpm_gimp2();
+	//test_chm_mpm_gimp2();
 	
 	//test_chm_mpm1();
 	//test_chm_mpm2();
@@ -56,9 +59,11 @@ int main(int argc, char *argv[])
 	//test_mesh();
 
 	//test_animation();
+
 	// animation for 2d particle
-	
-	//test_animation_particle2d();
+	test_animation_particle2d();
+
+	//test_mesh_resterization();
 
 	system("pause");
 	return 0;

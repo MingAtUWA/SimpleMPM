@@ -11,6 +11,7 @@ add_library(
     Animation.h Animation.cpp
     Animation_Test.h Animation_Test.cpp
     Animation_Particle2D.h Animation_Particle2D.cpp
+    Animation_Particle2D_RigidBody.h Animation_Particle2D_RigidBody.cpp
     screenshot.h screenshot.cpp
     gif.h
     )

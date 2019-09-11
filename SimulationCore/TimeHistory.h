@@ -16,7 +16,8 @@ enum class TimeHistoryType : unsigned short int
 	Particle_2D_ME_AllPcl = 7,
 	Particle_1D_ME_AllPcl = 8,
 	Particle_S2D_ME_AllPcl = 9,
-	Particle_S2D_CHM_AllPcl = 10
+	Particle_S2D_CHM_AllPcl = 10,
+	S2D_ME_RigidBody = 11
 };
 
 struct Model;

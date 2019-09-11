@@ -21,8 +21,8 @@ void test_chm_mpm_gimp1(void)
 
 	double pcl_vol = elem_len * elem_len * 0.5 * 0.5;
 	model.init_pcl(elem_x_num * elem_y_num * 4,
-		0.3, pcl_vol * (1.0 - 0.3) * 2.0, 2.0, 1.0,
-		100.0, 0.3, 1000.0, 1.0e-3, 1.0);
+		0.3, pcl_vol * (1.0 - 0.3) * 2650.0, 2650.0, 1000.0,
+		1.0e3, 0.3, 50.0e3, 1.0e-4, 1.0);
 	size_t k = 0;
 	for (size_t j = 0; j < elem_y_num * 2; ++j)
 		for (size_t i = 0; i < elem_x_num * 2; ++i)
@@ -38,7 +38,7 @@ void test_chm_mpm_gimp1(void)
 	for (size_t i = 0; i < model.ty_num; ++i)
 	{
 		model.tys[i].pcl_id = (elem_y_num * 2 - 1) * elem_x_num * 2 + i;
-		model.tys[i].t = -1.0 * 0.5 * elem_len;
+		model.tys[i].t = -10.0 * 0.5 * elem_len;
 	}
 
 	model.vsx_num = model.node_y_num * 2;
@@ -75,9 +75,8 @@ void test_chm_mpm_gimp1(void)
 	{
 		model.vfys[i].node_id = i;
 		model.vfys[i].v = 0.0;
-		model.vfys[i + model.node_x_num].node_id = model.node_x_num * (model.node_y_num - 1) + i;
-		model.vfys[i + model.node_x_num].v = 0.0;
-
+		model.vfys[i+model.node_x_num].node_id = model.node_x_num * (model.node_y_num - 1) + i;
+		model.vfys[i+model.node_x_num].v = 0.0;
 	}
 
 	ResultFile_Text res_file;
@@ -87,8 +86,8 @@ void test_chm_mpm_gimp1(void)
 
 	TimeHistory_Particle_S2D_CHM_AllPcl th1;
 	th1.set_name("test_out1");
-	th1.set_interval_num(100);
-	th1.set_if_output_initial_state(false);
+	th1.set_interval_num(5);
+	th1.set_if_output_initial_state(true);
 	Particle_Field_2D_CHM fld1[4] = {
 		Particle_Field_2D_CHM::x,
 		Particle_Field_2D_CHM::y,
@@ -105,10 +104,10 @@ void test_chm_mpm_gimp1(void)
 	step1.set_name("initial_step");
 	step1.set_model(&model);
 	step1.set_result_file(&res_file);
-	step1.set_step_time(10.0);
+	step1.set_step_time(5.0e-4);
 	step1.set_dt(1.0e-4);
 	step1.add_output(&th1);
-	step1.add_output(&th2);
+	//step1.add_output(&th2);
 
 	step1.solve();
 

@@ -17,16 +17,22 @@ void test_chm_mpm_gimp2(void)
 	size_t elem_x_num = 2;
 	size_t elem_y_num = 10;
 	double elem_len = 1.0 / double(elem_y_num);
-	elem_y_num += 1;
-	model.init_mesh(elem_len, elem_x_num, elem_y_num);
+	model.init_mesh(elem_len, elem_x_num, elem_y_num + 1);
 
+	size_t pcl_x_num = elem_x_num * 2;
+	size_t pcl_y_num = elem_y_num * 2;
+	double pcl_n = 0.3, pcl_den_s = 2650.0, pcl_den_f = 1000.0;
 	double pcl_vol = elem_len * elem_len * 0.5 * 0.5;
-	model.init_pcl(elem_x_num * (elem_y_num - 1) * 4,
-				   0.3, pcl_vol * (1.0-0.3) * 2.0, 2.0, 1.0,
-				   100.0, 0.3, 1000.0, 1.0e-3, 1.0);
+	double pcl_m_s = pcl_vol * (1.0 - pcl_n) * pcl_den_s;
+	//model.init_pcl(elem_x_num * (elem_y_num - 1) * 4,
+	//			   pcl_n, pcl_m_s, pcl_den_s, pcl_den_f,
+	//			   1.0e3, 0.25, 50.0e3, 1.0e-4, 1.0);
+	model.init_pcl(pcl_x_num * pcl_y_num,
+					pcl_n, pcl_m_s, pcl_den_s, pcl_den_f,
+					1.0e3, 0.25, 50.0e3, 1.0e-4, 1.0);
 	size_t k = 0;
-	for (size_t j = 0; j < (elem_y_num-1) * 2; ++j)
-		for (size_t i = 0; i < elem_x_num * 2; ++i)
+	for (size_t j = 0; j < pcl_y_num; ++j)
+		for (size_t i = 0; i < pcl_x_num; ++i)
 		{
 			Particle_S2D_CHM &pcl = model.pcls[k];
 			pcl.x = (0.25 + double(i) * 0.5) * elem_len;
@@ -34,12 +40,12 @@ void test_chm_mpm_gimp2(void)
 			++k;
 		}
 
-	model.ty_num = elem_x_num * 2;
+	model.ty_num = pcl_x_num;
 	model.tys = new TractionBC_MPM[model.ty_num];
 	for (size_t i = 0; i < model.ty_num; ++i)
 	{
-		model.tys[i].pcl_id = ((elem_y_num-1) * 2 - 1) * elem_x_num * 2 + i;
-		model.tys[i].t = -10.0 * 0.5 * elem_len;
+		model.tys[i].pcl_id = (pcl_y_num - 1) * pcl_x_num + i;
+		model.tys[i].t = -400.0 * 0.5 * elem_len;
 	}
 
 	model.vsx_num = model.node_y_num * 2;
@@ -76,9 +82,8 @@ void test_chm_mpm_gimp2(void)
 	{
 		model.vfys[i].node_id = i;
 		model.vfys[i].v = 0.0;
-		model.vfys[i + model.node_x_num].node_id = model.node_x_num * (model.node_y_num - 1) + i;
+		model.vfys[i + model.node_x_num].node_id = model.node_x_num * (model.node_y_num - 2) + i;
 		model.vfys[i + model.node_x_num].v = 0.0;
-
 	}
 
 	ResultFile_Text res_file;
@@ -88,43 +93,57 @@ void test_chm_mpm_gimp2(void)
 
 	TimeHistory_Particle_S2D_CHM_AllPcl th1;
 	th1.set_name("test_out1");
-	th1.set_interval_num(100);
 	th1.set_if_output_initial_state(false);
-	Particle_Field_2D_CHM fld1[4] = {
+	Particle_Field_2D_CHM fld1[6] = {
 		Particle_Field_2D_CHM::x,
 		Particle_Field_2D_CHM::y,
 		Particle_Field_2D_CHM::vol,
 		Particle_Field_2D_CHM::p,
+		Particle_Field_2D_CHM::vy_s,
+		Particle_Field_2D_CHM::vy_f
 	};
 	for (size_t i = 0; i < sizeof(fld1)/sizeof(fld1[0]); ++i)
 		th1.add_field(fld1[i]);
 
 	TimeHistory_ConsoleProgressBar th2;
 
-	// step1
+	//// step1
+	//Step_S2D_CHM_MPM_s_GIMP step1;
+	//step1.set_name("initial_step");
+	//step1.set_model(&model);
+	//step1.set_result_file(&res_file);
+	//step1.set_step_time(10.0);
+	//step1.set_dt(1.0e-4);
+	//th1.set_interval_num(10);
+	//step1.add_output(&th1);
+	//step1.add_output(&th2);
+
+	//step1.solve();
+
+	//// step2
+	//Step_S2D_CHM_MPM_s_GIMP step2;
+	//step2.set_name("consolidation_step");
+	//step2.set_prev_step(&step1);
+	//step2.set_step_time(30.0); // total_time
+	//step2.set_dt(1.0e-4);
+	//model.vfy_num = model.node_x_num; // free drainage bcs
+	//th1.set_interval_num(30);
+	//step2.add_output(&th1);
+	//step2.add_output(&th2);
+
+	//step2.solve();
+
+	// compression
 	Step_S2D_CHM_MPM_s_GIMP step1;
 	step1.set_name("initial_step");
 	step1.set_model(&model);
 	step1.set_result_file(&res_file);
-	step1.set_step_time(10.0);
+	step1.set_step_time(30.0);
 	step1.set_dt(1.0e-4);
+	model.vfy_num = model.node_x_num; // free drainage bcs
+	th1.set_interval_num(10);
 	step1.add_output(&th1);
 	step1.add_output(&th2);
 
 	step1.solve();
-
-	// step2
-	Step_S2D_CHM_MPM_s_GIMP step2;
-	step2.set_name("consolidation_step");
-	step2.set_prev_step(&step1);
-	step2.set_step_time(30.0); // total_time
-	step2.set_dt(1.0e-4);
-
-	// free drainage bcs
-	model.afy_num = model.node_x_num;
-	th1.set_interval_num(30);
-	step2.add_output(&th1);
-	step2.add_output(&th2);
-
-	step2.solve();
 }

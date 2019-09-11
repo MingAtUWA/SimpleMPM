@@ -53,19 +53,22 @@ with open(abs_file_path, 'r') as res_file:
 line1, = plot1.plot(x_data, y_data)
 
 #################################################################################################
-data_num = len(x_data)
-ana_solution = np.zeros(data_num)
+data_num = 200
+dt = x_data[-1] / float(data_num)
+t_data = np.zeros(data_num+1)
+ana_solution = np.zeros(data_num+1)
 H = 1.0
-p0 = -1.0
+p0 = -400.0
 bf = 0.0
 E = 1000.0
 niu = 0.25
 density = 10.0
 E = (1 - niu) / (1 + niu) / (1 - 2.0*niu) * E # Es = (1-v) / (1 + v) / (1-2v) * E
 bav = BarAxialVibration(H, p0, bf, E, density)
-for i in range(data_num):
-    ana_solution[i] = bav.displacement(H, x_data[i])
-line2, = plot1.plot(x_data, ana_solution, '--k')
+for i in range(data_num+1):
+    t_data[i] = i * dt 
+    ana_solution[i] = bav.displacement(H, t_data[i])
+line2, = plot1.plot(t_data, ana_solution, '--k')
 
 ################################################################################################
 plt.legend(handles=[line1,line2], labels=['Explicit MPM', 'Analytical Solution'])

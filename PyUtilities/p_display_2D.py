@@ -80,9 +80,9 @@ for i in range(data_num):
     u_list[i + 2] = con_res.calPorePressure(t_list[i + 2], 1.0 - z)
     t_list[i + 2] += t_list[1]
 
-line2, = plot1.plot(t_list, u_list, 'r--')
+#line2, = plot1.plot(t_list, u_list, 'r--')
 
-plt.legend(handles=[line1,line2], labels=['Explicit MPM', 'Analytical Solution'])
+#plt.legend(handles=[line1,line2], labels=['Explicit MPM', 'Analytical Solution'])
 
 plt.show()
 #os.system("pause")

@@ -79,7 +79,7 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 			model.get_elements_overlapped_by_particle(pcl);
 			if (pcl.elem_num)
 			{
-				pcl.n_prod_k_div_miu = pcl.n * pcl.k / pcl.miu;
+				double n_miu_div_k = pcl.n * pcl.miu / pcl.k;
 				for (size_t i = 0; i < pcl.elem_num; ++i)
 				{
 					ParticleVar_S2D_CHM &pcl_var = pcl.vars[i];
@@ -89,7 +89,8 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 					double m_tf = pcl_var.vol * pcl.density_f;
 					double mvx_tf = m_tf * pcl.vx_f;
 					double mvy_tf = m_tf * pcl.vy_f;
-				
+					double n_miu_div_k_vrx_vol = n_miu_div_k * (pcl.vx_f - pcl.vx_s) * pcl_var.vol;
+					double n_miu_div_k_vry_vol = n_miu_div_k * (pcl.vy_f - pcl.vy_s) * pcl_var.vol;
 					// ------------------- node 1 -------------------
 					Node_S2D_CHM &n1 = *pcl_var.pn1;
 					// mixture phase
@@ -104,9 +105,8 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 					n1.vy_f += pcl_var.N1 * mvy_tf;
 					n1.fx_int_tf += (pcl_var.dN1_dx * -pcl.p) * pcl_var.vol;
 					n1.fy_int_tf += (pcl_var.dN1_dy * -pcl.p) * pcl_var.vol;
-					n1.fx_drag_tf += pcl_var.N1 * pcl.n_prod_k_div_miu * (pcl.vx_f - pcl.vx_s) * pcl_var.vol;
-					n1.fy_drag_tf += pcl_var.N1 * pcl.n_prod_k_div_miu * (pcl.vy_f - pcl.vy_s) * pcl_var.vol;
-
+					n1.fx_drag_tf += pcl_var.N1 * n_miu_div_k_vrx_vol;
+					n1.fy_drag_tf += pcl_var.N1 * n_miu_div_k_vry_vol;
 					// ------------------- node 2 -------------------
 					Node_S2D_CHM &n2 = *pcl_var.pn2;
 					// mixture phase
@@ -121,13 +121,12 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 					n2.vy_f += pcl_var.N2 * mvy_tf;
 					n2.fx_int_tf += (pcl_var.dN2_dx * -pcl.p) * pcl_var.vol;
 					n2.fy_int_tf += (pcl_var.dN2_dy * -pcl.p) * pcl_var.vol;
-					n2.fx_drag_tf += pcl_var.N2 * pcl.n_prod_k_div_miu * (pcl.vx_f - pcl.vx_s) * pcl_var.vol;
-					n2.fy_drag_tf += pcl_var.N2 * pcl.n_prod_k_div_miu * (pcl.vy_f - pcl.vy_s) * pcl_var.vol;
-
+					n2.fx_drag_tf += pcl_var.N2 * n_miu_div_k_vrx_vol;
+					n2.fy_drag_tf += pcl_var.N2 * n_miu_div_k_vry_vol;
 					// ------------------- node 3 -------------------
 					Node_S2D_CHM &n3 = *pcl_var.pn3;
 					// mixture phase
-					n3.m_s += pcl_var.N3 * m_s;
+					n3.m_s  += pcl_var.N3 * m_s;
 					n3.vx_s += pcl_var.N3 * mvx_s;
 					n3.vy_s += pcl_var.N3 * mvy_s;
 					n3.fx_int_m += (pcl_var.dN3_dx * (pcl.s11 - pcl.p) + pcl_var.dN3_dy * pcl.s12) * pcl_var.vol;
@@ -138,13 +137,12 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 					n3.vy_f += pcl_var.N3 * mvy_tf;
 					n3.fx_int_tf += (pcl_var.dN3_dx * -pcl.p) * pcl_var.vol;
 					n3.fy_int_tf += (pcl_var.dN3_dy * -pcl.p) * pcl_var.vol;
-					n3.fx_drag_tf += pcl_var.N3 * pcl.n_prod_k_div_miu * (pcl.vx_f - pcl.vx_s) * pcl_var.vol;
-					n3.fy_drag_tf += pcl_var.N3 * pcl.n_prod_k_div_miu * (pcl.vy_f - pcl.vy_s) * pcl_var.vol;
-
+					n3.fx_drag_tf += pcl_var.N3 * n_miu_div_k_vrx_vol;
+					n3.fy_drag_tf += pcl_var.N3 * n_miu_div_k_vry_vol;
 					// ------------------- node 4 -------------------
 					Node_S2D_CHM &n4 = *pcl_var.pn4;
 					// mixture phase
-					n4.m_s += pcl_var.N4 * m_s;
+					n4.m_s  += pcl_var.N4 * m_s;
 					n4.vx_s += pcl_var.N4 * mvx_s;
 					n4.vy_s += pcl_var.N4 * mvy_s;
 					n4.fx_int_m += (pcl_var.dN4_dx * (pcl.s11 - pcl.p) + pcl_var.dN4_dy * pcl.s12) * pcl_var.vol;
@@ -155,8 +153,8 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 					n4.vy_f += pcl_var.N4 * mvy_tf;
 					n4.fx_int_tf += (pcl_var.dN4_dx * -pcl.p) * pcl_var.vol;
 					n4.fy_int_tf += (pcl_var.dN4_dy * -pcl.p) * pcl_var.vol;
-					n4.fx_drag_tf += pcl_var.N4 * pcl.n_prod_k_div_miu * (pcl.vx_f - pcl.vx_s) * pcl_var.vol;
-					n4.fy_drag_tf += pcl_var.N4 * pcl.n_prod_k_div_miu * (pcl.vy_f - pcl.vy_s) * pcl_var.vol;
+					n4.fx_drag_tf += pcl_var.N4 * n_miu_div_k_vrx_vol;
+					n4.fy_drag_tf += pcl_var.N4 * n_miu_div_k_vry_vol;
 				}
 			}
 		}
@@ -281,7 +279,6 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 					 + pcl_var.N3 * n3.ax_f + pcl_var.N4 * n4.ax_f;
 			pcl_ay_f = pcl_var.N1 * n1.ay_f + pcl_var.N2 * n2.ay_f
 					 + pcl_var.N3 * n3.ay_f + pcl_var.N4 * n4.ay_f;
-
 			// Interial term of fluid phase
 			pcl_m_f = pcl.n * pcl.density_f * pcl_var.vol;
 			pcl_max_f = pcl_m_f * pcl_ax_f;
@@ -332,6 +329,10 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 		Node_S2D_CHM &n = model.nodes[n_id];
 		if (n.m_s != 0.0)
 		{
+			n.vx_s /= n.m_s;
+			n.vy_s /= n.m_s;
+			n.vx_f /= n.m_tf;
+			n.vy_f /= n.m_tf;
 			max(v_max, (abs(n.vx_s) + sqrt(n.vx_s*n.vx_s + 4.0*abs(n.ax_s)*alpha_h)) / 2.0);
 			max(v_max, (abs(n.vy_s) + sqrt(n.vy_s*n.vy_s + 4.0*abs(n.ay_s)*alpha_h)) / 2.0);
 			max(v_max, (abs(n.vx_f) + sqrt(n.vx_f*n.vx_f + 4.0*abs(n.ax_f)*alpha_h)) / 2.0);
@@ -350,7 +351,10 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 	{
 		dt_tmp = alpha_h / v_max;
 		if (dt_tmp < self.dt)
+		{
 			self.dt = dt_tmp;
+			//std::cout << "new elem dt: " << self.dt << "\n";
+		}
 	}
 	// 2. particle at edge travel less than 1/10 particle size at each substeps (for gimp)
 	double beta_h_pcl;
@@ -372,20 +376,22 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 					 + pcl_var.N3 * n3.ax_s + pcl_var.N4 * n4.ax_s;
 			pcl.ay_s = pcl_var.N1 * n1.ay_s + pcl_var.N2 * n2.ay_s
 					 + pcl_var.N3 * n3.ay_s + pcl_var.N4 * n4.ay_s;
-
 			if (pcl.is_at_edge) // either at internal or external edge
 			{
-				beta_h_pcl = self.h_pcl_ratio * sqrt(pcl.vol);
+				beta_h_pcl = sqrt(pcl.vol) * self.h_pcl_ratio;
 				v_max = 0.0;
-				max(v_max, (abs(pcl.vx_s) + sqrt(pcl.vx_s*pcl.vx_s + 4.0*abs(pcl.ax_s)*alpha_h)) / 2.0);
-				max(v_max, (abs(pcl.vy_s) + sqrt(pcl.vy_s*pcl.vy_s + 4.0*abs(pcl.ay_s)*alpha_h)) / 2.0);
-				max(v_max, (abs(pcl.vx_f) + sqrt(pcl.vx_f*pcl.vx_f + 4.0*abs(pcl.ax_f)*alpha_h)) / 2.0);
-				max(v_max, (abs(pcl.vy_f) + sqrt(pcl.vy_f*pcl.vy_f + 4.0*abs(pcl.ay_f)*alpha_h)) / 2.0);
+				max(v_max, (abs(pcl.vx_s) + sqrt(pcl.vx_s*pcl.vx_s + 4.0*abs(pcl.ax_s)*beta_h_pcl)) / 2.0);
+				max(v_max, (abs(pcl.vy_s) + sqrt(pcl.vy_s*pcl.vy_s + 4.0*abs(pcl.ay_s)*beta_h_pcl)) / 2.0);
+				max(v_max, (abs(pcl.vx_f) + sqrt(pcl.vx_f*pcl.vx_f + 4.0*abs(pcl.ax_f)*beta_h_pcl)) / 2.0);
+				max(v_max, (abs(pcl.vy_f) + sqrt(pcl.vy_f*pcl.vy_f + 4.0*abs(pcl.ay_f)*beta_h_pcl)) / 2.0);
 				if (v_max != 0.0)
 				{
 					dt_tmp = beta_h_pcl / v_max;
 					if (dt_tmp < self.dt)
+					{
 						self.dt = dt_tmp;
+						//std::cout << "new pcl dt: " << self.dt << "\n";
+					}
 				}
 			}
 		}
@@ -397,15 +403,11 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 	for (size_t n_id = 0; n_id < model.node_num; ++n_id)
 	{
 		Node_S2D_CHM &n = model.nodes[n_id];
-		if (n.m_tf != 0.0)
+		if (n.m_s != 0.0)
 		{
-			n.vx_f /= n.m_tf;
 			n.vx_f += n.ax_f * self.dt;
-			n.vy_f /= n.m_tf;
 			n.vy_f += n.ay_f * self.dt;
-			n.vx_s /= n.m_s;
 			n.vx_s += n.ax_s * self.dt;
-			n.vy_s /= n.m_s;
 			n.vy_s += n.ay_s * self.dt;
 		}
 	}
@@ -418,6 +420,12 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 		model.nodes[model.vsxs[v_id].node_id].vx_s = model.vsxs[v_id].v;
 	for (size_t v_id = 0; v_id < model.vsy_num; ++v_id)
 		model.nodes[model.vsys[v_id].node_id].vy_s = model.vsys[v_id].v;
+
+	//{
+	//	Node_S2D_CHM &n = model.nodes[3];
+	//	std::cout << "g vxs: " << n.vx_s << " vyf: " << n.vy_s
+	//			  <<  " vxf: " << n.vx_f << " vyf: " << n.vy_f << "\n";
+	//}
 
 	// map variables back to and update variables particles
 	double de11, de22, de12, dw12, de_vol_s, de_vol_f;
@@ -491,7 +499,7 @@ int solve_substep_S2D_CHM_MPM_s_GIMP(void *_self)
 			de_vol_s = de11 + de22;
 			// "volumetric strain" of fluid phase
 			de_vol_f = -(1.0 - pcl.n) / pcl.n * de_vol_s
-					  - (n1.vx_f * pcl_var.dN1_dx + n2.vx_f * pcl_var.dN2_dx
+					   -(n1.vx_f * pcl_var.dN1_dx + n2.vx_f * pcl_var.dN2_dx
 					   + n3.vx_f * pcl_var.dN3_dx + n4.vx_f * pcl_var.dN4_dx
 					   + n1.vy_f * pcl_var.dN1_dy + n2.vy_f * pcl_var.dN2_dy
 					   + n3.vy_f * pcl_var.dN3_dy + n4.vy_f * pcl_var.dN4_dy) * self.dt;

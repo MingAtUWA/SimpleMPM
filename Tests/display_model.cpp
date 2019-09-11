@@ -25,11 +25,11 @@ void display_model(void)
 	BackgroundMeshNode *bg_mesh = ms_node->background_mesh;
 	ObjectNode *obj_node = ms_node->first_object();
 	Frame_Particle2D frame;
-	frame.add_mesh(bg_mesh->x_coord_num, bg_mesh->x_coords,
-				   bg_mesh->y_coord_num, bg_mesh->y_coords);
+	frame.add_mesh(bg_mesh->x_coord_num, bg_mesh->x_coords.get_mem(),
+				   bg_mesh->y_coord_num, bg_mesh->y_coords.get_mem());
 	frame.add_particles(obj_node->particle_num,
-						obj_node->x, obj_node->y,
-						obj_node->vol);
+						obj_node->x.get_mem(), obj_node->y.get_mem(),
+						obj_node->vol.get_mem());
 	vtkSmartPointer<vtkRenderWindow> window = vtkSmartPointer<vtkRenderWindow>::New();
 	window->AddRenderer(frame.create_scene());
 	vtkSmartPointer<vtkRenderWindowInteractor> interactor

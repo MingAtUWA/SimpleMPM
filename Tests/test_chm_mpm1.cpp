@@ -115,50 +115,50 @@ void test_chm_mpm1(void)
 		model.ty_bcs[i].t = -10.0 * 0.5;
 	}
 
-	model.vx_s_bc_num = 0;
-	model.vx_s_bcs = nullptr;
-	model.ax_s_bc_num = model.node_y_num * 2;
-	model.ax_s_bcs = new AccelerationBC[model.ax_s_bc_num];
+	model.ax_s_bc_num = 0;
+	model.ax_s_bcs = nullptr;
+	model.vx_s_bc_num = model.node_y_num * 2;
+	model.vx_s_bcs = new VelocityBC[model.vx_s_bc_num];
 	for (i = 0; i < model.node_y_num; i++)
 	{
-		model.ax_s_bcs[i].node_id = i * model.node_x_num;
-		model.ax_s_bcs[i].a = 0.0;
-		model.ax_s_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
-		model.ax_s_bcs[i + model.node_y_num].a = 0.0;
+		model.vx_s_bcs[i].node_id = i * model.node_x_num;
+		model.vx_s_bcs[i].v = 0.0;
+		model.vx_s_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
+		model.vx_s_bcs[i + model.node_y_num].v = 0.0;
 	}
 
-	model.vy_s_bc_num = 0;
-	model.vy_s_bcs = nullptr;
-	model.ay_s_bc_num = model.node_x_num;
-	model.ay_s_bcs = new AccelerationBC[model.ay_s_bc_num];
+	model.ay_s_bc_num = 0;
+	model.ay_s_bcs = nullptr;
+	model.vy_s_bc_num = model.node_x_num;
+	model.vy_s_bcs = new VelocityBC[model.vy_s_bc_num];
 	for (i = 0; i < model.node_x_num; i++)
 	{
-		model.ay_s_bcs[i].node_id = i;
-		model.ay_s_bcs[i].a = 0.0;
+		model.vy_s_bcs[i].node_id = i;
+		model.vy_s_bcs[i].v = 0.0;
 	}
 
-	model.vx_f_bc_num = 0;
-	model.vx_f_bcs = nullptr;
-	model.ax_f_bc_num = model.node_y_num * 2;
-	model.ax_f_bcs = new AccelerationBC[model.ax_f_bc_num];
+	model.ax_f_bc_num = 0;
+	model.ax_f_bcs = nullptr;
+	model.vx_f_bc_num = model.node_y_num * 2;
+	model.vx_f_bcs = new VelocityBC[model.vx_f_bc_num];
 	for (i = 0; i < model.node_y_num; i++)
 	{
-		model.ax_f_bcs[i].node_id = i * model.node_x_num;
-		model.ax_f_bcs[i].a = 0.0;
-		model.ax_f_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
-		model.ax_f_bcs[i + model.node_y_num].a = 0.0;
+		model.vx_f_bcs[i].node_id = i * model.node_x_num;
+		model.vx_f_bcs[i].v = 0.0;
+		model.vx_f_bcs[i + model.node_y_num].node_id = (i + 1) * model.node_x_num - 1;
+		model.vx_f_bcs[i + model.node_y_num].v = 0.0;
 	}
 
-	model.vy_f_bc_num = 0;
-	model.vy_f_bcs = nullptr;
-	model.ay_f_bc_num = model.node_x_num * 2;
-	model.ay_f_bcs = new AccelerationBC[model.ay_f_bc_num];
+	model.ay_f_bc_num = 0;
+	model.ay_f_bcs = nullptr;
+	model.vy_f_bc_num = model.node_x_num * 2;
+	model.vy_f_bcs = new VelocityBC[model.vy_f_bc_num];
 	for (i = 0; i < model.node_x_num; i++)
 	{
-		model.ay_f_bcs[i].node_id = i;
-		model.ay_f_bcs[i].a = 0.0;
-		model.ay_f_bcs[i + model.node_x_num].node_id = model.node_x_num * (model.node_y_num - 1) + i;
-		model.ay_f_bcs[i + model.node_x_num].a = 0.0;
+		model.vy_f_bcs[i].node_id = i;
+		model.vy_f_bcs[i].v = 0.0;
+		model.vy_f_bcs[i + model.node_x_num].node_id = model.node_x_num * (model.node_y_num - 1) + i;
+		model.vy_f_bcs[i + model.node_x_num].v = 0.0;
 	}
 
 	ResultFile_Text res_file;
@@ -174,13 +174,7 @@ void test_chm_mpm1(void)
 		Particle_Field_2D_CHM::x,
 		Particle_Field_2D_CHM::y,
 		Particle_Field_2D_CHM::vol,
-		Particle_Field_2D_CHM::p,
-		Particle_Field_2D_CHM::n,
-		Particle_Field_2D_CHM::vx_s,
-		Particle_Field_2D_CHM::vy_s,
-		Particle_Field_2D_CHM::e11,
-		Particle_Field_2D_CHM::e12,
-		Particle_Field_2D_CHM::e22
+		Particle_Field_2D_CHM::p
 	};
 	size_t *pcl_ids1;
 	pcl_ids1 = new size_t[model.pcl_num];
@@ -201,27 +195,27 @@ void test_chm_mpm1(void)
 
 	th1->set_interval_num(5);
 	step1->add_output(th1);
-	step1->add_output(&th2);
+	//step1->add_output(&th2);
 
 	step1->solve();
 
-	Step_R2D_CHM_MPM_s *step2;
-	step2 = new Step_R2D_CHM_MPM_s;
-	step2->set_name("consolidation_step");
-	step2->set_prev_step(step1);
-	delete step1;
-	step2->set_step_time(5.0e-4); // total_time
-	step2->set_dt(1.0e-4);
+	//Step_R2D_CHM_MPM_s *step2;
+	//step2 = new Step_R2D_CHM_MPM_s;
+	//step2->set_name("consolidation_step");
+	//step2->set_prev_step(step1);
+	//delete step1;
+	//step2->set_step_time(5.0e-4); // total_time
+	//step2->set_dt(1.0e-4);
 
-	// free drainage bcs
-	model.ay_f_bc_num = model.node_x_num;
-	th1->set_interval_num(5);
-	step2->add_output(th1);
-	step2->add_output(&th2);
+	//// free drainage bcs
+	//model.ay_f_bc_num = model.node_x_num;
+	//th1->set_interval_num(5);
+	//step2->add_output(th1);
+	//step2->add_output(&th2);
 
-	step2->solve();
-	
-	delete step2;
+	//step2->solve();
+	//
+	//delete step2;
 
 	delete th1;
 }

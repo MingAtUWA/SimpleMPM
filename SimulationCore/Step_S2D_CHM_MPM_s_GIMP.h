@@ -31,13 +31,13 @@ public:
 	}
 
 	inline void set_dt(double _dt,
-		double dt_max_min_raio = 1.0e-3 /*ad hoc number*/,
+		double dt_max_min_raio = 0.1 /*ad hoc number*/,
 		double t_tol_r = 0.01)
 	{
 		max_dt = _dt;
 		min_dt = max_dt * dt_max_min_raio;
 		time_tol_ratio = t_tol_r;
-		time_tol = min_dt * t_tol_r;
+		time_tol = max_dt * t_tol_r;
 	}
 
 	inline void set_dt_ratio(double _h_elem_ratio, double _h_pcl_ratio)

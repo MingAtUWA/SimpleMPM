@@ -33,6 +33,7 @@ int TimeHistory_Particle_S2D_ME_AllPcl::init_per_step(void)
 {
 	Model_S2D_ME_MPM_s &model = static_cast<Model_S2D_ME_MPM_s &>(*step->get_model());
 	
+	pcl_mem.reset();
 	pcl_mem.reserve(model.pcl_num);
 	Particle_S2D_ME *ppcl;
 	for (size_t i = 0; i < model.pcl_num; ++i)

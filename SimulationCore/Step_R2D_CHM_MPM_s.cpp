@@ -292,6 +292,7 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 			pn->ax_f = (pn->fx_ext_tf - pn->fx_int_tf - pn->fx_drag_tf) / pn->m_tf;
 			pn->ay_f = (pn->fy_ext_tf - pn->fy_int_tf - pn->fy_drag_tf) / pn->m_tf;
 		}
+		//std::cout << "2: fint_tf " << pn->fx_int_tf << "\n";
 	}
 	for (size_t i = 0; i < model->ax_f_bc_num; i++)
 	{
@@ -315,7 +316,6 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 			pn->vy_f  = pn->mmy_tf / pn->m_tf;
 			pn->vy_f += pn->ay_f * self->dt;
 		}
-		//if (i == 2 || i == 3) std::cout << "v: " << pn->vx_f << " " << pn->vy_f << std::endl;
 	}
 	// apply velocity boundary conditions of fluid phase
 	for (size_t i = 0; i < model->vx_f_bc_num; i++)
@@ -427,6 +427,9 @@ int solve_substep_R2D_CHM_MPM_s(void *_self)
 			// fluid phase
 			pn->dux_f = pn->vx_f * self->dt;
 			pn->duy_f = pn->vy_f * self->dt;
+			//if (i == 3)
+			//	std::cout << "1 vxs: " << pn->vx_s << " vys: " << pn->vy_s
+			//			  <<  " vxf: " << pn->vx_f << " vyf: " << pn->vy_f << "\n";
 		}
 	}
 

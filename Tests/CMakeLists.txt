@@ -30,6 +30,8 @@ add_executable(
     test_chm_mpm2.cpp
     test_chm_mpm_gimp1.cpp
     test_chm_mpm_gimp2.cpp
+    test_chm_mpm_mix1.cpp
+    test_chm_mpm_mix2.cpp
     test_chm_visdamp_mpm1.cpp
     test_chm_visdamp_mpm2.cpp
     test_chm_visdamp_mpm3.cpp
@@ -38,6 +40,7 @@ add_executable(
     test_chm_2D_bspline_mpm1.cpp
     test_chm_2D_bspline_mpm2.cpp
     test_Model_S2D.cpp
+    test_mesh_resterization.cpp
     # multiple object
     test_multi_object_me1.cpp
     # write result file
@@ -62,9 +65,15 @@ target_include_directories(
     ${CMAKE_SOURCE_DIR}/ResultFileParser/
     ${CMAKE_SOURCE_DIR}/Utilities/
     ${HDF5_INCLUDE_DIR}
+    ${GLAD_INCLUDE_DIR}
+    ${GLFW_INCLUDE_DIR}
+    ${GLM_INCLUDE_DIR}
     )
 
-link_directories(${HDF5_LIBRARIES_DIR})
+link_directories(
+    ${HDF5_LIBRARIES_DIR}
+    ${GLFW_LIBRARIES_DIR}
+    )
 target_link_libraries(
     Tests PRIVATE
     SimulationCore
@@ -73,6 +82,7 @@ target_link_libraries(
     Utilities
     ${VTK_LIBRARIES}
     ${HDF5_LIBRARIES}
+    ${GLFW_LIBRARIES}
     )
 
 if (WIN32)

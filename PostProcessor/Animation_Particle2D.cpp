@@ -6,15 +6,9 @@
 
 Animation_Particle2D::
 	Animation_Particle2D(double animation_time, vtkRenderWindowInteractor *win_iter) :
-	Animation(animation_time, win_iter)
-{
+	Animation(animation_time, win_iter) {}
 
-}
-
-Animation_Particle2D::~Animation_Particle2D()
-{
-
-}
+Animation_Particle2D::~Animation_Particle2D() {}
 
 int Animation_Particle2D::init(const char *res_file_name)
 {

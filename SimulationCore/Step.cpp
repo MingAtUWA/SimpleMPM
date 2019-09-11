@@ -54,6 +54,8 @@ int Step::solve(void)
 	double time_diff_tmp;
 	do
 	{
+		(*solve_substep)(this);
+
 		++substep_num;
 		current_time += dt;
 		time_diff_tmp = current_time - step_time;
@@ -62,8 +64,6 @@ int Step::solve(void)
 			dt -= time_diff_tmp;
 			current_time = step_time;
 		}
-
-		(*solve_substep)(this);
 
 		output_time_history_if_needed();
 

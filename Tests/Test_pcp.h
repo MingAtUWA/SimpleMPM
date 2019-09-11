@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 
+// VTK package
 #include <vtkSphereSource.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataMapper.h>

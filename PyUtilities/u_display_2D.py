@@ -5,7 +5,8 @@ import os
 import oned_consolidation as oc
 
 res_file_name = "..\\Build\\Tests\\res_file\\TimeHistory1-test_out1.txt"
-#res_file_name = "..\\Build\\Tests\\res_file\\TimeHistory1-test_out1_no_damp.txt"
+#res_file_name = "..\\Build\\Tests\\res_file\\TimeHistory1-test_out1 - mixed.txt"
+#res_file_name = "..\\Build\\Tests\\res_file\\TimeHistory1-test_out1 - standard.txt"
 
 script_dir =  os.path.dirname(os.path.realpath('__file__')) #<-- absolute dir the script is in
 abs_file_path = os.path.join(script_dir + "\\", res_file_name)
@@ -48,9 +49,7 @@ with open(abs_file_path, 'r') as res_file:
                     field_value -= z
                     y_data.append(field_value)
 
-
 line1, = plot1.plot(x_data, y_data)
-
 
 #################################################################################################
 E = 1000.0
@@ -59,7 +58,7 @@ Es = (1 - niu) / (1 + niu) / (1 - 2.0*niu) * E # Es = (1-v) / (1 + v) / (1-2v) *
 kv = 1.0e-4
 miu = 1.0 # dynamic viscosity
 Cv = kv * Es / miu
-u0 = 400.0
+u0 = 100.0
 H = 1.0
 con_res = oc.OneDConsolidation(Cv, Es, u0, H)
 
@@ -69,7 +68,7 @@ t_list = np.zeros(data_num + 2)
 u_list = np.zeros(data_num + 2)
 t_list[0] = 0.0
 u_list[0] = 0.0
-t_list[1] = 10.0 # time for equilibrium
+t_list[1] = 0.0 # time for equilibrium
 u_list[1] = u_list[0]
 for i in range(data_num):
     t_list[i + 2] = time * float(i) / float(data_num)
