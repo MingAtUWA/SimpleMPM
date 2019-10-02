@@ -16,6 +16,64 @@ Step_S2D_ME_s_RigidBody::Step_S2D_ME_s_RigidBody() :
 
 Step_S2D_ME_s_RigidBody::~Step_S2D_ME_s_RigidBody() {}
 
+int Step_S2D_ME_s_RigidBody::init_output(void)
+{
+	size_t i;
+
+	// Initialize time history information
+	TimeHistory *pth;
+	if (time_history_output_num)
+	{
+		info_for_time_history_output = new InfoForTimeHistoryOutput[time_history_output_num];
+		for (pth = time_history_list, i = 0; pth;
+			pth = pth->next_for_step_class, ++i)
+		{
+			info_for_time_history_output[i].time_history = pth;
+			info_for_time_history_output[i].next_output_time = step_time * pth->init_next_time_ratio();
+			pth->step = this;
+		}
+	}
+
+	// Initialize time histories
+	for (pth = time_history_list; pth; pth = pth->next_for_step_class)
+		pth->init_per_step();
+
+	output_time_history_if_needed();
+
+	return 0;
+}
+
+int Step_S2D_ME_s_RigidBody::solve(void)
+{
+	substep_num = 0;
+	current_time = 0.0;
+
+	init(); // initialize calculation
+	init_output();
+
+	double time_diff_tmp;
+	do
+	{
+		(*solve_substep)(this);
+
+		++substep_num;
+		current_time += dt;
+		time_diff_tmp = current_time - step_time;
+		if (time_diff_tmp > time_tol)
+		{
+			dt -= time_diff_tmp;
+			current_time = step_time;
+		}
+
+		output_time_history_if_needed();
+
+	} while (-time_diff_tmp > time_tol);
+
+	finalize(); // finalize calculation
+
+	return 0;
+}
+
 int Step_S2D_ME_s_RigidBody::init()
 {
 	if (is_first_step)

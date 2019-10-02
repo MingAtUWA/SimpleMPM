@@ -53,15 +53,18 @@ void TriangleMesh::BgGrid::get_intersect_points(
 {
 	long long *x_ids;
 	x_ids_mem.reset();
-	if (y1 == y2)
+
+	if (y1 == y2) // horizontal line
 	{
-		x_ids = x_ids_mem.alloc(2);
-		y_id0 = long long(y1/h);
+		y_id0 = long long(y1 / h);
 		y_idn = y_id0 + 1;
-		x_ids[0] = long long(x1/h);
-		x_ids[1] = long long(x2/h);
+		x_ids = x_ids_mem.alloc(2);
+		x_ids[0] = long long(x1 / h);
+		x_ids[1] = long long(x2 / h);
 		return;
 	}
+
+	// ensure that y1 < y2
 	if (y1 > y2)
 	{
 		double d_tmp;
@@ -72,11 +75,15 @@ void TriangleMesh::BgGrid::get_intersect_points(
 		x1 = x2;
 		x2 = d_tmp;
 	}
-	y_id0 = long long(y1/h);
-	y_idn = long long(y2/h) + 1;
+
+	y_id0 = long long(y1 / h);
+	y_idn = long long(y2 / h);
+	if (double(y_idn) * h < y2)
+		++y_idn;
+	
 	size_t x_id_num = y_idn - y_id0;
 	double xi, yi, k = (x2 - x1) / (y2 - y1);
-	x_ids_mem.reserve(x_id_num+1);
+	x_ids_mem.reserve(x_id_num + 1);
 	long long x_id;
 	x_id = long long(x1 / h);
 	x_ids_mem.add(x_id);

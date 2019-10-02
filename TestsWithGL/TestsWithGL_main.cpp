@@ -7,7 +7,11 @@
 
 int main(int argc, void **argv)
 {
-	test_triangle_mesh();
+	//test_triangle_mesh_circle();
+	//test_triangle_mesh_square();
+	//test_rigid_body_square();
+	
+	test_mpm_rigidbody_square();
 
 	//system("pause");
 	return 0;

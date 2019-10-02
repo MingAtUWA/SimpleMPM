@@ -8,7 +8,7 @@
 #include "HashTableEdge.h"
 
 template<typename _Type>
-inline void swap(_Type a, _Type b) noexcept { _Type tmp = a; a = b, b = tmp; }
+inline void swap(_Type &a, _Type &b) noexcept { _Type tmp = a; a = b, b = tmp; }
 
 bool TriangleMesh::is_in_triangle(Element &elem, Point &p)
 {
@@ -196,39 +196,46 @@ int TriangleMesh::find_edges_at_boundary(void)
 }
 
 // After edges at boundaries are obtained
-int TriangleMesh::init_bg_grid(void)
+int TriangleMesh::init_bg_grid(double _grid_size)
 {
-	// Use length of shortest boundary segment as size of background grid
-	double edge_len_min, edge_len_tmp;
-	size_t be_id;
-	for (be_id = 0; be_id < boundary_edge_num; ++be_id)
+	double grid_size;
+	if (_grid_size > 0)
 	{
-		Edge &be = boundary_edges[be_id];
-		edge_len_min = distance(nodes[be.n1], nodes[be.n2]);
-		if (edge_len_min != 0.0)
-			break;
+		grid_size = _grid_size;
 	}
-	for (; be_id < boundary_edge_num; ++be_id)
+	else
 	{
-		Edge &be = boundary_edges[be_id];
-		edge_len_tmp = distance(nodes[be.n1], nodes[be.n2]);
-		if (edge_len_tmp != 0.0 && edge_len_min > edge_len_tmp)
-			edge_len_min = edge_len_tmp;
+		// Use length of shortest boundary segment as size of background grid
+		double edge_len_min, edge_len_tmp;
+		size_t be_id;
+		for (be_id = 0; be_id < boundary_edge_num; ++be_id)
+		{
+			Edge &be = boundary_edges[be_id];
+			edge_len_min = distance(nodes[be.n1], nodes[be.n2]);
+			if (edge_len_min != 0.0)
+				break;
+		}
+		for (; be_id < boundary_edge_num; ++be_id)
+		{
+			Edge &be = boundary_edges[be_id];
+			edge_len_tmp = distance(nodes[be.n1], nodes[be.n2]);
+			if (edge_len_tmp != 0.0 && edge_len_min > edge_len_tmp)
+				edge_len_min = edge_len_tmp;
+		}
+		if (edge_len_min == 0)
+			return -1;
+		grid_size = edge_len_min;
 	}
-	if (edge_len_min == 0)
-		return -1;
 
 	// Calculate number of element in x and y direction
-	double bb_len_x, bb_len_y;
-	size_t elem_x_num, elem_y_num;
-	bb_len_x = bounding_box.xu - bounding_box.xl;
-	bb_len_y = bounding_box.yu - bounding_box.yl;
-	elem_x_num = size_t(bb_len_x / edge_len_min) + 1;
-	elem_y_num = size_t(bb_len_y / edge_len_min) + 1;
+	double bb_len_x = bounding_box.xu - bounding_box.xl;
+	double bb_len_y = bounding_box.yu - bounding_box.yl;
+	size_t elem_x_num = size_t(bb_len_x / grid_size) + 1;
+	size_t elem_y_num = size_t(bb_len_y / grid_size) + 1;
 	// init the tree height
 	init_tree_height(elem_x_num, elem_y_num);
 	// init grid
-	bg_grid.alloc_grid(elem_x_num, elem_y_num, edge_len_min);
+	bg_grid.alloc_grid(elem_x_num, elem_y_num, grid_size);
 	bg_grid_rect.xl = 0.0;
 	bg_grid_rect.xu = bg_grid.xn;
 	bg_grid_rect.yl = 0.0;
@@ -236,8 +243,8 @@ int TriangleMesh::init_bg_grid(void)
 
 	// Adjust coordinates of bounding box and nodes
 	double offset_x, offset_y;
-	offset_x = (double(elem_x_num) * edge_len_min - bb_len_x) * 0.5 - bounding_box.xl;
-	offset_y = (double(elem_y_num) * edge_len_min - bb_len_y) * 0.5 - bounding_box.yl;
+	offset_x = (double(elem_x_num) * grid_size - bb_len_x) * 0.5 - bounding_box.xl;
+	offset_y = (double(elem_y_num) * grid_size - bb_len_y) * 0.5 - bounding_box.yl;
 	bounding_box.xl += offset_x;
 	bounding_box.xu += offset_x;
 	bounding_box.yl += offset_y;
@@ -295,7 +302,7 @@ int TriangleMesh::init_bg_grid(void)
 	for (size_t elem_id = 0; elem_id < elem_num; ++elem_id)
 	{
 		Element &elem = elems[elem_id];
-		// find the highest, lowest and middle point
+		// find the highest (y1), middle (y2) and lowest (y3) point
 		Node &n1 = nodes[elem.n1];
 		x1 = n1.x; y1 = n1.y;
 		Node &n2 = nodes[elem.n2];
@@ -321,11 +328,13 @@ int TriangleMesh::init_bg_grid(void)
 		size_t y13_num, y23_num, y12_num;
 		size_t y_start;
 		bg_grid.get_intersect_points(x3, y3, x1, y1, y_id0, y_idn, x_ids_mem);
+		//for (size_t i = 0; i < x_ids_mem.get_num(); i++)
+		//	std::cout << x_ids_mem[i] << ", ";
+		//std::cout << "\n";
 		y_start = y_id0;
 		y13_num = y_idn - y_id0 + 1;
 		x_id_range_mem.reset();
-		x_id_range_mem.alloc(y13_num + y13_num);
-		x_id_range = x_id_range_mem.get_mem();
+		x_id_range = x_id_range_mem.alloc(y13_num + y13_num);
 		for (size_t i = 0; i < y13_num; ++i)
 		{
 			x_id_range[2 * i] = x_ids[i];
@@ -401,7 +410,7 @@ bool TriangleMesh::distance_to_edge(Edge &edge, Point &p,
 	y = p.y;
 
 	double x_diff, y_diff, len;
-	if (x1 == x2 || y1 == y2)
+	if (x1 == x2 && y1 == y2) // the line deteriorates into a point
 	{
 		x_diff = x - x1;
 		y_diff = y - y1;
@@ -418,8 +427,7 @@ bool TriangleMesh::distance_to_edge(Edge &edge, Point &p,
 	len = sqrt(x_diff * x_diff + y_diff * y_diff);
 	nx = -y_diff / len;
 	ny = x_diff / len;
-	dist = ((y - y2) * (x1 - x2) - (x - x2) * (y1 - y2))
-		 / (nx * (y1 - y2) - ny * (x1 - x2));
+	dist = ((y - y2) * (x1 - x2) - (x - x2) * (y1 - y2)) / len;
 	double x_interset = x + nx * dist;
 	double y_interset = y + ny * dist;
 	if (dist > 0)
@@ -463,11 +471,15 @@ bool TriangleMesh::distance_to_edge(Edge &edge, Point &p,
 
 int TriangleMesh::distance_to_boundary(Point &p, double &dist, double &nx, double &ny, double dist_max)
 {
+#ifdef __DEBUG_TRIANGLE_MESH__
+	std::cout << "Point (" << p.x << ", " << p.y << ") is ";
+#endif
+
 	int res = 1;
 	if (p.x < 0.0 || p.x >= bg_grid.xn || p.y < 0.0 || p.y >= bg_grid.yn)
 	{
 #ifdef __DEBUG_TRIANGLE_MESH__
-		std::cout << "outside background mesh\n";
+		std::cout << "outside mesh.\n";
 #endif
 		if (distance(bg_grid_rect, p) < dist_max)
 			goto find_closest_boundary_grid;
@@ -479,12 +491,12 @@ int TriangleMesh::distance_to_boundary(Point &p, double &dist, double &nx, doubl
 	{
 	case BgGrid::PosType::Outside:
 #ifdef __DEBUG_TRIANGLE_MESH__
-		std::cout << "outside mesh\n";
+		std::cout << "outside mesh.\n";
 #endif
 		break;
 	case BgGrid::PosType::AtBoundary:
 #ifdef __DEBUG_TRIANGLE_MESH__
-		std::cout << "at mesh boundary\n";
+		std::cout << "close to mesh boundary.\n";
 #endif
 		for (BgGrid::PElement *pelem = in_grid.elems;
 			pelem; pelem = pelem->next)
@@ -498,7 +510,7 @@ int TriangleMesh::distance_to_boundary(Point &p, double &dist, double &nx, doubl
 		break;
 	case BgGrid::PosType::Inside:
 #ifdef __DEBUG_TRIANGLE_MESH__
-		std::cout << "inside mesh\n";
+		std::cout << "inside mesh.\n";
 #endif
 		res = 0;
 		break;
@@ -512,6 +524,9 @@ int TriangleMesh::distance_to_boundary(Point &p, double &dist, double &nx, doubl
 	
 find_closest_boundary_grid:
 	dist = dist_max;
+#ifdef __DEBUG_TRIANGLE_MESH__
+	std::cout << "Start searching...\n";
+#endif
 	if (search_node(p, 0, 0, tree_height, dist, nx, ny, dist_max))
 	{
 		if (res == 0) // inside 
@@ -523,17 +538,27 @@ find_closest_boundary_grid:
 		{
 			dist = -dist;
 		}
+
 #ifdef __DEBUG_TRIANGLE_MESH__
-		std::cout << "closest edge: (" << closest_edge->n1 << ", "
-				  << closest_edge->n2 << ")\n";
+		Node &ce_n1 = nodes[closest_edge->n1], &ce_n2 = nodes[closest_edge->n2];
+		std::cout << "End searching.\nClosest edge is (" << closest_edge->n1 << ", "
+				  << closest_edge->n2 << "), from (" << ce_n1.x <<  ", " << ce_n1.y
+				  << ") to (" << ce_n2.x << ", " << ce_n2.y << ").\n"
+				  "Distance: " << dist << ", normal: (" << nx << ", " << ny << ")\n";;
 #endif
+
 		return res;
 	}
 
+#ifdef __DEBUG_TRIANGLE_MESH__
+	std::cout << "End searching.\nClosest edge not found.\n";
+#endif
 	return -1;
 }
 
-// searhc background grid as a quadtree
+
+// helper function
+// search background grid as a quadtree
 bool TriangleMesh::search_node(Point &p, long long raw_x_id0, long long raw_y_id0, size_t height,
 							   double &dist, double &nx, double &ny, double dist_max)
 {

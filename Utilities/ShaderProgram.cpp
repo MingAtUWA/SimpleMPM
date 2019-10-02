@@ -67,6 +67,12 @@ int ShaderProgram::init_uniform(const char *uniform_name)
 	return -1;
 }
 
+int ShaderProgram::set_uniform_vec4f(GLint uniform_loc, const GLfloat *mat_value)
+{
+	glUniform4fv(uniform_loc, 1, mat_value);
+	return 0;
+}
+
 int ShaderProgram::set_uniform_matrix4f(GLint uniform_loc, const GLfloat *mat_value)
 {
 	glUniformMatrix4fv(uniform_loc, 1, GL_FALSE, mat_value);

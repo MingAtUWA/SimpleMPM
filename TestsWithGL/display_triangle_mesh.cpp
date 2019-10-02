@@ -56,33 +56,21 @@ int display_triangle_mesh(TriangleMesh &tri_mesh, bool disp_tri_mesh, bool dis_b
 
 	glViewport(0, 0, win_size, win_size);
 	
-	ShaderProgram shader;
-	shader.init_from_file("..\\..\\Asset\\rb_vshader.txt",
-						  "..\\..\\Asset\\rb_fshader.txt");
-	size_t proj_mat_id = shader.init_from_code();
-
-
 	DrawTriangleMesh draw_tri_mesh;
-	draw_tri_mesh.init(tri_mesh);
+	draw_tri_mesh.init(tri_mesh,
+					   "..\\..\\Asset\\unicolor_vshader.txt",
+					   "..\\..\\Asset\\unicolor_fshader.txt",
+					   "..\\..\\Asset\\multicolor_vshader.txt",
+					   "..\\..\\Asset\\multicolor_fshader.txt");
 	// draw point and line
 	if (_edge) draw_tri_mesh.init_line_and_point(tri_mesh, *_edge, *_pt);
 	
-	// set projection matrix
-	Rect disp_range = tri_mesh.get_display_range();
-	GLfloat range = (GLfloat)(disp_range.xu > disp_range.yu ? disp_range.xu : disp_range.yu);
-	GLfloat padding = range * 0.05f;
-	glm::mat4 proj_mat = glm::ortho(-padding, range + padding, -padding, range + padding);
-	shader.use();
-	GLint proj_mat_id = shader.init_uniform("proj_mat");
-	shader.set_uniform_matrix4f(proj_mat_id, glm::value_ptr(proj_mat));
-
 	while (!glfwWindowShouldClose(window))
 	{
 		// set background color
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		shader.use();
 		draw_tri_mesh.draw(disp_tri_mesh, dis_bl, disp_bg_grid);
 		if (_edge) draw_tri_mesh.draw_line_and_point();
 		

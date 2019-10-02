@@ -55,7 +55,6 @@ with open(abs_file_path, 'r') as res_file:
 
 line1, = plot1.plot(x_data, y_data)
 
-
 #################################################################################################
 E = 1000.0
 niu = 0.25 # possion ratio

@@ -134,6 +134,7 @@ int Step::finalize_output(void)
 
 	return 0;
 }
+
 int Step::output_time_history_anyway(void)
 {
 	for (size_t i = 0; i < time_history_output_num; i++)

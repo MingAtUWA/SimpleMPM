@@ -9,9 +9,12 @@ add_executable(
     test_sim_core.h
     test_post_processor.h
     # Test functions
-    # mpm - rigid body contact
+    # rigid body testing
     display_triangle_mesh.cpp
-    test_triangle_mesh.cpp
+    test_triangle_mesh_circle.cpp
+    test_triangle_mesh_square.cpp
+    test_rigid_body_square.cpp
+    # mpm - rigid body contact
     test_mpm_rigidbody_circle.cpp
     test_mpm_rigidbody_square.cpp
     )

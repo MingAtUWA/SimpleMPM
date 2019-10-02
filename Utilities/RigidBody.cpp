@@ -2,12 +2,12 @@
 
 #include "RigidBody.h"
 
-int RigidBody::load_and_init_mesh(const char *filename)
+int RigidBody::load_and_init_mesh(const char *filename, double bg_grid_size)
 {
 	mesh.load_mesh(filename);
 	mesh.get_bounding_box();
 	mesh.find_edges_at_boundary();
-	mesh.init_bg_grid();
+	mesh.init_bg_grid(bg_grid_size);
 	return 0;
 }
 

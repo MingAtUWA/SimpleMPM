@@ -19,14 +19,13 @@ class RigidBody
 public:
 	double m, L;
 
-	// For higher precision
-	double x_ori, y_ori, theta_ori;
-	double ux, uy, u_theta;
-	// x = x_ori + ux, y = y_ori + uy
-	// note that (x, y) is the position of mass centre
-	// theta take counter-clockwise as positive
+	// mass centre is (x, y)
+	// theta (in radians) takes counter-clockwise as positive
 	double x, y, theta;
 	double vx, vy, v_theta;
+	// x = x_ori + ux, y = y_ori + uy
+	double x_ori, y_ori, theta_ori;
+	double ux, uy, u_theta;
 
 	// external force
 	double Fx_ext, Fy_ext, M_ext;
@@ -44,31 +43,47 @@ public:
 		Fx_ext(0.0), Fy_ext(0.0), M_ext(0.0),
 		Fx_con(0.0), Fy_con(0.0), M_con(0.0) {}
 	~RigidBody() {}
-	int load_and_init_mesh(const char *filename);
+	int load_and_init_mesh(const char *filename, double bg_grid_size = -1.0);
+	// called after load_and_init_mesh()
+	inline void set_params(double density,
+		double _x = 0.0, double _y = 0.0, double _theta = 0.0,
+		double _vx = 0.0, double _vy = 0.0, double _v_theta = 0.0) noexcept
+	{
+		m = mesh.area * density;
+		L = mesh.moi_area * density;
+		x = _x, y = _y, theta = _theta, trim_to_pi(theta);
+		_vx = vx, _vy = vy, v_theta = _v_theta;
+	}
+	// add force at mass centre
+	inline void add_ext_force(double fx, double fy)
+	{
+		Fx_ext += fx, Fy_ext += fy;
+	}
+	inline void add_ext_force(double fx, double fy, double posx, double posy)
+	{
+		Fx_ext += fx, Fy_ext += fy;
+		M_ext += (posx - x) * fy - (posy - y) * fx;
+	}
+
+public: // for calculation
 	inline void init_calculation(void)
 	{
 		x_ori = x;
 		y_ori = y;
 		trim_to_pi(theta);
 		theta_ori = theta;
-		ux = 0;
-		uy = 0;
+		ux = 0.0;
+		uy = 0.0;
 		u_theta = 0.0;
 		Fx_con = 0.0;
 		Fy_con = 0.0;
 		M_con = 0.0;
 	}
-	inline void add_ext_force(double fx, double fy, double posx, double posy)
-	{
-		Fx_ext += fx;
-		Fy_ext += fy;
-		M_ext  += (posx - x) * fy + (posy - y) * fx;
-	}
 	inline void add_con_force(double fx, double fy, double posx, double posy)
 	{
 		Fx_con += fx;
 		Fy_con += fy;
-		M_con  += (posx - x) * fy + (posy - y) * fx;
+		M_con  += (posx - x) * fy - (posy - y) * fx;
 	}
 	inline void predict_motion_from_ext_force(double dt) // Euler - Cromer
 	{
@@ -111,12 +126,12 @@ protected: // helper data and functions
 		   // for transformation
 	double sin_theta, cos_theta;
 public:
+	// called after set_init_pos()
 	inline void init_transformation(void) noexcept
 	{
-		sin_theta = sin(theta);
-		cos_theta = cos(theta);
+		sin_theta = sin(theta), cos_theta = cos(theta);
 	}
-	// called after init_transformation
+	// functions below should be called after init_transformation()
 	void get_bounding_box(double &x1, double &y1, double &x2, double &y2,
 						  double &x3, double &y3, double &x4, double &y4,
 						  double expand_size = 0.0);
@@ -125,13 +140,9 @@ public:
 	{
 		// transform into local coordinates
 		double x_tmp = p.x - x, y_tmp = p.y - y;
-		//std::cout << "p coord: (" << p.x << ", " << p.y << ")\n";
-
-		//init_transformation();
 		Point lp;
 		lp.x = x_tmp *  cos_theta + y_tmp * sin_theta + mesh.x_mc;
 		lp.y = x_tmp * -sin_theta + y_tmp * cos_theta + mesh.y_mc;
-		//std::cout << "p coord: (" << lp.x << ", " << lp.y << ")\n";
 		
 		int res = mesh.distance_to_boundary(lp, dist, nx, ny, dist_max);
 
@@ -139,9 +150,26 @@ public:
 		double nx_tmp = nx, ny_tmp = ny;
 		nx = nx_tmp * cos_theta - ny_tmp * sin_theta;
 		ny = nx_tmp * sin_theta + ny_tmp * cos_theta;
-		//std::cout << "normal: (" << nx << ", " << ny << ")\n";
+		//std::cout << "\nPoint in global coords: (" << p.x << ", " << p.y << ").\n"
+		//		  "Distance: " << dist << ", normal: (" << nx << ", " << ny << ")\n";
 
 		return res;
+	}
+	inline Point to_local_coord(Point &gp) const noexcept
+	{
+		double x_tmp = gp.x - x, y_tmp = gp.y - y;
+		Point lp;
+		lp.x = x_tmp *  cos_theta + y_tmp * sin_theta + mesh.x_mc;
+		lp.y = x_tmp * -sin_theta + y_tmp * cos_theta + mesh.y_mc;
+		return lp;
+	}
+	inline Point to_global_coord(Point &lp) const noexcept
+	{
+		double x_tmp = lp.x - mesh.x_mc, y_tmp = lp.y - mesh.y_mc;
+		Point gp;
+		gp.x = x_tmp * cos_theta + y_tmp * -sin_theta + x;
+		gp.y = x_tmp * sin_theta + y_tmp *  cos_theta + y;
+		return gp;
 	}
 };
 

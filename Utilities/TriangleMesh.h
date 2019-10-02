@@ -6,7 +6,7 @@
 
 #include "Geometry.h"
 
-#define __DEBUG_TRIANGLE_MESH__
+//#define __DEBUG_TRIANGLE_MESH__
 
 template <typename Item>
 struct ItemPointer
@@ -102,7 +102,8 @@ protected:
 	Edge *boundary_edges;
 
 	Rect bounding_box;
-	Rect moved_bounding_box; // mass centre at origin
+	// mass centre at origin
+	Rect moved_bounding_box;
 
 	BgGrid bg_grid;
 
@@ -173,7 +174,7 @@ public:
 	// after
 	//   get_bounding_box()
 	//   find_edges_at_boundary()
-	int init_bg_grid(void);
+	int init_bg_grid(double _grid_size = -1.0);
 
 public:
 	// get distance to object

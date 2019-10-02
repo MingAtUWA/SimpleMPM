@@ -127,8 +127,11 @@ void Model_S2D_ME_s_RigidBody::init_pcl(
 
 void Model_S2D_ME_s_RigidBody::clear_pcl(void)
 {
-	if (pcls) delete[] pcls;
-	pcls = nullptr;
+	if (pcls)
+	{
+		delete[] pcls;
+		pcls = nullptr;
+	}
 	pcl_num = 0;
 }
 

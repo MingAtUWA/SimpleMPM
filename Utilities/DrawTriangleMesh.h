@@ -2,6 +2,7 @@
 
 #include "OpenGL_headers.h"
 
+#include "ShaderProgram.h"
 #include "TriangleMesh.h"
 
 // Draw triangular mesh
@@ -28,10 +29,18 @@ protected:
 	GLsizei grid_num;
 	GLsizei grid_line_num;
 
+protected:
+	ShaderProgram unicolor_shader;
+	GLint uc_mv_mat_id, uc_proj_mat_id, uc_color_vec_id;
+	ShaderProgram multicolor_shader;
+	GLint mc_mv_mat_id, mc_proj_mat_id;
+
 public:
 	DrawTriangleMesh();
 	~DrawTriangleMesh();
-	void init(TriangleMesh &tri_mesh);
+	void init(TriangleMesh &tri_mesh,
+			  const char *vs_name, const char *fs_name,
+			  const char *bg_grid_vs_name, const char *bg_grid_fs_name);
 	void draw(bool disp_tri_mesh = true, bool dis_bl = true, bool disp_bg_grid = true);
 
 protected:

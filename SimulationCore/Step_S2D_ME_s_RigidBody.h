@@ -17,6 +17,9 @@ public:
 	Step_S2D_ME_s_RigidBody();
 	~Step_S2D_ME_s_RigidBody();
 
+	int solve(void) override;
+	int init_output(void);
+
 	inline void set_model(Model_S2D_ME_s_RigidBody *md)
 	{
 		Step::set_model(md);
